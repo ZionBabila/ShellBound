@@ -7,6 +7,13 @@ public class PlayerController : MonoBehaviour
     [Header("Movement Settings")]
     public float baseMoveSpeed = 5f;
     public float jumpForce = 10f;
+    [Header("Physics Movement")]
+    // The force the crab's legs apply to the ground. 
+    // You will need to play with this number in the Inspector! (Try 20-40)
+    public float legPower = 25f; 
+    
+    // How much rotational power the crab has to flip itself over
+    public float flipTorque = 15f;
     [Header("Throw Settings")]
     public Vector2 throwAngle = new Vector2(1f, 1f); // X = Forward, Y = Up
     public float throwPower = 8f;
@@ -66,44 +73,60 @@ public class PlayerController : MonoBehaviour
         AbilityAction.Disable();
     }
 
-    void FixedUpdate() 
+void FixedUpdate() 
     {
-        //if shell is currently dashing, completely stop reading keyboard movement 
-        if (isDashing)
+        // 1. Read input
+        Vector2 moveInput = MoveAction.ReadValue<Vector2>();
+
+        // 2. Rolling Shell takes complete control if inside one
+        if (currentShell is RollingShell rollingShell)
         {
+            if (animator != null) animator.SetFloat("speed", 0f);
+            rollingShell.HandleRolling(moveInput.x);
             return;
         }
-        // Physics-based movement must be done in FixedUpdate
-        Vector2 moveInput = MoveAction.ReadValue<Vector2>();
-        
-        // Calculate speed (affected by the shell if equipped)
-        float currentSpeed = baseMoveSpeed;
-        if (currentShell != null)
+
+        // 3. Skip walking during dash
+        if (isDashing) 
         {
-            currentSpeed *= currentShell.speedMultiplier;
+            if (animator != null) animator.SetFloat("speed", 0f);
+            return;
         }
 
-        // Apply horizontal movement
-        rb.linearVelocity = new Vector2(moveInput.x * currentSpeed, rb.linearVelocity.y);
+        // --- 4. PHYSICS-BASED HORIZONTAL MOVEMENT ---
+        // Calculate the TARGET speed we want to reach
+        float currentTargetSpeed = baseMoveSpeed;
+        if (currentShell != null)
+        {
+            currentTargetSpeed *= currentShell.speedMultiplier;
+        }
 
-        // --- Animation Logic ---
-        bool isWalking = Mathf.Abs(moveInput.x) > 0.01f;
+        // Calculate the difference between our current speed and our target speed
+        float speedDifference = (moveInput.x * currentTargetSpeed) - rb.linearVelocity.x;
+
+        // Apply force based on the difference. 
+        // Because we use AddForce, Unity respects the crab's Mass!
+        // A heavy crab will accelerate slower, and heavy boxes will resist pushing.
+        rb.AddForce(Vector2.right * speedDifference * legPower);
+
+        // --- 5. UNLOCKED ROTATION & FLIPPING (Z-AXIS) ---
+        // Using W/S or Up/Down arrows to apply rotation torque
+        if (Mathf.Abs(moveInput.y) > 0.1f)
+        {
+            // Apply rotational force. Up arrow/W rotates one way, Down/S rotates the other.
+            rb.AddTorque(moveInput.y * flipTorque); 
+        }
+
+        // --- 6. ANIMATION & FLIPPING ---
+        // Update animation parameters using the actual physics velocity
         if (animator != null)
         {
             animator.SetFloat("speed", Mathf.Abs(rb.linearVelocity.x));
         }
 
-        // --- Flip Logic (Exactly like the video) ---
-        // If moving right but not facing right
-        if (moveInput.x > 0 && !facingRight)
-        {
-            Flip();
-        }
-        // If moving left but currently facing right
-        else if (moveInput.x < 0 && facingRight)
-        {
-            Flip();
-        }
+        // Handle visual flipping
+        if (moveInput.x > 0 && !facingRight) Flip();
+        else if (moveInput.x < 0 && facingRight) Flip();
     }
 
     // This is the exact flip function from the YouTube video
@@ -118,55 +141,66 @@ public class PlayerController : MonoBehaviour
         transform.localScale = currentScale;
     }
 
-   private void TryInteractShell()
+private void TryInteractShell()
     {
         Debug.Log("Interact Action (E) Triggered!");
 
-        // If wearing a shell, pressing will throw it
-   if (currentShell != null)
+        // --- UNEQUIP (Throwing the shell) ---
+        // If the player is already wearing a shell, pressing E will throw it
+        if (currentShell != null)
         {
-            // 1. Determine direction (1 for right, -1 for left)
+            // 1. Determine throw direction (1 for right, -1 for left)
             float direction = facingRight ? 1f : -1f;
 
-            // 2. Calculate the final force vector
+            // 2. Calculate the final force vector based on angle and power
             Vector2 finalThrowForce = new Vector2(throwAngle.x * direction, throwAngle.y).normalized * throwPower;
 
-            // 3. Get player's collider to pass it for the ignore logic
+            // 3. Get the player's collider to pass it to the ignore-collision logic
             Collider2D playerCol = GetComponent<Collider2D>();
 
-            // 4. Call unequip with physics parameters
+            // 4. Detach the shell and throw it using physics
             currentShell.Unequip(finalThrowForce, playerCol);
 
+            // 5. Reset the shell reference and restore the crab's original lightweight mass
             currentShell = null;
             rb.mass = originalMass;
-            return;
+            
+            return; // Exit the function early so we don't pick up another shell immediately
         }
 
-        // TransformPoint converts the interactOffset into a world position
+        // --- EQUIP (Picking up a shell) ---
+        // Convert the local interactOffset into a world position for the overlap circle
         Vector3 searchCenter = transform.TransformPoint(interactOffset);
         
-        // Check for colliders in the designated layer
+        // Find all colliders within range that belong specifically to the shellLayer
         Collider2D[] colliders = Physics2D.OverlapCircleAll(searchCenter, interactRadius, shellLayer);
         
-        // --- NEW DEBUG LINE TO FIND THE ISSUE ---
         Debug.Log("Physics check found " + colliders.Length + " colliders in range.");
 
         if (colliders.Length > 0)
         {
-            // Try to get the BaseShell script from the first collider found
+            // Try to extract the BaseShell script from the first valid collider found
             BaseShell foundShell = colliders[0].GetComponent<BaseShell>();
             
             if (foundShell != null)
             {
+                // CRITICAL FIX: Read the shell's mass BEFORE calling Equip(). 
+                // This prevents bugs if special shells (like RollingShell) alter their physics during Equip.
+                float addedWeight = foundShell.shellMass;
+
+                // Assign the new shell and mount it to the crab's back
                 currentShell = foundShell;
                 currentShell.Equip(shellMountPoint);
-                rb.mass = originalMass + currentShell.shellMass; // The crab becomes heavier
-                Debug.Log("Successfully equipped: " + foundShell.gameObject.name);
+                
+                // Update the crab's physics body to feel heavier
+                rb.mass = originalMass + addedWeight; 
+                
+                Debug.Log("Successfully equipped: " + foundShell.gameObject.name + " | New crab mass: " + rb.mass);
             }
             else
             {
-                // This will trigger if the object is in the Shells layer, but has no script attached
-                Debug.LogWarning("Found an object, but it doesn't have a BaseShell/SprayShell script on it!");
+                // Triggered if the object is in the Shell layer but lacks the required script
+                Debug.LogWarning("Found an object in range, but it is missing a BaseShell script!");
             }
         }
     }

@@ -9,12 +9,13 @@ public class BaseShell : MonoBehaviour
     public bool affectsMass = true;
 
     [Header("Shell Stats")]
-    public float shellMass = 2f;
+    // Smart property: dynamically reads the mass directly from the Rigidbody2D component
+    public float shellMass => GetComponent<Rigidbody2D>().mass; 
     public float speedMultiplier = 1f;
 
     [Header("Visual Settings")]
     public float collectionRadius = 2f; // Visual reference for the editor
-    public Vector2 gizmoOffset; // Allows centering the visual circle
+    public Vector3 gizmoOffset; // Allows centering the visual circle
 
     protected Rigidbody2D rb;
     protected Collider2D coll;
@@ -25,11 +26,17 @@ public class BaseShell : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         coll = GetComponent<Collider2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        
+        // Removed the redundant mass assignment here. 
+        // The mass is now controlled entirely via the Inspector's Rigidbody2D component!
     }
 
     // Aligns the shell's pivot (defined in Sprite Editor) with the crab's mount point
     public virtual void Equip(Transform mountPoint)
     {
+        // Turning off simulation means Unity physics COMPLETELY ignores this object.
+        // This is exactly why the mass is "lost" when equipped! 
+        // (The PlayerController must add this shell's mass to the Crab's Rigidbody)
         rb.simulated = false;
         coll.enabled = false;
 
@@ -41,15 +48,13 @@ public class BaseShell : MonoBehaviour
         transform.localRotation = Quaternion.identity;
     }
 
-    // Update this method in BaseShell.cs
- public virtual void Unequip(Vector2 throwForce, Collider2D playerCollider)
+    public virtual void Unequip(Vector2 throwForce, Collider2D playerCollider)
     {
         transform.SetParent(null); // Detach from mount point
-        
-        // --- MATCHING YOUR EQUIP LOGIC ---
+
         // Turn the physics engine and collisions back on for this shell
         rb.simulated = true;
-        
+
         Collider2D shellCollider = GetComponent<Collider2D>();
         if (shellCollider != null)
         {
@@ -62,7 +67,7 @@ public class BaseShell : MonoBehaviour
             StartCoroutine(IgnoreCollisionRoutine(playerCollider, shellCollider));
         }
 
-        // Apply the throwing force
+        // Apply the throwing force using the shell's actual physics mass
         rb.AddForce(throwForce, ForceMode2D.Impulse);
     }
 
@@ -70,17 +75,17 @@ public class BaseShell : MonoBehaviour
     {
         // Disable collision momentarily
         Physics2D.IgnoreCollision(player, shell, true);
-        
+
         // Wait for a fraction of a second until the shell is clear of the player's body
         yield return new WaitForSeconds(0.2f);
-        
+
         // Re-enable collision so the shell can interact with the player again later
         Physics2D.IgnoreCollision(player, shell, false);
     }
 
     public virtual void UseAbility(Rigidbody2D playerRb)
     {
-        // This will be overridden by specific shell types
+        // This will be overridden by specific shell types (like SprayShell)
         if (!canBoost && !canRoll)
         {
             Debug.Log("This shell has no active abilities.");
@@ -89,10 +94,11 @@ public class BaseShell : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        //Calculate the actual center for the green circle
-        Vector2 drawPosition = (Vector2)transform.position + gizmoOffset;
+        // Use TransformPoint so the offset rotates and flips perfectly with the shell
+        Vector3 drawPosition = transform.TransformPoint(gizmoOffset);
+
         // Show the collection radius around the shell in the editor
         Gizmos.color = new Color(0, 1, 0, 0.3f); // Semi-transparent green
-        Gizmos.DrawWireSphere(transform.position, collectionRadius);
+        Gizmos.DrawWireSphere(drawPosition, collectionRadius);
     }
 }
