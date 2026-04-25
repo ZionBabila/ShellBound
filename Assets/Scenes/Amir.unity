@@ -2521,8 +2521,8 @@ MonoBehaviour:
   canBoost: 0
   canRoll: 0
   affectsMass: 1
-  speedMultiplier: 0.19
-  collectionRadius: 1.99
+  speedMultiplier: 0.56
+  collectionRadius: 1.61
   gizmoOffset: {x: 0, y: 0, z: 0}
 --- !u!50 &1488768544
 Rigidbody2D:
@@ -2829,6 +2829,46 @@ MonoBehaviour:
     - m_Name: right
       m_Id: f035b3d7-f701-4d16-b8a9-702a98f863e1
       m_Path: <Keyboard>/rightArrow
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Move
+      m_Flags: 8
+    - m_Name: 2D Vector
+      m_Id: 8fdc90fa-a8d2-47bb-bdd5-cccb4d59741c
+      m_Path: 2DVector
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Move
+      m_Flags: 4
+    - m_Name: up
+      m_Id: 99896e30-4b51-4fbd-be4a-e4494777e01b
+      m_Path: <Keyboard>/w
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Move
+      m_Flags: 8
+    - m_Name: down
+      m_Id: 2a174dba-ba94-401b-9ac6-81f593e0651e
+      m_Path: <Keyboard>/s
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Move
+      m_Flags: 8
+    - m_Name: left
+      m_Id: c89b5daa-9649-4762-8eb6-879b963fe235
+      m_Path: <Keyboard>/a
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Move
+      m_Flags: 8
+    - m_Name: right
+      m_Id: 95610267-23e8-4eab-bb73-2fc9dd007d7c
+      m_Path: <Keyboard>/d
       m_Interactions: 
       m_Processors: 
       m_Groups: 
