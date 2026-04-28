@@ -6,68 +6,111 @@ public class RollingShell : BaseShell
     public float rollTorque = 25f;
     public float maxAngularVelocity = 600f;
 
-    [Header("Mounting")]
-    [Tooltip("הזז את הערכים כאן (בעיקר Y) כדי למרכז את הסרטן")]
-    public Vector3 playerVisualOffset = new Vector3(0f, -0.5f, 0f);
+    [Header("Rolling Visuals")]
+    [Tooltip("הסטה של הסרטן ביחס למרכז הקוליידר כשהוא מתגלגל")]
+    public Vector3 rollingOffset = new Vector3(0f, -0.5f, 0f);
 
     private bool isPlayerInside = false;
+    public bool IsPlayerInside => isPlayerInside;
+
     private Rigidbody2D playerRb;
     private PlayerController playerCtrl;
+    private Collider2D playerCollider;
     private CircleCollider2D shellCollider;
-    public override void Equip(Transform mountPoint)
-    {
-        playerCtrl = mountPoint.GetComponentInParent<PlayerController>();
-        playerRb = playerCtrl.GetComponent<Rigidbody2D>();
-        shellCollider = GetComponent<CircleCollider2D>();
-        // 1. We completely UNPARENT the crab so it doesn't spin with the shell
-        playerCtrl.transform.SetParent(null);
 
-        // 2. Disable physics
+    protected override void Awake()
+    {
+        base.Awake();
+        shellCollider = GetComponent<CircleCollider2D>();
+    }
+
+public override void Equip(Transform mountPoint)
+{
+    // קודם כל עושים את ה-Equip הבסיסי שיצמיד אותנו ל-MountPoint
+    base.Equip(mountPoint);
+
+    playerCtrl = mountPoint.GetComponentInParent<PlayerController>();
+    playerRb = playerCtrl.GetComponent<Rigidbody2D>();
+    playerCollider = playerCtrl.GetComponent<Collider2D>();
+
+    isPlayerInside = false;
+    rb.simulated = false;
+    if (shellCollider != null) shellCollider.enabled = false;
+    
+    // אם יש לך אופסט נוסף שאתה רוצה מעבר ל-Mount Point, אפשר להוסיף אותו כאן
+    // transform.localPosition += carryOffset; 
+}
+
+    public override void UseAbility(Rigidbody2D pRb)
+    {
+        if (!isPlayerInside) EnterShell();
+        else ExitShell();
+    }
+
+    private void EnterShell()
+    {
+        isPlayerInside = true;
+        playerCtrl.isDashing = true;
+
+        // ניתוק הקונכייה מהשחקן כדי שתתגלגל חופשי
+        transform.SetParent(null);
+
+        // הקפאת הפיזיקה של השחקן
         playerRb.simulated = false;
 
-        // 3. Set flags
-        playerCtrl.isDashing = true;
-        isPlayerInside = true;
-
-        // 4. Set shell to dynamic
+        // הפעלת הפיזיקה של הקונכייה
         rb.bodyType = RigidbodyType2D.Dynamic;
         rb.simulated = true;
+        shellCollider.enabled = true;
+
+        // מניעת התנגשות ביניהם
+        Physics2D.IgnoreCollision(playerCollider, shellCollider, true);
+
+        // העברת מהירות מהסרטן לקונכייה
+        rb.linearVelocity = playerRb.linearVelocity;
+    }
+
+    private void ExitShell()
+    {
+        isPlayerInside = false;
+        playerCtrl.isDashing = false;
+
+        playerRb.simulated = true;
+        playerRb.linearVelocity = rb.linearVelocity;
+
+        // חזרה לגב (משתמש ב-shellMountPoint)
+        Equip(playerCtrl.shellMountPoint);
+        
+        Physics2D.IgnoreCollision(playerCollider, shellCollider, false);
     }
 
     public void HandleRolling(float moveInput)
     {
         if (!isPlayerInside) return;
-
-        // Apply rolling force
         rb.AddTorque(-moveInput * rollTorque);
         rb.angularVelocity = Mathf.Clamp(rb.angularVelocity, -maxAngularVelocity, maxAngularVelocity);
     }
 
-    // LateUpdate runs AFTER physics, making it perfect for smooth following
-void LateUpdate()
+    void LateUpdate()
     {
-        if (isPlayerInside && playerCtrl != null && shellCollider != null)
+        if (isPlayerInside && playerCtrl != null)
         {
-            // shellCollider.bounds.center מחזיר את הנקודה המדויקת של מרכז העיגול הירוק בעולם.
-            // הנקודה הזו תמיד נשארת יציבה ולא מושפעת מנקודת הציר (Pivot) של התמונה!
-            Vector3 physicalCenter = shellCollider.bounds.center;
-            
-            // מחברים את מרכז הפיזיקה לאופסט החזותי שלך
-            playerCtrl.transform.position = physicalCenter + playerVisualOffset;
-            
-            // שומרים על הסרטן זקוף
+            // השחקן עוקב אחרי המרכז הפיזיקלי של הקוליידר העגול
+            playerCtrl.transform.position = shellCollider.bounds.center + rollingOffset;
             playerCtrl.transform.rotation = Quaternion.identity;
         }
     }
 
-    public override void Unequip(Vector2 throwForce, Collider2D playerCollider)
+    public override void Unequip(Vector2 throwForce, Collider2D pCol)
     {
-        isPlayerInside = false;
-
-        // Restore physics
-        playerRb.simulated = true;
-        playerCtrl.isDashing = false;
-
-        base.Unequip(throwForce, playerCollider);
+        if (isPlayerInside)
+        {
+            isPlayerInside = false;
+            playerCtrl.isDashing = false;
+            playerRb.simulated = true;
+            playerRb.linearVelocity = rb.linearVelocity;
+            Physics2D.IgnoreCollision(playerCollider, shellCollider, false);
+        }
+        base.Unequip(throwForce, pCol);
     }
 }
