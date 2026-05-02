@@ -169,7 +169,7 @@ GameObject:
   - component: {fileID: 44760458}
   - component: {fileID: 44760456}
   m_Layer: 0
-  m_Name: Remove tool edits_0 (1)
+  m_Name: Pipe1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -203,7 +203,7 @@ Transform:
   m_GameObject: {fileID: 44760455}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -24.67, y: 0.61, z: 0}
+  m_LocalPosition: {x: -25.41, y: -0.53, z: 0}
   m_LocalScale: {x: 0.72, y: 0.72, z: 0.72}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -2830,7 +2830,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 10.41
+  m_Mass: 2.6
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_GravityScale: 0.27
@@ -2949,7 +2949,7 @@ Transform:
   m_GameObject: {fileID: 1488768542}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: 0.26176807, w: 0.9651308}
-  m_LocalPosition: {x: -8.61672, y: -3.2168999, z: 0}
+  m_LocalPosition: {x: 18.35, y: -1.09, z: 0}
   m_LocalScale: {x: 0.17000002, y: 0.17000002, z: 0.17}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -3684,7 +3684,7 @@ GameObject:
   - component: {fileID: 2080225593}
   - component: {fileID: 2080225592}
   m_Layer: 0
-  m_Name: Remove tool edits_0 (2)
+  m_Name: Pipe2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3705,7 +3705,7 @@ MonoBehaviour:
   destinationPipe: {fileID: 44760456}
   exitPoint: {fileID: 664550712}
   suckDuration: 0.5
-  undergroundDuration: 1
+  undergroundDuration: 1.48
   spitDuration: 0.5
   shrinkPlayer: 1
   canWarp: 1
@@ -3823,7 +3823,7 @@ Transform:
   m_GameObject: {fileID: 2080225591}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 28.34, y: 8.43, z: 0}
+  m_LocalPosition: {x: 47.91, y: 14.27, z: 0}
   m_LocalScale: {x: 0.72, y: 0.72, z: 0.72}
   m_ConstrainProportionsScale: 1
   m_Children:
