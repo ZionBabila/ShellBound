@@ -32,22 +32,17 @@ public class BaseShell : MonoBehaviour
     }
 
     // Aligns the shell's pivot (defined in Sprite Editor) with the crab's mount point
-    public virtual void Equip(Transform mountPoint)
-    {
-        // Turning off simulation means Unity physics COMPLETELY ignores this object.
-        // This is exactly why the mass is "lost" when equipped! 
-        // (The PlayerController must add this shell's mass to the Crab's Rigidbody)
-        rb.simulated = false;
-        coll.enabled = false;
+ public virtual void Equip(Transform mountPoint)
+{
+    rb.simulated = false;
+    coll.enabled = false;
 
-        transform.SetParent(mountPoint);
+    transform.SetParent(mountPoint);
 
-        // Resetting local position to (0,0,0) aligns the sprite's pivot 
-        // with the mountPoint's position automatically
-        transform.localPosition = Vector3.zero;
-        transform.localRotation = Quaternion.identity;
-    }
-
+    // נצמד בדיוק למיקום של ה-GameObject הריק ששמת בסצנה
+    transform.localPosition = Vector3.zero; 
+    transform.localRotation = Quaternion.identity;
+}
     public virtual void Unequip(Vector2 throwForce, Collider2D playerCollider)
     {
         transform.SetParent(null); // Detach from mount point
