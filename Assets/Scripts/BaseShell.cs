@@ -32,15 +32,15 @@ public class BaseShell : MonoBehaviour
     }
 
     // Aligns the shell's pivot (defined in Sprite Editor) with the crab's mount point
- public virtual void Equip(Transform mountPoint)
+public virtual void Equip(Transform mountPoint)
 {
     rb.simulated = false;
-    coll.enabled = false;
+    if (coll != null) coll.enabled = false;
 
     transform.SetParent(mountPoint);
 
-    // נצמד בדיוק למיקום של ה-GameObject הריק ששמת בסצנה
-    transform.localPosition = Vector3.zero; 
+    // זה הסוד: איפוס המיקום המקומי גורם לקונכייה להיצמד למיקום המדויק של ה-MountPoint
+    transform.localPosition = Vector3.zero;
     transform.localRotation = Quaternion.identity;
 }
     public virtual void Unequip(Vector2 throwForce, Collider2D playerCollider)
