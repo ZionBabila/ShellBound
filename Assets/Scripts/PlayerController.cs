@@ -17,6 +17,18 @@ public class PlayerController : MonoBehaviour
     [Header("Throw Settings")]
     public Vector2 throwAngle = new Vector2(1f, 1f); // X = Forward, Y = Up
     public float throwPower = 8f;
+
+    [Header("Balance & Center of Mass")]
+    [Tooltip("גרור לכאן GameObject ילד שיקבע את מרכז המסה. אם ריק - ישתמש ב-Center Of Mass Offset")]
+    public Transform centerOfMassPoint;
+
+    [Tooltip("מיקום מרכז המסה ביחס לפיבוט של השחקן (פעיל רק כש-Center Of Mass Point ריק)")]
+    public Vector2 centerOfMassOffset = new Vector2(0f, -0.3f);
+
+    [Range(0f, 1f)]
+    [Tooltip("מתחת לסף הזה הסרטן נחשב 'על הגב' ולא יכול ללכת - רק להסתובב")]
+    public float uprightThreshold = 0.3f;
+
     [Header("Shell System")]
     public Transform shellMountPoint; // Empty GameObject above the crab
     public float interactRadius = 2f;
@@ -53,6 +65,7 @@ public class PlayerController : MonoBehaviour
         }
 
         originalMass = rb.mass; // Store the naked crab's weight
+        ApplyCenterOfMass();
 
         // Subscribe to input system events
         InteractAction.performed += ctx => TryInteractShell();
@@ -73,8 +86,11 @@ public class PlayerController : MonoBehaviour
         AbilityAction.Disable();
     }
 
-void FixedUpdate() 
+void FixedUpdate()
 {
+    // סנכרון מרכז המסה — מאפשר כיול בזמן ריצה ע"י הזזת ה-marker
+    ApplyCenterOfMass();
+
     // 1. קריאת קלט
     Vector2 moveInput = MoveAction.ReadValue<Vector2>();
 
@@ -106,29 +122,58 @@ void FixedUpdate()
         return;
     }
 
-    // --- 4. תנועה רגילה (על הרגליים) ---
-    float currentTargetSpeed = baseMoveSpeed;
-    if (currentShell != null) currentTargetSpeed *= currentShell.speedMultiplier;
+    // --- 4. בדיקת זקיפות: 1 = עומד מושלם, -1 = הפוך לגמרי ---
+    float upright = Vector2.Dot(transform.up, Vector2.up);
+    bool canWalk = upright > uprightThreshold;
 
-    float speedDifference = (moveInput.x * currentTargetSpeed) - rb.linearVelocity.x;
-    rb.AddForce(Vector2.right * speedDifference * legPower);
+    // --- 5. תנועה רגילה (על הרגליים) - רק כשמספיק זקופים ---
+    if (canWalk)
+    {
+        float currentTargetSpeed = baseMoveSpeed;
+        if (currentShell != null) currentTargetSpeed *= currentShell.speedMultiplier;
 
-    // סיבוב עצמי (Torque)
+        float speedDifference = (moveInput.x * currentTargetSpeed) - rb.linearVelocity.x;
+        rb.AddForce(Vector2.right * speedDifference * legPower);
+    }
+
+    // --- 6. סיבוב עצמי (Torque) - תמיד פעיל, גם על הגב, כדי שאפשר יהיה להתהפך חזרה ---
+    // מוכפל ב-facing כדי שלמעלה/למטה יישארו עקביים מנקודת מבט השחקן ללא קשר לכיוון ההליכה
     if (Mathf.Abs(moveInput.y) > 0.1f)
     {
-        rb.AddTorque(moveInput.y * flipTorque); 
+        float facingMultiplier = facingRight ? 1f : -1f;
+        rb.AddTorque(moveInput.y * flipTorque * facingMultiplier);
     }
 
-    // אנימציית הליכה רגילה
+    // אנימציה - "speed" מתאפס כשעל הגב כדי שהסרטן לא יראה מהלך באוויר
     if (animator != null)
     {
-        animator.SetFloat("speed", Mathf.Abs(rb.linearVelocity.x));
+        float animSpeed = canWalk ? Mathf.Abs(rb.linearVelocity.x) : 0f;
+        animator.SetFloat("speed", animSpeed);
     }
 
-    // Flip רגיל
-    if (moveInput.x > 0 && !facingRight) Flip();
-    else if (moveInput.x < 0 && facingRight) Flip();
+    // Flip - רק כשבאמת הולכים
+    if (canWalk)
+    {
+        if (moveInput.x > 0 && !facingRight) Flip();
+        else if (moveInput.x < 0 && facingRight) Flip();
+    }
 }
+
+    private void ApplyCenterOfMass()
+    {
+        Vector2 baseCom;
+        if (centerOfMassPoint != null)
+            baseCom = transform.InverseTransformPoint(centerOfMassPoint.position);
+        else
+            baseCom = centerOfMassOffset;
+
+        // הקונכייה הנישאת מזיזה את ה-COM בהתאם ל-carryComShift שהיא מצהירה עליו
+        Vector2 shellShift = (currentShell != null && currentShell.attachment != null)
+            ? currentShell.attachment.carryComShift
+            : Vector2.zero;
+
+        rb.centerOfMass = baseCom + shellShift;
+    }
 
     // This is the exact flip function from the YouTube video
     private void Flip()
@@ -230,6 +275,15 @@ void FixedUpdate()
             Gizmos.color = Color.cyan;
             Gizmos.DrawSphere(shellMountPoint.position, 0.1f);
             Gizmos.DrawWireSphere(shellMountPoint.position, 0.15f);
+        }
+
+        // Center of Mass gizmo - מצויר רק כשאין marker (כי ל-marker יש סקריפט משלו שמצייר)
+        if (centerOfMassPoint == null)
+        {
+            Vector3 comWorld = transform.TransformPoint(centerOfMassOffset);
+            Gizmos.color = Color.green;
+            Gizmos.DrawSphere(comWorld, 0.08f);
+            Gizmos.DrawWireSphere(comWorld, 0.16f);
         }
     }
 }

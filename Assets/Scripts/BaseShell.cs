@@ -13,6 +13,9 @@ public class BaseShell : MonoBehaviour
     public float shellMass => GetComponent<Rigidbody2D>().mass; 
     public float speedMultiplier = 1f;
 
+    [Header("Attachment")]
+    public ShellAttachment attachment = new ShellAttachment();
+
     [Header("Visual Settings")]
     public float collectionRadius = 2f; // Visual reference for the editor
     public Vector3 gizmoOffset; // Allows centering the visual circle
@@ -38,10 +41,16 @@ public virtual void Equip(Transform mountPoint)
     if (coll != null) coll.enabled = false;
 
     transform.SetParent(mountPoint);
-
-    // זה הסוד: איפוס המיקום המקומי גורם לקונכייה להיצמד למיקום המדויק של ה-MountPoint
-    transform.localPosition = Vector3.zero;
     transform.localRotation = Quaternion.identity;
+    transform.localPosition = Vector3.zero;
+
+    // אם הוגדר attachPoint - מיישרים אותו ל-mountPoint במקום להסתמך על הפיבוט של הספרייט.
+    // ככה כל קונכייה יכולה להגדיר ויזואלית איפה היא "מתחברת" לסרטן בלי לזוז את הפיבוט.
+    if (attachment != null && attachment.attachPoint != null)
+    {
+        Vector3 offset = mountPoint.position - attachment.attachPoint.position;
+        transform.position += offset;
+    }
 }
     public virtual void Unequip(Vector2 throwForce, Collider2D playerCollider)
     {
