@@ -1,173 +1,229 @@
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
+
+// =============================================================================
+// PlayerController — central player script for ShellBound
+// =============================================================================
+// Architecture overview:
+//
+//   PlayerInputHandler  ── events ─▶  PlayerController
+//                                          │
+//                                          │ Equip / Unequip / UseAbility
+//                                          ▼
+//                                      BaseShell
+//                                     /    │    \
+//                          RollingShell  SprayShell  ClimbShell
+//                                          │
+//                                  ShellAttachment (per-shell config)
+//
+// PlayerController:
+//   - Rigidbody2D-driven crab body. Walks via leg force, rights itself via torque.
+//   - Tracks ground contacts (OnCollisionEnter/Exit2D + HashSet) → IsGrounded.
+//   - Exposes TryGetSteepestContactNormal for shells that need surface alignment.
+//   - Delegates locomotion to currentShell when shell.OverridesPlayerMovement is true.
+//   - Computes COM each FixedUpdate (centerOfMassPoint or offset, plus shell carryComShift).
+//
+// Shells (inherit BaseShell):
+//   - Override OverridesPlayerMovement / HandlePlayerMovement / GetAnimationSpeed
+//     to plug custom locomotion (e.g. ClimbShell projecting input onto a wall tangent).
+//   - Override UseAbility for the Space-key ability.
+//   - Call player.SetDashing(true) to suppress player input during ability sequences.
+//
+// Input:
+//   - PlayerInputHandler is the only place that talks to Unity's InputSystem.
+//     PlayerController subscribes to OnInteract (E) and OnAbility (Space).
+// =============================================================================
 
 [RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Collider2D))]
+[RequireComponent(typeof(PlayerInputHandler))]
 public class PlayerController : MonoBehaviour
 {
-    [Header("Movement Settings")]
+    [Header("Movement")]
     public float baseMoveSpeed = 5f;
-    public float jumpForce = 10f;
-    [Header("Physics Movement")]
-    // The force the crab's legs apply to the ground. 
-    // You will need to play with this number in the Inspector! (Try 20-40)
+    [Tooltip("Force the crab's legs apply to the ground each FixedUpdate. Tune in Inspector (try 20-40).")]
     public float legPower = 25f;
-
-    // How much rotational power the crab has to flip itself over
+    [Tooltip("Rotational force the crab uses to flip itself over.")]
     public float flipTorque = 15f;
-    [Header("Throw Settings")]
-    public Vector2 throwAngle = new Vector2(1f, 1f); // X = Forward, Y = Up
+
+    [Header("Throw")]
+    [Tooltip("Throw direction relative to facing. X = forward, Y = up.")]
+    public Vector2 throwAngle = new Vector2(1f, 1f);
     public float throwPower = 8f;
 
     [Header("Balance & Center of Mass")]
-    [Tooltip("גרור לכאן GameObject ילד שיקבע את מרכז המסה. אם ריק - ישתמש ב-Center Of Mass Offset")]
+    [Tooltip("Optional child Transform that defines center of mass. If null, falls back to centerOfMassOffset.")]
     public Transform centerOfMassPoint;
-
-    [Tooltip("מיקום מרכז המסה ביחס לפיבוט של השחקן (פעיל רק כש-Center Of Mass Point ריק)")]
+    [Tooltip("Center of mass offset relative to the player pivot (used only when centerOfMassPoint is null).")]
     public Vector2 centerOfMassOffset = new Vector2(0f, -0.3f);
 
     [Range(0f, 1f)]
-    [Tooltip("מתחת לסף הזה הסרטן נחשב 'על הגב' ולא יכול ללכת - רק להסתובב")]
+    [Tooltip("Below this dot(transform.up, world up), the crab counts as 'on its back' and cannot walk — only torque to right itself.")]
     public float uprightThreshold = 0.3f;
 
     [Header("Shell System")]
-    public Transform shellMountPoint; // Empty GameObject above the crab
+    public Transform shellMountPoint;
     public float interactRadius = 2f;
-
-    // IMPORTANT: Changed to Vector3 so it works with TransformPoint.
-    // Use this in the inspector to move the yellow circle exactly where you want it.
+    [Tooltip("Center of the pickup search circle, in player-local space (flips with facing).")]
     public Vector3 interactOffset;
-    public LayerMask shellLayer; // Layer containing only shells
+    public LayerMask shellLayer;
 
-    [Header("Inputs")]
-    public InputAction MoveAction;
-    public InputAction InteractAction; // E key press
-    public InputAction AbilityAction; // Space/Shift key press
+    [Header("Ground Detection")]
+    [Tooltip("Layers that count as 'ground' for IsGrounded — driven by collision callbacks.")]
+    public LayerMask groundLayer;
 
     [Header("Animation")]
     public Animator animator;
 
     private Rigidbody2D rb;
+    private Collider2D playerCollider;
+    private PlayerInputHandler input;
     private BaseShell currentShell;
     private float originalMass;
-    // Tells the controller to ignore keyboard input while a shell is ability is pushing the player 
-    [HideInInspector] public bool isDashing = false;
-    // The exact boolean used in the video to track facing direction
     private bool facingRight = true;
+
+    private static readonly int AnimSpeedHash = Animator.StringToHash("speed");
+
+    public BaseShell CurrentShell => currentShell;
+    public bool FacingRight => facingRight;
+
+    // Tracks every collider on groundLayer the player is currently touching.
+    // HashSet guards against duplicate Enter calls (multiple contact points per collider).
+    private readonly HashSet<Collider2D> groundContacts = new();
+    public bool IsGrounded => groundContacts.Count > 0;
+
+    // Reused buffer for on-demand contact queries.
+    private static readonly ContactPoint2D[] contactsBuffer = new ContactPoint2D[16];
+
+    // Returns the steepest current contact normal (the one most "wall-like" / least "floor-like").
+    // upDot = Dot(normal, world up). 1 = perfect floor, 0 = vertical wall, -1 = perfect ceiling.
+    // Returns false if no ground-layer contacts.
+    public bool TryGetSteepestContactNormal(out Vector2 normal, out float upDot)
+    {
+        int count = playerCollider.GetContacts(contactsBuffer);
+        normal = Vector2.up;
+        upDot = 1f;
+        bool found = false;
+        for (int i = 0; i < count; i++)
+        {
+            var c = contactsBuffer[i];
+            if (c.collider == null) continue;
+            if (!IsOnGroundLayer(c.collider)) continue;
+            float d = Vector2.Dot(c.normal, Vector2.up);
+            if (d < upDot)
+            {
+                upDot = d;
+                normal = c.normal;
+                found = true;
+            }
+        }
+        return found;
+    }
+
+    // Set true while a shell ability is driving the player (dash, rolling, etc.).
+    // Setter is restricted to BaseShell subclasses via SetDashing().
+    public bool IsDashing { get; private set; }
+    public void SetDashing(bool value) => IsDashing = value;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        playerCollider = GetComponent<Collider2D>();
+        input = GetComponent<PlayerInputHandler>();
 
-        // Automatically fetch the Animator if not assigned
-        if (animator == null)
-        {
-            animator = GetComponent<Animator>();
-        }
+        if (animator == null) animator = GetComponent<Animator>();
 
-        originalMass = rb.mass; // Store the naked crab's weight
+        originalMass = rb.mass;
         ApplyCenterOfMass();
 
-        // Subscribe to input system events
-        InteractAction.performed += ctx => TryInteractShell();
-        AbilityAction.performed += ctx => UseShellAbility();
+        input.OnInteract += TryInteractShell;
+        input.OnAbility += UseShellAbility;
     }
 
-    void OnEnable()
+    void OnDestroy()
     {
-        MoveAction.Enable();
-        InteractAction.Enable();
-        AbilityAction.Enable();
-    }
-
-    void OnDisable()
-    {
-        MoveAction.Disable();
-        InteractAction.Disable();
-        AbilityAction.Disable();
-    }
-
-void FixedUpdate()
-{
-    // סנכרון מרכז המסה — מאפשר כיול בזמן ריצה ע"י הזזת ה-marker
-    ApplyCenterOfMass();
-
-    // 1. קריאת קלט
-    Vector2 moveInput = MoveAction.ReadValue<Vector2>();
-
-    // --- 2. מצב גילגול (Rolling Shell) ---
-    if (currentShell is RollingShell rollingShell && rollingShell.IsPlayerInside)
-    {
-        // שליחת הקלט לקונכייה כדי שתתגלגל
-        rollingShell.HandleRolling(moveInput.x);
-
-        // עדכון אנימציה: אנחנו לוקחים את המהירות של הקונכייה במקום של הסרטן (כי של הסרטן היא 0)
-        if (animator != null)
+        if (input != null)
         {
-            float shellSpeed = Mathf.Abs(rollingShell.GetComponent<Rigidbody2D>().linearVelocity.x);
-            animator.SetFloat("speed", shellSpeed);
+            input.OnInteract -= TryInteractShell;
+            input.OnAbility -= UseShellAbility;
+        }
+    }
+
+    void OnCollisionEnter2D(Collision2D c)
+    {
+        if (IsOnGroundLayer(c.collider)) groundContacts.Add(c.collider);
+    }
+
+    void OnCollisionExit2D(Collision2D c)
+    {
+        groundContacts.Remove(c.collider);
+    }
+
+    private bool IsOnGroundLayer(Collider2D col)
+    {
+        return (groundLayer.value & (1 << col.gameObject.layer)) != 0;
+    }
+
+    void FixedUpdate()
+    {
+        // Re-apply COM each tick so live-tuning the marker in the editor is reflected immediately.
+        ApplyCenterOfMass();
+
+        Vector2 moveInput = input.MoveValue;
+
+        // Shell-driven movement (e.g. RollingShell while inside) takes precedence over walking physics.
+        if (currentShell != null && currentShell.OverridesPlayerMovement)
+        {
+            currentShell.HandlePlayerMovement(moveInput, this);
+            if (animator != null) animator.SetFloat(AnimSpeedHash, currentShell.GetAnimationSpeed(rb));
+            return;
         }
 
-        // עדכון כיוון (Flip): 
-        // בגלל שהסרטן מנותק מהקונכייה (SetParent null), ה-Flip הרגיל יעבוד עליו מצוין
-        if (moveInput.x > 0 && !facingRight) Flip();
-        else if (moveInput.x < 0 && facingRight) Flip();
+        // Shell ability is currently pushing the player — suppress input-driven motion.
+        if (IsDashing)
+        {
+            if (animator != null) animator.SetFloat(AnimSpeedHash, 0f);
+            return;
+        }
 
-        return; // יוצאים כדי שלא תופעל פיזיקת הליכה
+        // Upright check: 1 = standing perfectly, -1 = fully upside-down.
+        float upright = Vector2.Dot(transform.up, Vector2.up);
+        bool canWalk = upright > uprightThreshold;
+
+        if (canWalk)
+        {
+            float targetSpeed = baseMoveSpeed;
+            if (currentShell != null) targetSpeed *= currentShell.speedMultiplier;
+
+            float speedDifference = (moveInput.x * targetSpeed) - rb.linearVelocity.x;
+            rb.AddForce(Vector2.right * (speedDifference * legPower));
+        }
+
+        // Self-righting torque is always available — even on its back — so the crab can flip back upright.
+        // Multiplied by facing so up/down feel consistent from the player's perspective regardless of orientation.
+        if (Mathf.Abs(moveInput.y) > 0.1f)
+        {
+            float facingMultiplier = facingRight ? 1f : -1f;
+            rb.AddTorque(moveInput.y * flipTorque * facingMultiplier);
+        }
+
+        if (animator != null)
+        {
+            // Animation speed zeros out while on its back so the crab doesn't appear to "walk" mid-air.
+            float animSpeed = canWalk ? Mathf.Abs(rb.linearVelocity.x) : 0f;
+            animator.SetFloat(AnimSpeedHash, animSpeed);
+        }
+
+        if (canWalk) UpdateFacing(moveInput.x);
     }
-
-    // --- 3. מצב Dash (אם יש כזה) ---
-    if (isDashing) 
-    {
-        if (animator != null) animator.SetFloat("speed", 0f);
-        return;
-    }
-
-    // --- 4. בדיקת זקיפות: 1 = עומד מושלם, -1 = הפוך לגמרי ---
-    float upright = Vector2.Dot(transform.up, Vector2.up);
-    bool canWalk = upright > uprightThreshold;
-
-    // --- 5. תנועה רגילה (על הרגליים) - רק כשמספיק זקופים ---
-    if (canWalk)
-    {
-        float currentTargetSpeed = baseMoveSpeed;
-        if (currentShell != null) currentTargetSpeed *= currentShell.speedMultiplier;
-
-        float speedDifference = (moveInput.x * currentTargetSpeed) - rb.linearVelocity.x;
-        rb.AddForce(Vector2.right * speedDifference * legPower);
-    }
-
-    // --- 6. סיבוב עצמי (Torque) - תמיד פעיל, גם על הגב, כדי שאפשר יהיה להתהפך חזרה ---
-    // מוכפל ב-facing כדי שלמעלה/למטה יישארו עקביים מנקודת מבט השחקן ללא קשר לכיוון ההליכה
-    if (Mathf.Abs(moveInput.y) > 0.1f)
-    {
-        float facingMultiplier = facingRight ? 1f : -1f;
-        rb.AddTorque(moveInput.y * flipTorque * facingMultiplier);
-    }
-
-    // אנימציה - "speed" מתאפס כשעל הגב כדי שהסרטן לא יראה מהלך באוויר
-    if (animator != null)
-    {
-        float animSpeed = canWalk ? Mathf.Abs(rb.linearVelocity.x) : 0f;
-        animator.SetFloat("speed", animSpeed);
-    }
-
-    // Flip - רק כשבאמת הולכים
-    if (canWalk)
-    {
-        if (moveInput.x > 0 && !facingRight) Flip();
-        else if (moveInput.x < 0 && facingRight) Flip();
-    }
-}
 
     private void ApplyCenterOfMass()
     {
-        Vector2 baseCom;
-        if (centerOfMassPoint != null)
-            baseCom = transform.InverseTransformPoint(centerOfMassPoint.position);
-        else
-            baseCom = centerOfMassOffset;
+        Vector2 baseCom = centerOfMassPoint != null
+            ? (Vector2)transform.InverseTransformPoint(centerOfMassPoint.position)
+            : centerOfMassOffset;
 
-        // הקונכייה הנישאת מזיזה את ה-COM בהתאם ל-carryComShift שהיא מצהירה עליו
+        // Carried shell may shift the COM (carryComShift) — top-heavy when worn, neutral when bare.
         Vector2 shellShift = (currentShell != null && currentShell.attachment != null)
             ? currentShell.attachment.carryComShift
             : Vector2.zero;
@@ -175,101 +231,73 @@ void FixedUpdate()
         rb.centerOfMass = baseCom + shellShift;
     }
 
-    // This is the exact flip function from the YouTube video
+    // Public so shells that override movement can drive facing without exposing Flip().
+    public void UpdateFacing(float horizontalInput)
+    {
+        if (horizontalInput > 0f && !facingRight) Flip();
+        else if (horizontalInput < 0f && facingRight) Flip();
+    }
+
     private void Flip()
     {
-        // Switch the boolean to its opposite
         facingRight = !facingRight;
-
-        // Multiply the player's x local scale by -1
-        Vector3 currentScale = transform.localScale;
-        currentScale.x *= -1;
-        transform.localScale = currentScale;
+        Vector3 scale = transform.localScale;
+        scale.x *= -1f;
+        transform.localScale = scale;
     }
 
     private void TryInteractShell()
     {
-        Debug.Log("Interact Action (E) Triggered!");
+        if (currentShell != null) TryThrowShell();
+        else TryPickupShell();
+    }
 
-        // --- UNEQUIP (Throwing the shell) ---
-        // If the player is already wearing a shell, pressing E will throw it
-        if (currentShell != null)
-        {
-            // 1. Determine throw direction (1 for right, -1 for left)
-            float direction = facingRight ? 1f : -1f;
+    private void TryThrowShell()
+    {
+        float direction = facingRight ? 1f : -1f;
+        Vector2 throwForce = new Vector2(throwAngle.x * direction, throwAngle.y).normalized * throwPower;
 
-            // 2. Calculate the final force vector based on angle and power
-            Vector2 finalThrowForce = new Vector2(throwAngle.x * direction, throwAngle.y).normalized * throwPower;
+        BaseShell thrown = currentShell;
+        currentShell = null;
 
-            // 3. Get the player's collider to pass it to the ignore-collision logic
-            Collider2D playerCol = GetComponent<Collider2D>();
+        if (thrown.affectsMass) rb.mass = originalMass;
 
-            // 4. Detach the shell and throw it using physics
-            currentShell.Unequip(finalThrowForce, playerCol);
+        thrown.Unequip(throwForce, playerCollider);
+    }
 
-            // 5. Reset the shell reference and restore the crab's original lightweight mass
-            currentShell = null;
-            rb.mass = originalMass;
-
-            return; // Exit the function early so we don't pick up another shell immediately
-        }
-
-        // --- EQUIP (Picking up a shell) ---
-        // Convert the local interactOffset into a world position for the overlap circle
+    private void TryPickupShell()
+    {
         Vector3 searchCenter = transform.TransformPoint(interactOffset);
-
-        // Find all colliders within range that belong specifically to the shellLayer
         Collider2D[] colliders = Physics2D.OverlapCircleAll(searchCenter, interactRadius, shellLayer);
+        if (colliders.Length == 0) return;
 
-        Debug.Log("Physics check found " + colliders.Length + " colliders in range.");
-
-        if (colliders.Length > 0)
+        BaseShell foundShell = colliders[0].GetComponent<BaseShell>();
+        if (foundShell == null)
         {
-            // Try to extract the BaseShell script from the first valid collider found
-            BaseShell foundShell = colliders[0].GetComponent<BaseShell>();
-
-            if (foundShell != null)
-            {
-                // CRITICAL FIX: Read the shell's mass BEFORE calling Equip(). 
-                // This prevents bugs if special shells (like RollingShell) alter their physics during Equip.
-                float addedWeight = foundShell.shellMass;
-
-                // Assign the new shell and mount it to the crab's back
-                currentShell = foundShell;
-                currentShell.Equip(shellMountPoint);
-
-                // Update the crab's physics body to feel heavier
-                rb.mass = originalMass + addedWeight;
-
-                Debug.Log("Successfully equipped: " + foundShell.gameObject.name + " | New crab mass: " + rb.mass);
-            }
-            else
-            {
-                // Triggered if the object is in the Shell layer but lacks the required script
-                Debug.LogWarning("Found an object in range, but it is missing a BaseShell script!");
-            }
+            Debug.LogWarning("Object on shellLayer is missing a BaseShell script: " + colliders[0].name);
+            return;
         }
+
+        // Read mass BEFORE Equip — special shells (e.g. RollingShell) can mutate their physics on equip.
+        float addedWeight = foundShell.affectsMass ? foundShell.shellMass : 0f;
+
+        currentShell = foundShell;
+        currentShell.Equip(shellMountPoint);
+
+        rb.mass = originalMass + addedWeight;
     }
 
     private void UseShellAbility()
     {
-        Debug.Log("Ability Action (Space) Triggered!");
-
-        if (currentShell != null)
-        {
-            currentShell.UseAbility(rb); // Activate shell ability
-        }
+        if (currentShell != null) currentShell.UseAbility(rb);
     }
 
     private void OnDrawGizmos()
     {
-        // Ensure the Gizmo draws in the correct flipped position in the editor too!
         Vector3 gizmoCenter = transform.TransformPoint(interactOffset);
-
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(gizmoCenter, interactRadius);
 
-        // Draw the shell mounting point pivot
         if (shellMountPoint != null)
         {
             Gizmos.color = Color.cyan;
@@ -277,7 +305,7 @@ void FixedUpdate()
             Gizmos.DrawWireSphere(shellMountPoint.position, 0.15f);
         }
 
-        // Center of Mass gizmo - מצויר רק כשאין marker (כי ל-marker יש סקריפט משלו שמצייר)
+        // COM gizmo only drawn when no marker is assigned — the marker has its own gizmo script.
         if (centerOfMassPoint == null)
         {
             Vector3 comWorld = transform.TransformPoint(centerOfMassOffset);

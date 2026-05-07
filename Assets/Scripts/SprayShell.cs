@@ -1,17 +1,31 @@
 using UnityEngine;
 using System.Collections;
 
+// =============================================================================
+// SprayShell — shell with a slope-aware dash (Space launches a short burst).
+// -----------------------------------------------------------------------------
+// Role:        Raycasts down to find the ground normal, builds a slope-tangent
+//              dash direction with optional upward angle, drives the player
+//              Rigidbody for dashDuration, then restores gravity.
+//              Refuses to dash unless player.IsGrounded (no air-dash).
+//              If thrown mid-dash, replaces throw force with a backward recoil.
+// Depends on:  groundLayer LayerMask, PlayerController.IsGrounded / IsDashing.
+// Used by:     PlayerController via BaseShell.UseAbility.
+// =============================================================================
 public class SprayShell : BaseShell
 {
     [Header("Dash Settings")]
     public float dashSpeed = 25f;
     public float dashDuration = 0.2f;
-    public float dashAngle = 15f; // זווית בסיס מהמישור
-    
+    [Tooltip("Base launch angle above the surface tangent.")]
+    public float dashAngle = 15f;
+
     [Header("Slope & Recoil")]
-    public LayerMask groundLayer; // חשוב! הגדר את השכבה של הרצפה באינספקטור
-    public float recoilForceMultiplier = 1.5f; // כמה חזק הפחית תעוף אחורה בזריקה
-    
+    [Tooltip("Layer mask for the surface raycast — set this in the Inspector.")]
+    public LayerMask groundLayer;
+    [Tooltip("Multiplier on dashSpeed when the shell is thrown mid-dash and recoils backward.")]
+    public float recoilForceMultiplier = 1.5f;
+
     public ParticleSystem sprayParticles;
 
     private bool isDashingInternal = false;
@@ -21,44 +35,46 @@ public class SprayShell : BaseShell
         if (!canBoost) return;
 
         PlayerController player = playerRb.GetComponent<PlayerController>();
-        if (player != null && !player.isDashing)
-        {
-            StartCoroutine(DashRoutine(player, playerRb));
-        }
+        if (player == null) return;
+        if (player.IsDashing) return;
+        // Block air-dashes — player must be touching the ground layer to launch.
+        if (!player.IsGrounded) return;
+
+        StartCoroutine(DashRoutine(player, playerRb));
     }
 
     private IEnumerator DashRoutine(PlayerController player, Rigidbody2D rb)
     {
         isDashingInternal = true;
-        player.isDashing = true;
+        player.SetDashing(true);
 
         if (sprayParticles != null) sprayParticles.Play();
 
         float originalGravity = rb.gravityScale;
         rb.gravityScale = 0f;
 
-        // --- חישוב כיוון ביחס למשטח ---
+        // Compute dash direction relative to the surface beneath the player.
         float facingDirection = Mathf.Sign(player.transform.localScale.x);
-        Vector2 dashDir = Vector2.right * facingDirection; // כיוון ברירת מחדל
+        Vector2 dashDir = Vector2.right * facingDirection;
 
-        // ירידת לייזר קצרה למטה למציאת זווית הקרקע
+        // Short downward raycast to read the ground angle.
         RaycastHit2D hit = Physics2D.Raycast(player.transform.position, Vector2.down, 1.5f, groundLayer);
-        
+
         if (hit.collider != null)
         {
-            // מציאת הוקטור המקביל למשטח (הניצב לנורמל שלו)
+            // Tangent along the surface (perpendicular to the normal).
             Vector2 groundNormal = hit.normal;
-            Vector2 slopeForward = new Vector2(groundNormal.y, -groundNormal.x); // וקטור מקביל לרצפה
-            
-            // תיקון כיוון לפי לאן שהשחקן מסתכל
+            Vector2 slopeForward = new(groundNormal.y, -groundNormal.x);
+
+            // Flip tangent based on facing.
             if (facingDirection < 0) slopeForward *= -1;
 
-            // הוספת ה-Dash Angle המבוקשת מעל לזווית המשטח
+            // Pitch up by dashAngle relative to the surface tangent.
             dashDir = Quaternion.Euler(0, 0, dashAngle * facingDirection) * slopeForward;
         }
         else
         {
-            // אם אנחנו באוויר, נשתמש בזווית רגילה
+            // Airborne fallback — use a fixed pitch.
             float angleInRad = dashAngle * Mathf.Deg2Rad;
             dashDir = new Vector2(Mathf.Cos(angleInRad) * facingDirection, Mathf.Sin(angleInRad));
         }
@@ -68,28 +84,22 @@ public class SprayShell : BaseShell
         yield return new WaitForSeconds(dashDuration);
 
         rb.gravityScale = originalGravity;
-        rb.linearVelocity *= 0.5f; 
-        
-        player.isDashing = false;
+        rb.linearVelocity *= 0.5f;
+
+        player.SetDashing(false);
         isDashingInternal = false;
     }
 
-    // --- טיפול בזריקה תוך כדי דש ---
+    // Throwing the shell mid-dash replaces the normal throw force with a strong backward recoil.
     public override void Unequip(Vector2 throwForce, Collider2D playerCol)
     {
         if (isDashingInternal)
         {
-            // אם אנחנו כאן, סימן שלחצנו E תוך כדי הסילון
             float facingDirection = Mathf.Sign(playerCol.transform.localScale.x);
-            
-            // אנחנו יוצרים וקטור הפוך לגמרי לכיוון המבט
-            // אנחנו מעיפים את הפחית חזק אחורה ולמעלה מעט
+
+            // Recoil opposite the player's facing, with a small upward bias.
             Vector2 recoilDirection = new Vector2(-facingDirection * 1.2f, 0.4f).normalized;
-            
-            // מחליפים את ה-throwForce המקורי ברתע חזק
             throwForce = recoilDirection * (dashSpeed * recoilForceMultiplier);
-            
-            Debug.Log("Recoil Triggered! Shell flying opposite direction.");
         }
 
         base.Unequip(throwForce, playerCol);
