@@ -40,7 +40,6 @@ public class PlayerInputHandler : MonoBehaviour
 
     void OnDestroy()
     {
-        // Prevent leaks if the component is destroyed while the actions outlive it.
         InteractAction.performed -= HandleInteractPerformed;
         AbilityAction.performed -= HandleAbilityPerformed;
     }

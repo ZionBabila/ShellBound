@@ -11,7 +11,7 @@ using UnityEngine;
 // Used by:     PlayerController calls Equip / Unequip / UseAbility, and during
 //              FixedUpdate queries OverridesPlayerMovement / HandlePlayerMovement /
 //              GetAnimationSpeed each tick.
-// Subclasses:  RollingShell, SprayShell, ClimbShell.
+// Subclasses:  RollingShell, SprayShell.
 // =============================================================================
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
 public class BaseShell : MonoBehaviour

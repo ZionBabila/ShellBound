@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir \"c:\\\\Users\\\\babil\\\\Documents\\\\My Games\\\\ShellBound\\\\Assets\\\\Scripts\" /b)"
+      "Bash(dir \"c:\\\\Users\\\\babil\\\\Documents\\\\My Games\\\\ShellBound\\\\Assets\\\\Scripts\" /b)",
+      "Bash(git -C \"c:\\\\Users\\\\babil\\\\Documents\\\\unityGames\\\\ShellBound\" log -1 --stat 8a0c087)",
+      "Bash(git -C \"c:\\\\Users\\\\babil\\\\Documents\\\\unityGames\\\\ShellBound\" show 8a0c087 --stat)",
+      "Bash(git -C \"c:\\\\Users\\\\babil\\\\Documents\\\\unityGames\\\\ShellBound\" show 963d024 --stat)"
     ]
   }
 }
