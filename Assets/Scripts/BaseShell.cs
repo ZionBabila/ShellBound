@@ -1,5 +1,18 @@
 using UnityEngine;
 
+// =============================================================================
+// BaseShell — abstract-ish parent of every shell type in ShellBound.
+// -----------------------------------------------------------------------------
+// Role:        Shared shell behavior — equip/unequip mounting onto the player,
+//              mass exposure, attachment data, and virtual hooks subclasses can
+//              override for custom locomotion or abilities.
+// Depends on:  Rigidbody2D + Collider2D (RequireComponent), ShellAttachment for
+//              per-shell mount config (attachPoint, carryComShift, etc.).
+// Used by:     PlayerController calls Equip / Unequip / UseAbility, and during
+//              FixedUpdate queries OverridesPlayerMovement / HandlePlayerMovement /
+//              GetAnimationSpeed each tick.
+// Subclasses:  RollingShell, SprayShell.
+// =============================================================================
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
 public class BaseShell : MonoBehaviour
 {
@@ -12,6 +25,9 @@ public class BaseShell : MonoBehaviour
     // Smart property: dynamically reads the mass directly from the Rigidbody2D component
     public float shellMass => GetComponent<Rigidbody2D>().mass; 
     public float speedMultiplier = 1f;
+
+    [Header("Attachment")]
+    public ShellAttachment attachment = new ShellAttachment();
 
     [Header("Visual Settings")]
     public float collectionRadius = 2f; // Visual reference for the editor
@@ -38,10 +54,16 @@ public virtual void Equip(Transform mountPoint)
     if (coll != null) coll.enabled = false;
 
     transform.SetParent(mountPoint);
-
-    // זה הסוד: איפוס המיקום המקומי גורם לקונכייה להיצמד למיקום המדויק של ה-MountPoint
-    transform.localPosition = Vector3.zero;
     transform.localRotation = Quaternion.identity;
+    transform.localPosition = Vector3.zero;
+
+    // If an attachPoint is set, align it to mountPoint instead of relying on the sprite pivot.
+    // Lets each shell define visually where it connects to the crab without moving the pivot.
+    if (attachment != null && attachment.attachPoint != null)
+    {
+        Vector3 offset = mountPoint.position - attachment.attachPoint.position;
+        transform.position += offset;
+    }
 }
     public virtual void Unequip(Vector2 throwForce, Collider2D playerCollider)
     {
@@ -86,6 +108,18 @@ public virtual void Equip(Transform mountPoint)
             Debug.Log("This shell has no active abilities.");
         }
     }
+
+    // Returns true if this shell takes over the player's primary movement (e.g. RollingShell while inside).
+    // When true, PlayerController delegates to HandlePlayerMovement instead of running walking physics.
+    public virtual bool OverridesPlayerMovement => false;
+
+    // Called every FixedUpdate when OverridesPlayerMovement is true. The shell is responsible
+    // for applying motion (torque, velocity, etc.) and may call player.UpdateFacing() to handle flip.
+    public virtual void HandlePlayerMovement(Vector2 moveInput, PlayerController player) { }
+
+    // Speed value the player feeds to its animator. Default returns the player's horizontal velocity.
+    // Shells that move the player externally (e.g. inside a rolling shell) should override.
+    public virtual float GetAnimationSpeed(Rigidbody2D playerRb) => Mathf.Abs(playerRb.linearVelocity.x);
 
     private void OnDrawGizmos()
     {

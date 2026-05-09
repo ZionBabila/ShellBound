@@ -19,7 +19,9 @@ using UnityEngine;
 // PlayerController:
 //   - Rigidbody2D-driven crab body. Walks via leg force, rights itself via torque.
 //   - Tracks ground contacts (OnCollisionEnter/Exit2D + HashSet) → IsGrounded.
-//   - Exposes TryGetSteepestContactNormal for shells.
+//   - Exposes TryGetSteepestContactNormal for shells and for built-in wall climbing.
+//   - Wall/ceiling climbing is built into base movement — activates automatically when
+//     touching a surface steeper than maxFloorDot (no shell required).
 //   - Delegates locomotion to currentShell when shell.OverridesPlayerMovement is true.
 //   - Computes COM each FixedUpdate (centerOfMassPoint or offset, plus shell carryComShift).
 //
@@ -68,6 +70,21 @@ public class PlayerController : MonoBehaviour
     public Vector3 interactOffset;
     public LayerMask shellLayer;
 
+    [Header("Wall Climbing")]
+    [Tooltip("Speed along the surface tangent while clinging to a wall or ceiling.")]
+    public float climbSpeed = 4f;
+    [Range(-1f, 1f)]
+    [Tooltip("Cling activates when contact normal's dot with world up is BELOW this. 0.7 ≈ ignore floors but cling to anything 45°+ from horizontal.")]
+    public float maxFloorDot = 0.7f;
+    [Tooltip("Custom gravity strength pressing the player into the surface while climbing.")]
+    public float climbGravity = 20f;
+    [Tooltip("How quickly the surface normal lerps toward the actual contact — smooths corner transitions.")]
+    public float normalLerpSpeed = 8f;
+    [Tooltip("How far below the player's feet the surface probe reaches.")]
+    public float climbProbeDistance = 0.15f;
+    [Tooltip("Speed at which the player rotates to align with the wall/ceiling surface.")]
+    public float rotationAlignSpeed = 10f;
+
     [Header("Ground Detection")]
     [Tooltip("Layers that count as 'ground' for IsGrounded — driven by collision callbacks.")]
     public LayerMask groundLayer;
@@ -81,6 +98,10 @@ public class PlayerController : MonoBehaviour
     private BaseShell currentShell;
     private float originalMass;
     private bool facingRight = true;
+
+    private bool isClimbing;
+    private float savedGravityScale;
+    private Vector2 myNormal = Vector2.up;
 
     private static readonly int AnimSpeedHash = Animator.StringToHash("speed");
 
@@ -120,7 +141,9 @@ public class PlayerController : MonoBehaviour
         return found;
     }
 
+
     // Set true while a shell ability is driving the player (dash, rolling, etc.).
+    // Setter is restricted to BaseShell subclasses via SetDashing().
     public bool IsDashing { get; private set; }
     public void SetDashing(bool value) => IsDashing = value;
 
@@ -170,11 +193,37 @@ public class PlayerController : MonoBehaviour
 
         Vector2 moveInput = input.MoveValue;
 
-        // Shell-driven movement takes precedence over everything.
+        // Shell-driven movement (RollingShell inside) takes precedence over everything including climbing.
         if (currentShell != null && currentShell.OverridesPlayerMovement)
         {
             currentShell.HandlePlayerMovement(moveInput, this);
             if (animator != null) animator.SetFloat(AnimSpeedHash, currentShell.GetAnimationSpeed(rb));
+            return;
+        }
+
+        // Auto-detect climbing: probe from the player's feet (-transform.up).
+        // Tilting the body with the up arrow sweeps the probe toward walls/ceilings.
+        bool steepContact = TryGetFeetSurface(out Vector2 feetNormal)
+                            && Vector2.Dot(feetNormal, Vector2.up) < maxFloorDot;
+        if (steepContact && !isClimbing)
+        {
+            savedGravityScale = rb.gravityScale;
+            rb.gravityScale = 0f;
+            myNormal = feetNormal;
+            rb.angularVelocity = 0f;
+            isClimbing = true;
+        }
+        else if (!steepContact && isClimbing)
+        {
+            rb.gravityScale = savedGravityScale;
+            rb.angularVelocity = 0f;
+            isClimbing = false;
+        }
+
+        if (isClimbing)
+        {
+            HandleClimbMovement(moveInput);
+            if (animator != null) animator.SetFloat(AnimSpeedHash, rb.linearVelocity.magnitude);
             return;
         }
 
@@ -198,7 +247,8 @@ public class PlayerController : MonoBehaviour
             rb.AddForce(Vector2.right * (speedDifference * legPower));
         }
 
-        // Self-righting torque is always available — even on its back.
+        // Self-righting torque is always available — even on its back — so the crab can flip back upright.
+        // Multiplied by facing so up/down feel consistent from the player's perspective regardless of orientation.
         if (Mathf.Abs(moveInput.y) > 0.1f)
         {
             float facingMultiplier = facingRight ? 1f : -1f;
@@ -207,11 +257,61 @@ public class PlayerController : MonoBehaviour
 
         if (animator != null)
         {
+            // Animation speed zeros out while on its back so the crab doesn't appear to "walk" mid-air.
             float animSpeed = canWalk ? Mathf.Abs(rb.linearVelocity.x) : 0f;
             animator.SetFloat(AnimSpeedHash, animSpeed);
         }
 
         if (canWalk) UpdateFacing(moveInput.x);
+    }
+
+    // Probes for a surface directly below the player's feet (-transform.up direction).
+    // The probe origin tracks the player's actual rotation so tilting with the up arrow
+    // sweeps the probe toward walls and ceilings.
+    private bool TryGetFeetSurface(out Vector2 normal)
+    {
+        Vector2 up = transform.up;
+        Bounds b = playerCollider.bounds;
+        float halfExtent = Mathf.Abs(up.x) * b.extents.x + Mathf.Abs(up.y) * b.extents.y;
+        Vector2 feetOrigin = (Vector2)b.center - up * (halfExtent + 0.02f);
+
+        RaycastHit2D hit = Physics2D.Raycast(feetOrigin, -up, climbProbeDistance, groundLayer);
+        if (hit.collider != null) { normal = hit.normal; return true; }
+        normal = up;
+        return false;
+    }
+
+    private void HandleClimbMovement(Vector2 moveInput)
+    {
+        rb.angularVelocity = 0f;
+
+        // Align the player's body to the surface so -transform.up always points into the wall.
+        float targetAngle = Vector2.SignedAngle(Vector2.up, myNormal);
+        rb.MoveRotation(Mathf.LerpAngle(rb.rotation, targetAngle, rotationAlignSpeed * Time.fixedDeltaTime));
+
+        // Only stick to surfaces the player's feet can actually reach.
+        Vector2 surfaceNormal = TryGetFeetSurface(out Vector2 feetNormal) ? feetNormal : myNormal;
+
+        // Smoothly rotate myNormal toward the actual surface — corners feel seamless.
+        myNormal = Vector2.Lerp(myNormal, surfaceNormal, normalLerpSpeed * Time.fixedDeltaTime).normalized;
+
+        // Custom gravity: AddForce presses the player into whatever surface they're touching.
+        // Never sets velocity directly, so the physics solver's overlap correction is never discarded.
+        rb.AddForce(climbGravity * rb.mass * -myNormal);
+
+        // Tangent that always points "upward" along the current surface.
+        Vector2 tangentA = new(myNormal.y, -myNormal.x);
+        Vector2 tangentB = new(-myNormal.y, myNormal.x);
+        Vector2 tangent = tangentA.y >= 0f ? tangentA : tangentB;
+
+        // Force-based movement along the surface (mirrors the floor walking pattern).
+        float tangentInput = Vector2.Dot(moveInput, tangent);
+        float currentTangentSpeed = Vector2.Dot(rb.linearVelocity, tangent);
+        float speedDiff = (tangentInput * climbSpeed) - currentTangentSpeed;
+        rb.AddForce(tangent * (speedDiff * legPower));
+
+        // Facing is intentionally NOT updated while climbing — Flip() shifts the collider
+        // off-center and teleports the player to the other side of the wall.
     }
 
     private void ApplyCenterOfMass()
@@ -220,6 +320,7 @@ public class PlayerController : MonoBehaviour
             ? (Vector2)transform.InverseTransformPoint(centerOfMassPoint.position)
             : centerOfMassOffset;
 
+        // Carried shell may shift the COM (carryComShift) — top-heavy when worn, neutral when bare.
         Vector2 shellShift = (currentShell != null && currentShell.attachment != null)
             ? currentShell.attachment.carryComShift
             : Vector2.zero;
@@ -274,6 +375,7 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
+        // Read mass BEFORE Equip — special shells (e.g. RollingShell) can mutate their physics on equip.
         float addedWeight = foundShell.affectsMass ? foundShell.shellMass : 0f;
 
         currentShell = foundShell;
@@ -300,12 +402,37 @@ public class PlayerController : MonoBehaviour
             Gizmos.DrawWireSphere(shellMountPoint.position, 0.15f);
         }
 
+        // COM gizmo only drawn when no marker is assigned — the marker has its own gizmo script.
         if (centerOfMassPoint == null)
         {
             Vector3 comWorld = transform.TransformPoint(centerOfMassOffset);
             Gizmos.color = Color.green;
             Gizmos.DrawSphere(comWorld, 0.08f);
             Gizmos.DrawWireSphere(comWorld, 0.16f);
+        }
+
+        // Climb feet-probe gizmo — always visible.
+        // In Play mode uses myNormal (computed surface down); in Edit mode uses transform.up.
+        {
+            if (TryGetComponent(out Collider2D col))
+            {
+                Vector2 probeDir = (Vector2)transform.up; // always follows player rotation
+                Bounds b = col.bounds;
+                float halfExtent = Mathf.Abs(probeDir.x) * b.extents.x + Mathf.Abs(probeDir.y) * b.extents.y;
+                Vector3 feetOrigin = (Vector2)b.center - probeDir * (halfExtent + 0.02f);
+
+                float drawDist = climbProbeDistance;
+                if (Application.isPlaying)
+                {
+                    RaycastHit2D hit = Physics2D.Raycast(feetOrigin, -probeDir, climbProbeDistance, groundLayer);
+                    if (hit.collider != null) drawDist = hit.distance;
+                }
+
+                Gizmos.color = new Color(1f, 0.5f, 0f);
+                Gizmos.DrawSphere(feetOrigin, 0.05f);
+                Gizmos.DrawLine(feetOrigin, feetOrigin + (Vector3)(-probeDir * drawDist));
+                Gizmos.DrawSphere(feetOrigin + (Vector3)(-probeDir * drawDist), 0.03f);
+            }
         }
     }
 }

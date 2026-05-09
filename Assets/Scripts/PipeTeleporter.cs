@@ -1,6 +1,20 @@
 ﻿using System.Collections;
 using UnityEngine;
 
+// =============================================================================
+// PipeTeleporter — Mario-style two-pipe warp pair (suck → hide → spit).
+// -----------------------------------------------------------------------------
+// Role:        OnTriggerEnter2D for objects tagged "Player" runs WarpRoutine:
+//              lerps the player into this pipe's center (optionally shrinking),
+//              hides briefly, then teleports and spits the player out at
+//              destinationPipe.exitPoint.
+// Depends on:  destinationPipe paired in the Inspector; player has Rigidbody2D
+//              and a SpriteRenderer (in self or a child).
+// Notes:       - Uses rb.isKinematic which is deprecated in newer Unity; consider
+//                migrating to rb.bodyType = RigidbodyType2D.Kinematic.
+//              - Player input is NOT locked during warp (TODO comments in WarpRoutine
+//                mark the spots where input disable/enable should hook in).
+// =============================================================================
 public class PipeTeleporter : MonoBehaviour
 {
     [Header("Destination Settings")]

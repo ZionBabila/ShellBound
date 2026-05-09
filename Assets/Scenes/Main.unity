@@ -1319,6 +1319,11 @@ MonoBehaviour:
   canRoll: 1
   affectsMass: 1
   speedMultiplier: 1
+  attachment:
+    attachPoint: {fileID: 0}
+    carryComShift: {x: 0, y: 0.2}
+    mirrorWithPlayerFlip: 1
+    playerSeatOffset: {x: 0, y: 0}
   collectionRadius: 2.43
   gizmoOffset: {x: 0.98, y: 9.5, z: 0}
   rollTorque: 9.9
@@ -2622,6 +2627,11 @@ MonoBehaviour:
   canRoll: 0
   affectsMass: 1
   speedMultiplier: 0.19
+  attachment:
+    attachPoint: {fileID: 0}
+    carryComShift: {x: 0, y: 0.2}
+    mirrorWithPlayerFlip: 1
+    playerSeatOffset: {x: 0, y: 0}
   collectionRadius: 2
   gizmoOffset: {x: 0, y: 0, z: 0}
 --- !u!50 &1488768544
@@ -2880,6 +2890,9 @@ MonoBehaviour:
   flipTorque: 15
   throwAngle: {x: 1, y: 1}
   throwPower: 8
+  centerOfMassPoint: {fileID: 0}
+  centerOfMassOffset: {x: 0, y: -0.03}
+  uprightThreshold: 0.45
   shellMountPoint: {fileID: 1735883859}
   interactRadius: 2.52
   interactOffset: {x: 2.2, y: 11.62, z: 0}
@@ -2929,6 +2942,46 @@ MonoBehaviour:
     - m_Name: right
       m_Id: f035b3d7-f701-4d16-b8a9-702a98f863e1
       m_Path: <Keyboard>/rightArrow
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Move
+      m_Flags: 8
+    - m_Name: 2D Vector
+      m_Id: f403ccc2-64fd-4434-b517-16799c4b6d9f
+      m_Path: 2DVector
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Move
+      m_Flags: 4
+    - m_Name: up
+      m_Id: e0f40f59-f585-42d0-aad1-de7c55d80641
+      m_Path: <Keyboard>/w
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Move
+      m_Flags: 8
+    - m_Name: down
+      m_Id: 667663af-82ac-48e0-ab18-bad3ecf81ed5
+      m_Path: <Keyboard>/s
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Move
+      m_Flags: 8
+    - m_Name: left
+      m_Id: 8c48a5a0-9042-4913-b0c2-82e788ab1179
+      m_Path: <Keyboard>/a
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Move
+      m_Flags: 8
+    - m_Name: right
+      m_Id: d5bcdc75-32bc-4394-896e-af7af7ee84bf
+      m_Path: <Keyboard>/d
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -3634,6 +3687,11 @@ MonoBehaviour:
   canRoll: 0
   affectsMass: 1
   speedMultiplier: 1.01
+  attachment:
+    attachPoint: {fileID: 0}
+    carryComShift: {x: 0, y: 0.2}
+    mirrorWithPlayerFlip: 1
+    playerSeatOffset: {x: 0, y: 0}
   collectionRadius: 1.79
   gizmoOffset: {x: 0, y: 0, z: 0}
   dashSpeed: 25
