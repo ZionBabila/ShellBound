@@ -28,12 +28,21 @@ public class PlayerController : MonoBehaviour
     public Shell currentShell;
     public Vector2 interactCenterOffset = new Vector2(0, 0);
     public float interactRadius = 1.5f;
+    public Vector2 shellMountOffset = new Vector2(0, 0.5f); 
 
-    [Tooltip("The 'Socket' point on the player where the shell's anchor will attach")]
-    public Vector2 shellMountOffset = new Vector2(0, 0.5f); // Player's attachment point
-
-    // This variable is modified by shells (like ArmorShell) to slow the player down
     public float speedMultiplier  = 1.0f;
+
+    [Header("Push & Pull Mechanics")]
+    [Tooltip("The layer containing objects the crab can push/pull")]
+    public LayerMask movableLayer; 
+    [Tooltip("How far the crab can reach to grab an object")]
+    public float grabDistance = 0.6f; 
+    [Tooltip("Speed multiplier while dragging an object")]
+    public float pushPullSpeedMultiplier = 0.5f; 
+    
+    // Grab state variables
+    private bool isGrabbing = false;
+    private FixedJoint2D grabJoint;
 
     private Rigidbody2D rb;
     private PlayerInputHandler input;
@@ -45,7 +54,6 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         input = GetComponent<PlayerInputHandler>();
 
-        // Subscribe to input events
         if (input != null)
         {
             input.OnInteract += TryInteractShell;
@@ -55,7 +63,6 @@ public class PlayerController : MonoBehaviour
 
     void OnDestroy()
     {
-        // Unsubscribe from input events to prevent memory leaks
         if (input != null)
         {
             input.OnInteract -= TryInteractShell;
@@ -70,33 +77,68 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
+        HandleGrabbing();
         HandleMovement();
     }
 
     private void HandleGroundCheck()
     {
-        // Calculate the check position relative to the crab's rotation
         Vector2 checkPos = (Vector2)transform.position + (Vector2)transform.TransformDirection(groundCheckOffset);
-        
-        // Use CircleCast to detect the ground and extract the exact surface normal
         RaycastHit2D hit = Physics2D.CircleCast(checkPos, groundCheckRadius, -transform.up, 0.05f, groundLayer);
         
         if (hit.collider != null)
         {
             IsGrounded = true;
-            Debug.DrawLine(checkPos, hit.point, Color.green);
-            SurfaceNormal = hit.normal; // Save the angle of the surface
+            SurfaceNormal = hit.normal; 
         }
         else
         {
             IsGrounded = false;
-            SurfaceNormal = Vector2.up; // Default to flat ground if in the air
+            SurfaceNormal = Vector2.up; 
+        }
+    }
+
+    // --- NEW PUSH/PULL LOGIC ---
+    private void HandleGrabbing()
+    {
+        // For simplicity, using LeftShift as the grab button. 
+        // You can map this to your PlayerInputHandler later!
+        bool isHoldingGrab = Input.GetKey(KeyCode.LeftShift);
+
+        if (isHoldingGrab && !isGrabbing && IsGrounded)
+        {
+            // Calculate forward direction based on where the crab is facing and surface rotation
+            Vector2 forwardDir = facingRight ? transform.TransformDirection(Vector2.right) : transform.TransformDirection(Vector2.left);
+            Vector2 checkPos = (Vector2)transform.position + (Vector2)transform.TransformDirection(interactCenterOffset);
+            
+            // Cast a ray forward to detect movable objects
+            RaycastHit2D hit = Physics2D.Raycast(checkPos, forwardDir, grabDistance, movableLayer);
+
+            if (hit.collider != null && hit.rigidbody != null)
+            {
+                isGrabbing = true;
+                
+                // Dynamically add a joint to connect the player and the box
+                grabJoint = gameObject.AddComponent<FixedJoint2D>();
+                grabJoint.connectedBody = hit.rigidbody;
+                
+                Debug.Log($"<color=orange>✋ GRABBED:</color> Started pulling {hit.collider.gameObject.name}");
+            }
+        }
+        else if (!isHoldingGrab && isGrabbing)
+        {
+            // Release the object
+            isGrabbing = false;
+            if (grabJoint != null)
+            {
+                Destroy(grabJoint);
+                Debug.Log("<color=orange>✋ RELEASED:</color> Stopped pulling.");
+            }
         }
     }
 
     private void HandleMovement()
     {
-        // Block normal movement if a shell (like Tuna Can) takes over physics
         if (currentShell != null && currentShell.CurrentState == ShellState.InUse)
         {
             moveTimer = 0f;
@@ -106,9 +148,11 @@ public class PlayerController : MonoBehaviour
         
         float moveInputX = input.MoveValue.x;
         
-        // Base speeds affected by the shell's weight penalty
-        float actualBaseSpeed = moveSpeed * speedMultiplier;
-        float actualBaseResp = baseResponsiveness * speedMultiplier;
+        // Calculate total speed multiplier (combines armor penalty AND dragging penalty)
+        float totalMultiplier = speedMultiplier * (isGrabbing ? pushPullSpeedMultiplier : 1.0f);
+        
+        float actualBaseSpeed = moveSpeed * totalMultiplier;
+        float actualBaseResp = baseResponsiveness * totalMultiplier;
 
         float targetSpeed = 0f;
         float currentAccel = actualBaseResp;
@@ -117,13 +161,12 @@ public class PlayerController : MonoBehaviour
         {
             moveTimer += Time.fixedDeltaTime;
 
-            // TANK LOGIC: If wearing heavy armor (multiplier < 1), disable running completely.
-            if (speedMultiplier < 1.0f)
+            // Tank Logic / Dragging Logic (Disable running if heavy or pulling)
+            if (totalMultiplier < 1.0f)
             {
-                targetSpeed = moveInputX * actualBaseSpeed; // Locked to slow walk speed
-                currentAccel = actualBaseResp;              // Slower, heavier acceleration
+                targetSpeed = moveInputX * actualBaseSpeed; 
+                currentAccel = actualBaseResp;              
             }
-            // NORMAL LOGIC: Start walking, then accelerate to max sprint speed.
             else
             {
                 if (moveTimer >= accelerationDelay)
@@ -138,22 +181,23 @@ public class PlayerController : MonoBehaviour
                 }
             }
 
-            // Smoothly transition current velocity towards the target speed
             currentVelocityX = Mathf.MoveTowards(currentVelocityX, targetSpeed, currentAccel * Time.fixedDeltaTime);
         }
         else
         {
-            // Decelerate smoothly when no input is pressed
             moveTimer = 0f;
             currentVelocityX = Mathf.MoveTowards(currentVelocityX, 0f, actualBaseResp * Time.fixedDeltaTime);
         }
 
-        // Apply the calculated horizontal velocity while keeping the current vertical velocity (gravity)
         rb.linearVelocity = new Vector2(currentVelocityX, rb.linearVelocity.y);
 
-        // Handle visual sprite flipping
-        if (moveInputX > 0 && !facingRight) Flip();
-        else if (moveInputX < 0 && facingRight) Flip();
+        // --- PREVENT FLIPPING WHILE GRABBING ---
+        // If we are holding a box, we want to walk backwards, not flip around!
+        if (!isGrabbing)
+        {
+            if (moveInputX > 0 && !facingRight) Flip();
+            else if (moveInputX < 0 && facingRight) Flip();
+        }
     }
 
     private void Flip()
@@ -170,21 +214,18 @@ public class PlayerController : MonoBehaviour
 
     private void TryInteractShell()
     {
-        // 1. Throw currently equipped shell
         if (currentShell != null)
         {
             if (currentShell.CurrentState == ShellState.OnBack)
             {
                 float throwDirX = facingRight ? 1f : -1f;
                 Vector2 throwVelocity = new Vector2(throwDirX, 0.5f).normalized * 8f;
-
                 currentShell.OnThrow(throwVelocity);
                 currentShell = null;
             }
             return;
         }
 
-        // 2. Pick up a nearby shell from the ground
         Vector2 checkPosition = (Vector2)transform.position + interactCenterOffset;
         Collider2D[] hits = Physics2D.OverlapCircleAll(checkPosition, interactRadius);
 
@@ -195,8 +236,6 @@ public class PlayerController : MonoBehaviour
             {
                 currentShell = foundShell;
                 Transform attachParent = visualsRoot != null ? visualsRoot : transform;
-                
-                // Pass the attach parent and the exact socket offset
                 currentShell.OnCollect(attachParent, shellMountOffset);
                 break;
             }
@@ -205,7 +244,6 @@ public class PlayerController : MonoBehaviour
 
     private void TryUseAbility()
     {
-        // Toggle the unique ability of the equipped shell
         if (currentShell != null && currentShell.CurrentState == ShellState.OnBack)
         {
             currentShell.OnActivate();
@@ -218,21 +256,23 @@ public class PlayerController : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        // Draw Ground Check (Green)
         Gizmos.color = Color.green;
         Vector2 groundCheckPos = (Vector2)transform.position + (Vector2)transform.TransformDirection(groundCheckOffset);
         Gizmos.DrawWireSphere(groundCheckPos, groundCheckRadius);
 
-        // Draw Interact Radius (Blue)
         Gizmos.color = Color.blue;
         Vector2 interactPos = (Vector2)transform.position + interactCenterOffset;
         Gizmos.DrawWireSphere(interactPos, interactRadius);
 
-        // Draw Player Socket / Mount Point (Red Cross)
         Gizmos.color = Color.red;
         Vector2 mountPos = (Vector2)transform.position + (Vector2)transform.TransformDirection(shellMountOffset);
         Gizmos.DrawWireSphere(mountPos, 0.1f);
         Gizmos.DrawLine(mountPos + Vector2.left * 0.2f, mountPos + Vector2.right * 0.2f);
         Gizmos.DrawLine(mountPos + Vector2.down * 0.2f, mountPos + Vector2.up * 0.2f);
+
+        // --- NEW: Draw Grab Raycast (Orange) ---
+        Gizmos.color = new Color(1f, 0.5f, 0f); // Orange
+        Vector2 forwardDir = facingRight ? Vector2.right : Vector2.left;
+        Gizmos.DrawLine(interactPos, interactPos + forwardDir * grabDistance);
     }
 }
