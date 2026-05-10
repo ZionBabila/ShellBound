@@ -23,26 +23,31 @@ public class ArmorShell : Shell
     private PlayerController playerInside;
     private float originalPlayerMass;
 
-    public override void OnCollect(Transform parentTransform, Vector2 playerMountOffset)
+  public override void OnCollect(Transform parentTransform, Vector2 playerMountOffset)
     {
         base.OnCollect(parentTransform, playerMountOffset);
         
+        // מציאת השחקן ביררכיה
         playerInside = parentTransform.GetComponentInParent<PlayerController>();
         
         if (playerInside != null)
         {
             Rigidbody2D playerRb = playerInside.GetComponent<Rigidbody2D>();
             
-            // Store original mass to restore it later
+            // שמירת המסה המקורית כדי שנוכל להחזיר אותה אחר כך
             originalPlayerMass = playerRb.mass;
             
-            // 1. Apply physical mass increase[cite: 1]
+            // 1. הוספת משקל פיזי (מאפשר לדחוף חפצים כבדים יותר בעולם)
             playerRb.mass = originalPlayerMass + extraMass;
             
-            // 2. Apply movement speed penalty immediately on collect[cite: 1]
+            // 2. הפעלת עונש המהירות! זה מה שישפיע על פונקציית התנועה של השחקן
             playerInside.speedMultiplier = weightPenalty;
             
-            Debug.Log($"<color=blue>🛡 ARMOR EQUIPPED:</color> Mass increased, Speed reduced to {weightPenalty * 100}%");
+            Debug.Log($"<color=blue>🛡 ARMOR EQUIPPED:</color> Mass changed to {playerRb.mass}, Speed multiplier is now {playerInside.speedMultiplier}");
+        }
+        else
+        {
+            Debug.LogError("ArmorShell could not find the PlayerController on the parent!");
         }
     }
 

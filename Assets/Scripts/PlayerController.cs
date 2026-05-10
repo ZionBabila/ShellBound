@@ -103,21 +103,25 @@ private void HandleMovement()
         
         float moveInputX = input.MoveValue.x;
         
-        // כאן השריון מאט אותך! (זה מה שהיינו צריכים להוסיף מההתחלה)
+        // החלת ההאטה של הקונכייה על המהירות הסופית
         float actualBaseSpeed = moveSpeed * speedMultiplier;
         float actualMaxSpeed = maxSpeed * speedMultiplier;
+        
+        // החלת ההאטה גם על התאוצה כדי שהסרטן "יתאמץ" להתחיל ללכת
+        float actualBaseResp = baseResponsiveness * speedMultiplier;
+        float actualAccelRate = accelerationRate * speedMultiplier;
 
         if (Mathf.Abs(moveInputX) > 0.01f)
         {
             moveTimer += Time.fixedDeltaTime;
 
             float targetSpeed = moveInputX * actualBaseSpeed;
-            float currentAccel = baseResponsiveness;
+            float currentAccel = actualBaseResp; // שימוש בתאוצה המושפעת מהשריון
 
             if (moveTimer >= accelerationDelay)
             {
                 targetSpeed = moveInputX * actualMaxSpeed;
-                currentAccel = accelerationRate;
+                currentAccel = actualAccelRate; // שימוש בהאצה המושפעת מהשריון
             }
 
             currentVelocityX = Mathf.MoveTowards(currentVelocityX, targetSpeed, currentAccel * Time.fixedDeltaTime);
@@ -125,10 +129,10 @@ private void HandleMovement()
         else
         {
             moveTimer = 0f;
-            currentVelocityX = Mathf.MoveTowards(currentVelocityX, 0f, baseResponsiveness * Time.fixedDeltaTime);
+            currentVelocityX = Mathf.MoveTowards(currentVelocityX, 0f, actualBaseResp * Time.fixedDeltaTime);
         }
 
-        // חזרנו לשורה הבטוחה והמקורית שלך לתנועה!
+        // יישום המהירות הליניארית כפי שביקשת
         rb.linearVelocity = new Vector2(currentVelocityX, rb.linearVelocity.y);
 
         if (moveInputX > 0 && !facingRight) Flip();
