@@ -10,7 +10,9 @@ public class PlayerController : MonoBehaviour
     public float accelerationDelay = 1.0f;
     public float accelerationRate = 2.0f;
     public float baseResponsiveness = 20.0f;
+    
     public Vector2 SurfaceNormal { get; private set; } = Vector2.up;
+    
     [Header("Ground Detection")]
     public Vector2 groundCheckOffset = new Vector2(0, -0.2f);
     public float groundCheckRadius = 0.2f;
@@ -24,13 +26,13 @@ public class PlayerController : MonoBehaviour
 
     [Header("Shell System & Interaction")]
     public Shell currentShell;
-
     public Vector2 interactCenterOffset = new Vector2(0, 0);
     public float interactRadius = 1.5f;
 
     [Tooltip("The 'Socket' point on the player where the shell's anchor will attach")]
     public Vector2 shellMountOffset = new Vector2(0, 0.5f); // Player's attachment point
 
+    // This variable is modified by shells (like ArmorShell) to slow the player down
     public float speedMultiplier  = 1.0f;
 
     private Rigidbody2D rb;
@@ -43,8 +45,7 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         input = GetComponent<PlayerInputHandler>();
 
-        //rb.freezeRotation = true;
-
+        // Subscribe to input events
         if (input != null)
         {
             input.OnInteract += TryInteractShell;
@@ -54,6 +55,7 @@ public class PlayerController : MonoBehaviour
 
     void OnDestroy()
     {
+        // Unsubscribe from input events to prevent memory leaks
         if (input != null)
         {
             input.OnInteract -= TryInteractShell;
@@ -73,16 +75,17 @@ public class PlayerController : MonoBehaviour
 
     private void HandleGroundCheck()
     {
-        Vector2 checkPos = transform.position + transform.TransformDirection(groundCheckOffset);
+        // Calculate the check position relative to the crab's rotation
+        Vector2 checkPos = (Vector2)transform.position + (Vector2)transform.TransformDirection(groundCheckOffset);
         
-        // Use CircleCast instead of OverlapCircle so we can extract the exact surface normal
-        RaycastHit2D hit = Physics2D.CircleCast(checkPos, groundCheckRadius, - transform.up, 0.05f, groundLayer);
+        // Use CircleCast to detect the ground and extract the exact surface normal
+        RaycastHit2D hit = Physics2D.CircleCast(checkPos, groundCheckRadius, -transform.up, 0.05f, groundLayer);
         
         if (hit.collider != null)
         {
             IsGrounded = true;
-            Debug.DrawLine(IsGrounded ? (Vector2)transform.position : checkPos, hit.point, Color.green);
-            SurfaceNormal = hit.normal; // Save the angle of the wall/floor/ceiling
+            Debug.DrawLine(checkPos, hit.point, Color.green);
+            SurfaceNormal = hit.normal; // Save the angle of the surface
         }
         else
         {
@@ -91,9 +94,9 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-private void HandleMovement()
+    private void HandleMovement()
     {
-        // חסימת תנועה אם הקונכייה (כמו פחית) שולטת בשחקן
+        // Block normal movement if a shell (like Tuna Can) takes over physics
         if (currentShell != null && currentShell.CurrentState == ShellState.InUse)
         {
             moveTimer = 0f;
@@ -103,34 +106,52 @@ private void HandleMovement()
         
         float moveInputX = input.MoveValue.x;
         
-        // כאן השריון מאט אותך! (זה מה שהיינו צריכים להוסיף מההתחלה)
+        // Base speeds affected by the shell's weight penalty
         float actualBaseSpeed = moveSpeed * speedMultiplier;
-        float actualMaxSpeed = maxSpeed * speedMultiplier;
+        float actualBaseResp = baseResponsiveness * speedMultiplier;
+
+        float targetSpeed = 0f;
+        float currentAccel = actualBaseResp;
 
         if (Mathf.Abs(moveInputX) > 0.01f)
         {
             moveTimer += Time.fixedDeltaTime;
 
-            float targetSpeed = moveInputX * actualBaseSpeed;
-            float currentAccel = baseResponsiveness;
-
-            if (moveTimer >= accelerationDelay)
+            // TANK LOGIC: If wearing heavy armor (multiplier < 1), disable running completely.
+            if (speedMultiplier < 1.0f)
             {
-                targetSpeed = moveInputX * actualMaxSpeed;
-                currentAccel = accelerationRate;
+                targetSpeed = moveInputX * actualBaseSpeed; // Locked to slow walk speed
+                currentAccel = actualBaseResp;              // Slower, heavier acceleration
+            }
+            // NORMAL LOGIC: Start walking, then accelerate to max sprint speed.
+            else
+            {
+                if (moveTimer >= accelerationDelay)
+                {
+                    targetSpeed = moveInputX * maxSpeed;
+                    currentAccel = accelerationRate;
+                }
+                else
+                {
+                    targetSpeed = moveInputX * moveSpeed;
+                    currentAccel = baseResponsiveness;
+                }
             }
 
+            // Smoothly transition current velocity towards the target speed
             currentVelocityX = Mathf.MoveTowards(currentVelocityX, targetSpeed, currentAccel * Time.fixedDeltaTime);
         }
         else
         {
+            // Decelerate smoothly when no input is pressed
             moveTimer = 0f;
-            currentVelocityX = Mathf.MoveTowards(currentVelocityX, 0f, baseResponsiveness * Time.fixedDeltaTime);
+            currentVelocityX = Mathf.MoveTowards(currentVelocityX, 0f, actualBaseResp * Time.fixedDeltaTime);
         }
 
-        // חזרנו לשורה הבטוחה והמקורית שלך לתנועה!
+        // Apply the calculated horizontal velocity while keeping the current vertical velocity (gravity)
         rb.linearVelocity = new Vector2(currentVelocityX, rb.linearVelocity.y);
 
+        // Handle visual sprite flipping
         if (moveInputX > 0 && !facingRight) Flip();
         else if (moveInputX < 0 && facingRight) Flip();
     }
@@ -149,7 +170,7 @@ private void HandleMovement()
 
     private void TryInteractShell()
     {
-        // Throw equipped shell
+        // 1. Throw currently equipped shell
         if (currentShell != null)
         {
             if (currentShell.CurrentState == ShellState.OnBack)
@@ -163,7 +184,7 @@ private void HandleMovement()
             return;
         }
 
-        // Pick up nearby shell
+        // 2. Pick up a nearby shell from the ground
         Vector2 checkPosition = (Vector2)transform.position + interactCenterOffset;
         Collider2D[] hits = Physics2D.OverlapCircleAll(checkPosition, interactRadius);
 
@@ -173,10 +194,9 @@ private void HandleMovement()
             if (foundShell != null && foundShell.CurrentState == ShellState.OnGround)
             {
                 currentShell = foundShell;
-
                 Transform attachParent = visualsRoot != null ? visualsRoot : transform;
-
-                // Pass both the parent and the player's socket location
+                
+                // Pass the attach parent and the exact socket offset
                 currentShell.OnCollect(attachParent, shellMountOffset);
                 break;
             }
@@ -185,6 +205,7 @@ private void HandleMovement()
 
     private void TryUseAbility()
     {
+        // Toggle the unique ability of the equipped shell
         if (currentShell != null && currentShell.CurrentState == ShellState.OnBack)
         {
             currentShell.OnActivate();
@@ -197,17 +218,19 @@ private void HandleMovement()
 
     private void OnDrawGizmosSelected()
     {
+        // Draw Ground Check (Green)
         Gizmos.color = Color.green;
-        Vector2 groundCheckPos = (Vector2)transform.position + groundCheckOffset;
+        Vector2 groundCheckPos = (Vector2)transform.position + (Vector2)transform.TransformDirection(groundCheckOffset);
         Gizmos.DrawWireSphere(groundCheckPos, groundCheckRadius);
 
+        // Draw Interact Radius (Blue)
         Gizmos.color = Color.blue;
         Vector2 interactPos = (Vector2)transform.position + interactCenterOffset;
         Gizmos.DrawWireSphere(interactPos, interactRadius);
 
-        // Draw Player Socket (Red Cross/Sphere)
+        // Draw Player Socket / Mount Point (Red Cross)
         Gizmos.color = Color.red;
-        Vector2 mountPos = (Vector2)transform.position + shellMountOffset;
+        Vector2 mountPos = (Vector2)transform.position + (Vector2)transform.TransformDirection(shellMountOffset);
         Gizmos.DrawWireSphere(mountPos, 0.1f);
         Gizmos.DrawLine(mountPos + Vector2.left * 0.2f, mountPos + Vector2.right * 0.2f);
         Gizmos.DrawLine(mountPos + Vector2.down * 0.2f, mountPos + Vector2.up * 0.2f);
