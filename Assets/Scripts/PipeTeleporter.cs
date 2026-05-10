@@ -64,7 +64,7 @@ public class PipeTeleporter : MonoBehaviour
         if (rb != null)
         {
             rb.linearVelocity = Vector2.zero; // Stop player movement
-            rb.isKinematic = true;            // Disable gravity physics while in pipe
+            rb.bodyType = RigidbodyType2D.Kinematic;            // Disable gravity physics while in pipe
         }
 
         // 3. Suction animation (Move to center of current pipe)
@@ -120,7 +120,7 @@ public class PipeTeleporter : MonoBehaviour
         }
 
         // 6. Restore player state
-        if (rb != null) rb.isKinematic = false;
+        if (rb != null) rb.bodyType = RigidbodyType2D.Dynamic; // Re-enable physics
 
         // Ensure scale is exactly as it was (preserves left/right flipping)
         player.transform.localScale = originalScale;
