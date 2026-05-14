@@ -23,8 +23,14 @@ public class PlayerInputHandler : MonoBehaviour
     [Tooltip("Use shell ability (Space).")]
     public InputAction AbilityAction;
 
+    [Tooltip("Hold to grab a Movable item for push/pull (Ctrl).")]
+    public InputAction GrabAction;
+
     // Read on access so the timing matches the previous direct ReadValue call.
     public Vector2 MoveValue => MoveAction.ReadValue<Vector2>();
+
+    // True while the grab button is currently held down.
+    public bool IsGrabHeld => GrabAction.IsPressed();
 
     // Fired once when the interact key transitions to performed.
     public event Action OnInteract;
@@ -32,16 +38,26 @@ public class PlayerInputHandler : MonoBehaviour
     // Fired once when the ability key transitions to performed.
     public event Action OnAbility;
 
+    // Fired when the grab key is pressed down.
+    public event Action OnGrabStart;
+
+    // Fired when the grab key is released.
+    public event Action OnGrabEnd;
+
     void Awake()
     {
         InteractAction.performed += HandleInteractPerformed;
         AbilityAction.performed += HandleAbilityPerformed;
+        GrabAction.performed += HandleGrabPerformed;
+        GrabAction.canceled += HandleGrabCanceled;
     }
 
     void OnDestroy()
     {
         InteractAction.performed -= HandleInteractPerformed;
         AbilityAction.performed -= HandleAbilityPerformed;
+        GrabAction.performed -= HandleGrabPerformed;
+        GrabAction.canceled -= HandleGrabCanceled;
     }
 
     void OnEnable()
@@ -49,6 +65,7 @@ public class PlayerInputHandler : MonoBehaviour
         MoveAction.Enable();
         InteractAction.Enable();
         AbilityAction.Enable();
+        GrabAction.Enable();
     }
 
     void OnDisable()
@@ -56,8 +73,11 @@ public class PlayerInputHandler : MonoBehaviour
         MoveAction.Disable();
         InteractAction.Disable();
         AbilityAction.Disable();
+        GrabAction.Disable();
     }
 
     private void HandleInteractPerformed(InputAction.CallbackContext _) => OnInteract?.Invoke();
     private void HandleAbilityPerformed(InputAction.CallbackContext _) => OnAbility?.Invoke();
+    private void HandleGrabPerformed(InputAction.CallbackContext _) => OnGrabStart?.Invoke();
+    private void HandleGrabCanceled(InputAction.CallbackContext _) => OnGrabEnd?.Invoke();
 }

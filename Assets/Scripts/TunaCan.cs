@@ -2,12 +2,14 @@ using UnityEngine;
 
 public class TunaCan : Shell
 {
-    [Header("Tuna Can Physics")]
+    [Header("Attachment Settings")]
+    [Tooltip("Control exactly where the can sits on the crab's back offset")]
+    public Vector2 canAttachOffset = new Vector2(0, 0.4f);
+
+    [Header("Tuna Can Physics (Hamster Ball)")]
     public Vector2 playerInsideOffset = new Vector2(0, 0); 
-    public float playerMoveRangeX = 0.3f;
-    public float torqueForce = 6.0f;
-    public float maxAngularVelocity = 15.0f;
-    [Range(0f, 1f)] public float rollFriction = 0.85f;
+    public float torqueForce = 150f; // Note: Torque needs higher values than linear force
+    public float maxAngularVelocity = 800f; // Max rotation speed
     
     [Header("Sprites & Rotation")]
     public Sprite canSideSprite;
@@ -20,13 +22,11 @@ public class TunaCan : Shell
 
     private PlayerController playerInside;
     private PlayerInputHandler input;
-    private float currentRollVelocity = 0f;
 
     private void Update()
     {
         if (currentState == ShellState.InUse && playerInside != null)
         {
-            HandleRollingInput();
             HandleSpriteRotation();
         }
     }
@@ -47,78 +47,107 @@ public class TunaCan : Shell
         if (playerInside != null)
         {
             input = playerInside.GetComponent<PlayerInputHandler>();
+            
+            // Apply the custom offset for the Tuna Can specifically
+            transform.localPosition = canAttachOffset;
         }
     }
 
-    public override void OnActivate()
+public override void OnActivate()
     {
         currentState = ShellState.InUse;
         
+        // שחרור הפחית למרחב
         transform.SetParent(null);
         transform.localScale = originalScale; 
+        transform.rotation = Quaternion.identity; 
         
+        // הפעלת הפיזיקה של הפחית
         rb.bodyType = RigidbodyType2D.Dynamic;
         shellCollider.enabled = true;
         shellCollider.isTrigger = false;
-        
+        gameObject.layer = LayerMask.NameToLayer("ShellActive"); //[cite: 1]
+
         if (playerInside != null)
         {
+            // --- התיקון: כיבוי ההתנגשויות והפיזיקה של השחקן ---
+            Collider2D[] playerCols = playerInside.GetComponents<Collider2D>();
+            foreach (var col in playerCols) col.enabled = false;
+
+            Rigidbody2D playerRb = playerInside.GetComponent<Rigidbody2D>();
+            if (playerRb != null)
+            {
+                playerRb.bodyType = RigidbodyType2D.Kinematic;
+                playerRb.linearVelocity = Vector2.zero;
+            }
+
+            // מיקום השחקן במרכז
             playerInside.transform.position = transform.position + (Vector3)playerInsideOffset;
         }
 
         if (input != null) input.OnInteract += CheckThrowInput;
+        
+        Debug.Log("<color=green>🥫 TUNA CAN ACTIVE:</color> Hamster ball mode engaged without clipping!");
     }
 
-    public override void OnDeactivate()
+  public override void OnDeactivate()
     {
         currentState = ShellState.OnBack;
+        
+        // כיבוי הפיזיקה של הפחית
         rb.bodyType = RigidbodyType2D.Kinematic;
+        rb.linearVelocity = Vector2.zero;
+        rb.angularVelocity = 0f;
         shellCollider.enabled = false;
         shellCollider.isTrigger = true;
-        
+        gameObject.layer = LayerMask.NameToLayer("ShellOnPlayer"); //[cite: 1]
+
         if (playerInside != null)
         {
+            // --- התעוררות הפיזיקה וההתנגשויות של השחקן ---
+            Collider2D[] playerCols = playerInside.GetComponents<Collider2D>();
+            foreach (var col in playerCols) col.enabled = true;
+
+            Rigidbody2D playerRb = playerInside.GetComponent<Rigidbody2D>();
+            if (playerRb != null) playerRb.bodyType = RigidbodyType2D.Dynamic;
+
             Transform attachParent = playerInside.visualsRoot != null ? playerInside.visualsRoot : playerInside.transform;
             transform.SetParent(attachParent);
             
-            ApplyCompensatedScale(attachParent);
-            
-            // UPDATED: Now calls the new method that handles both position and rotation
-            UpdateAttachmentTransform(playerInside.shellMountOffset);
+            transform.localPosition = canAttachOffset;
+            transform.localRotation = Quaternion.identity;
         }
 
         if (input != null) input.OnInteract -= CheckThrowInput;
     }
 
-    private void HandleRollingInput()
-    {
-        if (input == null) return;
-
-        float moveInputX = input.MoveValue.x;
-        
-        if (Mathf.Abs(moveInputX) > 0.1f)
-        {
-            currentRollVelocity += moveInputX * torqueForce * Time.deltaTime;
-            currentRollVelocity = Mathf.Clamp(currentRollVelocity, -maxAngularVelocity, maxAngularVelocity);
-        }
-        else
-        {
-            currentRollVelocity *= rollFriction; 
-        }
-    }
-
     private void ApplyRollingPhysics()
     {
-        rb.angularVelocity = -currentRollVelocity * Mathf.Rad2Deg;
-        rb.linearVelocity = new Vector2(currentRollVelocity, rb.linearVelocity.y);
+        if (input == null || rb == null) return;
 
+        float moveInputX = input.MoveValue.x;
+
+        // 1. ADD TORQUE: Spin the can based on input
+        // Negative sign because moving Right (Positive X) means spinning Clockwise (Negative Z)
+        if (Mathf.Abs(moveInputX) > 0.1f)
+        {
+            rb.AddTorque(-moveInputX * torqueForce);
+        }
+
+        // 2. CLAMP SPEED: Prevent infinite acceleration
+        if (Mathf.Abs(rb.angularVelocity) > maxAngularVelocity)
+        {
+            rb.angularVelocity = Mathf.Sign(rb.angularVelocity) * maxAngularVelocity;
+        }
+
+        // 3. SYNC PLAYER: Lock the crab inside the can, but keep the crab upright
         if (playerInside != null)
         {
-            Vector3 targetPos = transform.position + (Vector3)playerInsideOffset;
-            targetPos.x += (currentRollVelocity / maxAngularVelocity) * playerMoveRangeX;
+            // The player's position is the can't position + any offset
+            playerInside.transform.position = transform.position + (Vector3)playerInsideOffset;
             
-            playerInside.transform.position = targetPos;
-            playerInside.transform.rotation = Quaternion.identity; 
+            // Keep the crab standing straight up, ignoring the can's rotation
+            playerInside.transform.rotation = Quaternion.FromToRotation(Vector3.up, playerInside.SurfaceNormal);
         }
     }
 
@@ -126,6 +155,7 @@ public class TunaCan : Shell
     {
         if (spriteRenderer == null) return;
 
+        // Determine which sprite to show based on the Z rotation of the can
         float zAngle = Mathf.Abs(transform.rotation.eulerAngles.z) % 180;
         if (zAngle < spriteAngleThreshold || zAngle > (180 - spriteAngleThreshold))
             spriteRenderer.sprite = canSideSprite;
@@ -133,7 +163,7 @@ public class TunaCan : Shell
             spriteRenderer.sprite = canTopSprite;
     }
 
-    private void CheckThrowInput()
+  private void CheckThrowInput()
     {
         if (currentState == ShellState.InUse && playerInside != null)
         {
@@ -141,6 +171,16 @@ public class TunaCan : Shell
 
             Vector2 throwMomentum = rb.linearVelocity;
             
+            // --- החזרת הפיזיקה לשחקן רגע לפני הזריקה ---
+            Collider2D[] playerCols = playerInside.GetComponents<Collider2D>();
+            foreach (var col in playerCols) col.enabled = true;
+
+            Rigidbody2D playerRb = playerInside.GetComponent<Rigidbody2D>();
+            if (playerRb != null) playerRb.bodyType = RigidbodyType2D.Dynamic;
+
+            // הרמה קטנה למעלה כדי שהסרטן לא ייתקע ברצפה כשהוא יוצא מהפחית
+            playerInside.transform.position += Vector3.up * 0.15f;
+
             playerInside.currentShell = null;
             playerInside = null;
 
@@ -150,8 +190,9 @@ public class TunaCan : Shell
             {
                 PhysicsMaterial2D bounceMat = new PhysicsMaterial2D();
                 bounceMat.bounciness = ricochetBounciness;
+                bounceMat.friction = 0.5f; 
                 shellCollider.sharedMaterial = bounceMat;
             }
         }
-    }
+}
 }

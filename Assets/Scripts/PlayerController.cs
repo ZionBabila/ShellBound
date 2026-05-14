@@ -35,6 +35,19 @@ public class PlayerController : MonoBehaviour
     // This variable is modified by shells (like ArmorShell) to slow the player down
     public float speedMultiplier  = 1.0f;
 
+    [Header("Push / Pull (Movable)")]
+    [Tooltip("Items on this layer can be grabbed with Ctrl for push/pull.")]
+    public LayerMask movableLayer;
+
+    [Tooltip("Local-space offset from the player toward the facing direction where the grab probe is placed. X is mirrored when the crab faces left.")]
+    public Vector2 grabCheckOffset = new Vector2(0.5f, 0.0f);
+
+    [Tooltip("Radius of the grab probe used to find a Movable in front of the crab.")]
+    public float grabCheckRadius = 0.4f;
+
+    // Active joint while the player is holding a Movable. Null when nothing is grabbed.
+    private FixedJoint2D grabJoint;
+
     private Rigidbody2D rb;
     private PlayerInputHandler input;
     private float currentVelocityX;
@@ -50,6 +63,8 @@ public class PlayerController : MonoBehaviour
         {
             input.OnInteract += TryInteractShell;
             input.OnAbility += TryUseAbility;
+            input.OnGrabStart += TryStartGrab;
+            input.OnGrabEnd += ReleaseGrab;
         }
     }
 
@@ -60,6 +75,8 @@ public class PlayerController : MonoBehaviour
         {
             input.OnInteract -= TryInteractShell;
             input.OnAbility -= TryUseAbility;
+            input.OnGrabStart -= TryStartGrab;
+            input.OnGrabEnd -= ReleaseGrab;
         }
     }
 
@@ -151,9 +168,13 @@ public class PlayerController : MonoBehaviour
         // Apply the calculated horizontal velocity while keeping the current vertical velocity (gravity)
         rb.linearVelocity = new Vector2(currentVelocityX, rb.linearVelocity.y);
 
-        // Handle visual sprite flipping
-        if (moveInputX > 0 && !facingRight) Flip();
-        else if (moveInputX < 0 && facingRight) Flip();
+        // Handle visual sprite flipping — but freeze facing while grabbing a Movable so
+        // pulling backward doesn't make the crab spin around to face the box.
+        if (grabJoint == null)
+        {
+            if (moveInputX > 0 && !facingRight) Flip();
+            else if (moveInputX < 0 && facingRight) Flip();
+        }
     }
 
     private void Flip()
@@ -216,6 +237,46 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private Vector2 GetGrabProbePosition()
+    {
+        // Mirror the X offset so the probe sits in front of whichever direction the crab is facing.
+        float facingMul = facingRight ? 1f : -1f;
+        Vector2 localOffset = new Vector2(grabCheckOffset.x * facingMul, grabCheckOffset.y);
+        return (Vector2)transform.TransformPoint(localOffset);
+    }
+
+    private void TryStartGrab()
+    {
+        // Block grabbing while a shell has taken over physics (e.g. inside a RollingShell).
+        if (currentShell != null && currentShell.CurrentState == ShellState.InUse) return;
+
+        // Already holding something — ignore.
+        if (grabJoint != null) return;
+
+        Vector2 probePos = GetGrabProbePosition();
+        Collider2D hit = Physics2D.OverlapCircle(probePos, grabCheckRadius, movableLayer);
+        if (hit == null) return;
+
+        Rigidbody2D targetRb = hit.attachedRigidbody;
+        // Need a non-static Rigidbody2D so the joint can actually move it.
+        if (targetRb == null || targetRb.bodyType == RigidbodyType2D.Static) return;
+
+        grabJoint = gameObject.AddComponent<FixedJoint2D>();
+        grabJoint.connectedBody = targetRb;
+        grabJoint.autoConfigureConnectedAnchor = true;
+        grabJoint.enableCollision = true;
+        // Let the joint break if something extreme happens, but keep the threshold high for normal play.
+        grabJoint.breakForce = Mathf.Infinity;
+        grabJoint.breakTorque = Mathf.Infinity;
+    }
+
+    private void ReleaseGrab()
+    {
+        if (grabJoint == null) return;
+        Destroy(grabJoint);
+        grabJoint = null;
+    }
+
     private void OnDrawGizmosSelected()
     {
         // Draw Ground Check (Green)
@@ -234,5 +295,21 @@ public class PlayerController : MonoBehaviour
         Gizmos.DrawWireSphere(mountPos, 0.1f);
         Gizmos.DrawLine(mountPos + Vector2.left * 0.2f, mountPos + Vector2.right * 0.2f);
         Gizmos.DrawLine(mountPos + Vector2.down * 0.2f, mountPos + Vector2.up * 0.2f);
+    }
+
+    // Always-visible gizmos so the grab probe is easy to spot without selecting the player.
+    private void OnDrawGizmos()
+    {
+        // Yellow when free, Magenta when actively holding something.
+        Gizmos.color = grabJoint != null ? Color.magenta : Color.yellow;
+
+        float facingMul = facingRight ? 1f : -1f;
+        Vector2 grabLocal = new Vector2(grabCheckOffset.x * facingMul, grabCheckOffset.y);
+        Vector2 grabPos = (Vector2)transform.TransformPoint(grabLocal);
+
+        // The radius circle = the actual OverlapCircle area.
+        Gizmos.DrawWireSphere(grabPos, grabCheckRadius);
+        // Line from the player origin out to the probe shows the offset length/direction.
+        Gizmos.DrawLine(transform.position, grabPos);
     }
 }
