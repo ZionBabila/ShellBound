@@ -1,75 +1,96 @@
 using UnityEngine;
 
+[RequireComponent(typeof(PlayerInputHandler))]
 public class CrabController : MonoBehaviour
 {
     [Header("Movement Settings")]
     public float moveSpeed = 5f;
-    public float rotationSpeed = 10f;
-    public LayerMask walkableLayer; // כאן נבחר את ה-Layer של המשטחים הדביקים
+    public float rotationSpeed = 300f; // מהירות סיבוב במעלות לשנייה
+    public LayerMask walkableLayer;
 
-    [Header("Physics Settings")]
-    public float rayDistance = 1.5f; // אורך הקרן שבודקת רצפה
-    public float stickyForce = 10f; // הכוח שמצמיד אותו למשטח
+    [Header("Raycast Settings")]
+    public float rayLength = 1.5f;
+    public float distanceFromCenter = 0.5f; // המרחק בין שתי הקרניים (רוחב הסרטן)
+    public float rayOffsetY = 0.5f; // הגבהת נקודת מוצא הקרן כדי שלא תתקע בתוך הרצפה
 
+    private PlayerInputHandler inputHandler;
     private Rigidbody2D rb;
     private bool isGrounded;
-    private Vector2 surfaceNormal;
+    private Vector2 averageNormal;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        // אנחנו מבטלים את כוח המשיכה הרגיל כי אנחנו בונים אחד "מגנטי" משלנו
+        inputHandler = GetComponent<PlayerInputHandler>();
         rb.gravityScale = 0;
     }
 
     void FixedUpdate()
     {
-        HandleSurfaceAlignment();
+        UpdateSurfaceInfo();
         HandleMovement();
     }
 
-    void HandleSurfaceAlignment()
+    void UpdateSurfaceInfo()
     {
-        // ירידת קרן למטה (לכיוון ה"בטן" של הסרטן)
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, -transform.up, rayDistance, walkableLayer);
+        // נקודות המוצא של שתי הקרניים (ימין ושמאל)
+        Vector3 leftOrigin = transform.position + (transform.up * rayOffsetY) - (transform.right * distanceFromCenter);
+        Vector3 rightOrigin = transform.position + (transform.up * rayOffsetY) + (transform.right * distanceFromCenter);
 
-        if (hit.collider != null)
+        RaycastHit2D leftHit = Physics2D.Raycast(leftOrigin, -transform.up, rayLength, walkableLayer);
+        RaycastHit2D rightHit = Physics2D.Raycast(rightOrigin, -transform.up, rayLength, walkableLayer);
+
+        if (leftHit.collider != null && rightHit.collider != null)
         {
             isGrounded = true;
-            surfaceNormal = hit.normal;
+            // ממוצע ה-Normal של שני המשטחים (בדיוק כמו במאמר)
+            averageNormal = (leftHit.normal + rightHit.normal).normalized;
 
-            // 1. סיבוב הסרטן כך שיהיה מקביל למשטח
-            float targetRotation = Mathf.Atan2(surfaceNormal.y, surfaceNormal.x) * Mathf.Rad2Deg - 90f;
-            Quaternion targetQuat = Quaternion.Euler(0, 0, targetRotation);
-            transform.rotation = Quaternion.Lerp(transform.rotation, targetQuat, Time.deltaTime * rotationSpeed);
+            // סיבוב השחקן בצורה חלקה לעבר הממוצע
+            float targetAngle = Mathf.Atan2(averageNormal.y, averageNormal.x) * Mathf.Rad2Deg - 90f;
+            Quaternion targetRotation = Quaternion.Euler(0, 0, targetAngle);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
 
-            // 2. הצמדת הסרטן למשטח (כוח משיכה עצמאי)
-            rb.AddForce(-surfaceNormal * stickyForce);
+            // הצמדה למשטח - כוח משיכה מקומי
+            rb.AddForce(-averageNormal * 15f);
+        }
+        else if (leftHit.collider != null || rightHit.collider != null)
+        {
+            // אם רק צד אחד נוגע, משתמשים ב-Normal שלו
+            isGrounded = true;
+            averageNormal = leftHit.collider != null ? leftHit.normal : rightHit.normal;
+            float targetAngle = Mathf.Atan2(averageNormal.y, averageNormal.x) * Mathf.Rad2Deg - 90f;
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(0, 0, targetAngle), rotationSpeed * Time.fixedDeltaTime);
+            rb.AddForce(-averageNormal * 15f);
         }
         else
         {
             isGrounded = false;
-            // אם הוא באוויר, אפשר להחזיר כוח משיכה עולמי רגיל
-            rb.AddForce(Vector2.down * 9.81f);
+            rb.AddForce(Vector2.down * 15f); // נפילה חופשית
         }
     }
 
     void HandleMovement()
     {
-        float moveInput = Input.GetAxis("Horizontal");
-
+        float moveInput = inputHandler.MoveValue.x;
         if (isGrounded)
         {
-            // תנועה יחסית לזווית של המשטח
-            Vector2 moveDirection = new Vector2(surfaceNormal.y, -surfaceNormal.x);
-            rb.linearVelocity = moveDirection * moveInput * moveSpeed;
+            // תנועה לפי הכיוון שהסרטן פונה אליו כרגע
+            rb.linearVelocity = transform.right * moveInput * moveSpeed;
+        }
+        else
+        {
+            rb.AddForce(new Vector2(moveInput * moveSpeed, 0));
         }
     }
 
-    // ציור הקרן ב-Editor כדי שתוכלו לראות ולכוון
+    // ציור הקרניים לדיבאג ב-Editor
     void OnDrawGizmos()
     {
-        Gizmos.color = Color.red;
-        Gizmos.DrawRay(transform.position, -transform.up * rayDistance);
+        Gizmos.color = Color.yellow;
+        Vector3 leftOrigin = transform.position + (transform.up * rayOffsetY) - (transform.right * distanceFromCenter);
+        Vector3 rightOrigin = transform.position + (transform.up * rayOffsetY) + (transform.right * distanceFromCenter);
+        Gizmos.DrawRay(leftOrigin, -transform.up * rayLength);
+        Gizmos.DrawRay(rightOrigin, -transform.up * rayLength);
     }
 }
