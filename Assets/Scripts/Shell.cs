@@ -34,6 +34,8 @@ public abstract class Shell : MonoBehaviour
     protected SpriteRenderer spriteRenderer;
 
     protected Vector3 originalScale;
+    protected int originalLayer; // שומר את שכבת הפיזיקה המקורית
+    protected PlayerController playerInside; // נשמר ברמת הבסיס כדי למנוע כפילויות בכל הקונכיות
 
     protected virtual void Awake()
     {
@@ -43,14 +45,19 @@ public abstract class Shell : MonoBehaviour
         rb.mass = shellWeight;
 
         originalScale = transform.localScale;
+        originalLayer = gameObject.layer;
 
         OnDetach(); 
     }
 
-   public virtual void OnCollect(Transform parentTransform, Vector2 playerMountOffset)
+    public virtual void OnCollect(PlayerController player)
     {
+        if (player == null) return;
+        
+        playerInside = player;
+
         // התעלמות מהתנגשות באופן בטוח רק כשהקונכייה נאספת בפועל
-        Collider2D playerCollider = parentTransform.GetComponentInParent<Collider2D>();
+        Collider2D playerCollider = player.GetComponent<Collider2D>();
         if (playerCollider != null && shellCollider != null)
         {
             Physics2D.IgnoreCollision(playerCollider, shellCollider, true);
@@ -76,10 +83,11 @@ public abstract class Shell : MonoBehaviour
         gameObject.layer = LayerMask.NameToLayer("ShellOnPlayer");
 
         // 4. חיבור פיזי לשחקן
-        transform.SetParent(parentTransform);
-        UpdateAttachmentTransform(playerMountOffset);
+        Transform attachParent = player.visualsRoot != null ? player.visualsRoot : player.transform;
+        transform.SetParent(attachParent);
+        UpdateAttachmentTransform(player);
         
-        Debug.Log($"<color=white>🐚 SHELL COLLECTED:</color> Physics disabled, attached safely to {parentTransform.name}.");
+        Debug.Log($"<color=white>🐚 SHELL COLLECTED:</color> Physics disabled, attached safely to {attachParent.name}.");
     }
     public void ApplyCompensatedScale(Transform newParent)
     {
@@ -95,11 +103,19 @@ public abstract class Shell : MonoBehaviour
     }
 
     // RENAMED AND UPDATED: Now handles both position and rotation
-    public void UpdateAttachmentTransform(Vector2 playerMountOffset)
+    public void UpdateAttachmentTransform(PlayerController player)
     {
+        if (player == null) return;
+
+        // מוצאים את המיקום המדויק של נקודת העגינה בעולם, בהתייחס לשחקן הראשי
+        Vector3 worldMountPos = player.transform.TransformPoint(player.shellMountOffset);
+        
+        // ממירים את המיקום העולמי הזה למיקום הלוקאלי של האובייקט שאליו אנחנו מחוברים בפועל (למשל visualsRoot)
+        Vector3 targetLocalPos = transform.parent != null ? transform.parent.InverseTransformPoint(worldMountPos) : worldMountPos;
+
         // Rotate the anchor offset by the shell's rotation to get the correct local position
         Vector2 rotatedAnchorOffset = (Vector2)(Quaternion.Euler(0, 0, anchorRotation) * anchorOffset);
-        transform.localPosition = (Vector3)(playerMountOffset - rotatedAnchorOffset);
+        transform.localPosition = targetLocalPos - (Vector3)rotatedAnchorOffset;
         transform.localRotation = Quaternion.Euler(0, 0, anchorRotation);
     }
 
@@ -109,8 +125,10 @@ public abstract class Shell : MonoBehaviour
     public virtual void OnThrow(Vector2 throwVelocity)
     {
         currentState = ShellState.Thrown;
+        playerInside = null;
         transform.SetParent(null);
         transform.localScale = originalScale; 
+        gameObject.layer = originalLayer; // החזרת השכבה כדי שנוכל לאסוף אותה שוב
 
         rb.bodyType = RigidbodyType2D.Dynamic;
         shellCollider.enabled = true; 
@@ -141,8 +159,10 @@ public abstract class Shell : MonoBehaviour
     public virtual void OnDetach()
     {
         currentState = ShellState.OnGround;
+        playerInside = null;
         transform.SetParent(null);
         transform.localScale = originalScale;
+        gameObject.layer = originalLayer; // החזרת השכבה בעת ניתוק
         
         shellCollider.sharedMaterial = null;
 
@@ -172,6 +192,15 @@ public abstract class Shell : MonoBehaviour
         Gizmos.DrawLine(anchorPos - up, anchorPos + up);
     }
 
+    // סנכרון תצוגה מדויק לכל הקונכיות - מונע רעידות ומבטיח שהקונכייה ממוקמת נכון תמיד
+    protected virtual void LateUpdate()
+    {
+        if (currentState == ShellState.OnBack && playerInside != null)
+        {
+            UpdateAttachmentTransform(playerInside);
+        }
+    }
+
 #if UNITY_EDITOR
     private void OnValidate()
     {
@@ -180,7 +209,7 @@ public abstract class Shell : MonoBehaviour
             PlayerController player = transform.parent.GetComponentInParent<PlayerController>();
             if (player != null)
             {
-                UpdateAttachmentTransform(player.shellMountOffset);
+                UpdateAttachmentTransform(player);
             }
         }
     }

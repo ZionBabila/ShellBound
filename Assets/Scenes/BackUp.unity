@@ -1460,16 +1460,28 @@ PrefabInstance:
       value: 2.53
       objectReference: {fileID: 0}
     - target: {fileID: 6906769753454529366, guid: 97240e96fbd243d44abf41e5ea66f2ac, type: 3}
+      propertyPath: grabCheckRadius
+      value: 1.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 6906769753454529366, guid: 97240e96fbd243d44abf41e5ea66f2ac, type: 3}
       propertyPath: speedMultiplier
       value: 0.92
       objectReference: {fileID: 0}
     - target: {fileID: 6906769753454529366, guid: 97240e96fbd243d44abf41e5ea66f2ac, type: 3}
       propertyPath: grabCheckOffset.x
-      value: 15
+      value: 3.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6906769753454529366, guid: 97240e96fbd243d44abf41e5ea66f2ac, type: 3}
+      propertyPath: grabCheckOffset.y
+      value: 9.63
       objectReference: {fileID: 0}
     - target: {fileID: 6906769753454529366, guid: 97240e96fbd243d44abf41e5ea66f2ac, type: 3}
       propertyPath: groundCheckRadius
       value: 0.51
+      objectReference: {fileID: 0}
+    - target: {fileID: 6906769753454529366, guid: 97240e96fbd243d44abf41e5ea66f2ac, type: 3}
+      propertyPath: shellLayer.m_Bits
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 6906769753454529366, guid: 97240e96fbd243d44abf41e5ea66f2ac, type: 3}
       propertyPath: shellMountOffset.x
@@ -3101,10 +3113,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: roundCan
       objectReference: {fileID: 0}
-    - target: {fileID: 203171320620782710, guid: e79ee4ddc0c1bc94f9ae2724fa536d50, type: 3}
-      propertyPath: m_TagString
-      value: Player
-      objectReference: {fileID: 0}
     - target: {fileID: 1304309865709915157, guid: e79ee4ddc0c1bc94f9ae2724fa536d50, type: 3}
       propertyPath: m_LocalPosition.x
       value: -40.4566
@@ -3145,22 +3153,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 46.55
       objectReference: {fileID: 0}
-    - target: {fileID: 7840262660890994209, guid: e79ee4ddc0c1bc94f9ae2724fa536d50, type: 3}
-      propertyPath: shellSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: f32b95e86a29f0e409612b5e074ad436, type: 3}
-    - target: {fileID: 7840262660890994209, guid: e79ee4ddc0c1bc94f9ae2724fa536d50, type: 3}
-      propertyPath: anchorOffset.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7840262660890994209, guid: e79ee4ddc0c1bc94f9ae2724fa536d50, type: 3}
-      propertyPath: anchorOffset.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7840262660890994209, guid: e79ee4ddc0c1bc94f9ae2724fa536d50, type: 3}
-      propertyPath: shellOnBackSprite
-      value: 
-      objectReference: {fileID: -5585003164373491211, guid: 531704b01604895429185fe16c4dad45, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

@@ -26,7 +26,6 @@ public class TunaCan : Shell
     public bool canRicochet = true;
     public float ricochetBounciness = 0.4f;
 
-    private PlayerController playerInside;
     private PlayerInputHandler input;
 
     private void Update()
@@ -45,27 +44,21 @@ public class TunaCan : Shell
         }
     }
 
-    // --- התיקון: סנכרון המיקום רגע לפני הרינדור מונע ריצודים וניתוקים ---
-  private void LateUpdate()
+    protected override void LateUpdate()
     {
+        base.LateUpdate(); // Handles OnBack alignment automatically
+        
         // 1. מצב התגלגלות (InUse): סנכרון מיקום השחקן לתוך הפחית
         if (currentState == ShellState.InUse && playerInside != null)
         {
             SyncPlayerPosition();
         }
-        // 2. התיקון החדש: נעילת ה-Offset כשהפחית על הגב של השחקן (OnBack)
-        else if (currentState == ShellState.OnBack && playerInside != null)
-        {
-            // Keep the shell aligned to the player's mount point using the shared anchor offsets.
-            UpdateAttachmentTransform(playerInside.shellMountOffset);
-        }
     }
 
-    public override void OnCollect(Transform parentTransform, Vector2 playerMountOffset)
+    public override void OnCollect(PlayerController player)
     {
-        base.OnCollect(parentTransform, playerMountOffset);
+        base.OnCollect(player);
         
-        playerInside = parentTransform.GetComponentInParent<PlayerController>();
         if (playerInside != null)
         {
             input = playerInside.GetComponent<PlayerInputHandler>();
@@ -125,7 +118,7 @@ public class TunaCan : Shell
             RestorePlayerPhysics();
             Transform attachParent = playerInside.visualsRoot != null ? playerInside.visualsRoot : playerInside.transform;
             transform.SetParent(attachParent);
-            UpdateAttachmentTransform(playerInside.shellMountOffset);
+            UpdateAttachmentTransform(playerInside);
         }
 
         if (input != null) input.OnInteract -= CheckThrowInput;
@@ -203,7 +196,6 @@ public class TunaCan : Shell
             playerInside.transform.position += Vector3.up * 0.15f;
 
             playerInside.currentShell = null;
-            playerInside = null;
 
             OnThrow(throwMomentum);
 

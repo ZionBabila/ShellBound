@@ -28,6 +28,7 @@ public class PlayerController : MonoBehaviour
     public Shell currentShell;
     public Vector2 interactCenterOffset = new Vector2(0, 0);
     public float interactRadius = 1.5f;
+    public LayerMask shellLayer;
 
     [Header("Throw Settings")]
     public Vector2 throwDirection = new Vector2(1f, 0.5f);
@@ -205,48 +206,61 @@ public class PlayerController : MonoBehaviour
 
                 currentShell.OnThrow(throwVelocity);
                 currentShell = null;
+                return;
             }
-            return;
+            else if (currentShell.CurrentState == ShellState.InUse)
+            {
+                return; // The player is using the shell, can't throw it right now
+            }
+            else
+            {
+                // TRAP FIX: If you accidentally dragged the shell into the Inspector, it silently blocked pickup. 
+                // This clears it automatically.
+                currentShell = null;
+            }
         }
 
         // 2. Pick up a nearby shell from the ground
         float facingMul = facingRight ? 1f : -1f;
-        Vector2 checkPosition = (Vector2)transform.position + new Vector2(interactCenterOffset.x * facingMul, interactCenterOffset.y);
+        Vector2 localOffset = new Vector2(interactCenterOffset.x * facingMul, interactCenterOffset.y);
+        Vector2 checkPosition = (Vector2)transform.TransformPoint(localOffset);
 
-        // Use ContactFilter2D to GUARANTEE we detect Triggers, regardless of Unity's Project Settings
-        ContactFilter2D filter = new ContactFilter2D();
-        filter.useTriggers = true;
+        // הכרחת המנוע למצוא טריגרים - קריטי כי הקונכיות מוגדרות כ-Trigger כשהן על הרצפה!
+        bool originalHitTriggers = Physics2D.queriesHitTriggers;
+        Physics2D.queriesHitTriggers = true;
         
-        Collider2D[] hits = new Collider2D[10];
-        int hitCount = Physics2D.OverlapCircle(checkPosition, interactRadius, filter, hits);
+        // ניסיון חיפוש ראשון לפי השכבה המוגדרת
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(checkPosition, interactRadius, shellLayer);
 
-        bool foundAnyShell = false;
-
-        for (int i = 0; i < hitCount; i++)
+        // אם לא נמצא כלום, רשת ביטחון: חיפוש בכל השכבות כדי לעקוף בעיות של הגדרות בעורך
+        if (colliders.Length == 0)
         {
-            Collider2D hit = hits[i];
-            // Updated to catch colliders on child objects
-            Shell foundShell = hit.GetComponentInParent<Shell>();
+            colliders = Physics2D.OverlapCircleAll(checkPosition, interactRadius, ~0);
+        }
+
+        Physics2D.queriesHitTriggers = originalHitTriggers;
+
+        foreach (Collider2D col in colliders)
+        {
+            if (col.gameObject == gameObject) continue; // מתעלם מעצמנו
+
+            Shell foundShell = col.GetComponentInParent<Shell>();
+            if (foundShell == null) foundShell = col.GetComponentInChildren<Shell>();
+
             if (foundShell != null && foundShell.CurrentState == ShellState.OnGround)
             {
-                foundAnyShell = true;
                 currentShell = foundShell;
-                Transform attachParent = visualsRoot != null ? visualsRoot : transform;
                 
-                // Pass the attach parent and the exact socket offset
-                currentShell.OnCollect(attachParent, shellMountOffset);
-                break;
+                currentShell.OnCollect(this);
+                Debug.Log($"<color=green>SUCCESS:</color> Grabbed {foundShell.gameObject.name} (Found on Layer: {LayerMask.LayerToName(col.gameObject.layer)})!");
+                return;
             }
         }
 
-        if (!foundAnyShell && hitCount > 0)
-        {
-            Debug.Log($"⚠️ Interact pressed. Found {hitCount} colliders, but none were a valid Shell in 'OnGround' state.");
-        }
-        else if (!foundAnyShell)
-        {
-            Debug.Log("⚠️ Interact pressed, but no colliders were within the interact radius.");
-        }
+        if (colliders.Length > 0)
+            Debug.Log($"⚠️ Interact pressed. Found {colliders.Length} objects nearby, but none were a valid 'OnGround' Shell.");
+        else
+            Debug.Log($"⚠️ Interact pressed, but absolutely nothing was found within radius {interactRadius}.");
     }
 
     private void TryUseAbility()
@@ -262,14 +276,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private Vector2 GetGrabProbePosition()
-    {
-        // Mirror the X offset so the probe sits in front of whichever direction the crab is facing.
-        float facingMul = facingRight ? 1f : -1f;
-        Vector2 localOffset = new Vector2(grabCheckOffset.x * facingMul, grabCheckOffset.y);
-        return (Vector2)transform.TransformPoint(localOffset);
-    }
-
     private void TryStartGrab()
     {
         // Block grabbing while a shell has taken over physics (e.g. inside a RollingShell).
@@ -278,11 +284,18 @@ public class PlayerController : MonoBehaviour
         // Already holding something — ignore.
         if (grabJoint != null) return;
 
-        Vector2 probePos = GetGrabProbePosition();
-        Collider2D hit = Physics2D.OverlapCircle(probePos, grabCheckRadius, movableLayer);
-        if (hit == null) return;
+        float facingMul = facingRight ? 1f : -1f;
+        
+        // מתחילים ממרכז השחקן (כולל ההיסט לגובה)
+        Vector2 origin = (Vector2)transform.TransformPoint(new Vector2(0, grabCheckOffset.y));
+        // כיוון מדויק קדימה לפי לאן שהשחקן פונה
+        Vector2 direction = transform.right * facingMul;
 
-        Rigidbody2D targetRb = hit.attachedRigidbody;
+        // שימוש ב-CircleCast (קרן עבה) שפונה קדימה בלבד - מונע תפיסה מהגב
+        RaycastHit2D hit = Physics2D.CircleCast(origin, grabCheckRadius, direction, grabCheckOffset.x, movableLayer);
+        if (hit.collider == null) return;
+
+        Rigidbody2D targetRb = hit.collider.attachedRigidbody;
         // Need a non-static Rigidbody2D so the joint can actually move it.
         if (targetRb == null || targetRb.bodyType == RigidbodyType2D.Static) return;
 
@@ -311,7 +324,9 @@ public class PlayerController : MonoBehaviour
 
         // Draw Interact Radius (Blue)
         Gizmos.color = Color.blue;
-        Vector2 interactPos = (Vector2)transform.TransformPoint(interactCenterOffset);
+        float facingMul = facingRight ? 1f : -1f;
+        Vector2 localOffset = new Vector2(interactCenterOffset.x * facingMul, interactCenterOffset.y);
+        Vector2 interactPos = (Vector2)transform.TransformPoint(localOffset);
         Gizmos.DrawWireSphere(interactPos, interactRadius);
 
         // Draw Player Socket / Mount Point (Red Cross)
@@ -329,12 +344,13 @@ public class PlayerController : MonoBehaviour
         Gizmos.color = grabJoint != null ? Color.magenta : Color.yellow;
 
         float facingMul = facingRight ? 1f : -1f;
-        Vector2 grabLocal = new Vector2(grabCheckOffset.x * facingMul, grabCheckOffset.y);
-        Vector2 grabPos = (Vector2)transform.TransformPoint(grabLocal);
+        Vector2 origin = (Vector2)transform.TransformPoint(new Vector2(0, grabCheckOffset.y));
+        Vector2 direction = transform.right * facingMul;
+        Vector2 grabPos = origin + direction * grabCheckOffset.x;
 
-        // The radius circle = the actual OverlapCircle area.
+        // The radius circle = the actual CircleCast sweep area end.
         Gizmos.DrawWireSphere(grabPos, grabCheckRadius);
-        // Line from the player origin out to the probe shows the offset length/direction.
-        Gizmos.DrawLine(transform.position, grabPos);
+        // Line from the player origin out to the probe shows the cast length/direction.
+        Gizmos.DrawLine(origin, grabPos);
     }
 }

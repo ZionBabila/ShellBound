@@ -17,17 +17,10 @@ public class SprayCan : Shell
     [Tooltip("Time before the player can dash again.")]
     public float dashCooldown = 1.5f; //[cite: 1]
 
-    private PlayerController playerInside;
     private bool isDashing = false;
     private float lastDashTime = -100f; // Ensure it's ready immediately
     private Coroutine dashCoroutine;
     private float originalGravity;
-
-    public override void OnCollect(Transform parentTransform, Vector2 playerMountOffset)
-    {
-        base.OnCollect(parentTransform, playerMountOffset);
-        playerInside = parentTransform.GetComponentInParent<PlayerController>();
-    }
 
     public override void OnActivate()
     {

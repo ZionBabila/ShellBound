@@ -16,6 +16,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: -8653719598885068355, guid: 531704b01604895429185fe16c4dad45, type: 3}
+      propertyPath: m_TagString
+      value: Player
+      objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.32
@@ -30,11 +34,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 665.37
+      value: -40.4566
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -29.15
+      value: -2.2
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalPosition.z
@@ -46,11 +50,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalRotation.z
@@ -174,14 +178,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d24ebb2a4d285224ab36c16a2fafd206, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TunaCan
-  anchorOffset: {x: -0.2, y: 0.54}
+  anchorOffset: {x: 0, y: 0}
   anchorRotation: 0
   shellWeight: 1
-  shellSprite: {fileID: 0}
-  shellOnBackSprite: {fileID: 0}
+  shellSprite: {fileID: 21300000, guid: f32b95e86a29f0e409612b5e074ad436, type: 3}
+  shellOnBackSprite: {fileID: -5585003164373491211, guid: 531704b01604895429185fe16c4dad45, type: 3}
   currentState: 0
   shellCollider: {fileID: 6694095735505125031}
-  canAttachOffset: {x: -2.38, y: -1.64}
   playerInsideOffset: {x: 0, y: 0}
   canSideSprite: {fileID: -5585003164373491211, guid: 531704b01604895429185fe16c4dad45, type: 3}
   canTopSprite: {fileID: -5585003164373491211, guid: 531704b01604895429185fe16c4dad45, type: 3}

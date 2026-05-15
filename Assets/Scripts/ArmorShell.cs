@@ -20,14 +20,11 @@ public class ArmorShell : Shell
     [Tooltip("The Layer of objects that can be crushed.")]
     public LayerMask crushLayer; 
 
-    private PlayerController playerInside;
     private float originalPlayerMass;
 
-    public override void OnCollect(Transform parentTransform, Vector2 playerMountOffset)
+    public override void OnCollect(PlayerController player)
     {
-        base.OnCollect(parentTransform, playerMountOffset);
-        
-        playerInside = parentTransform.GetComponentInParent<PlayerController>();
+        base.OnCollect(player);
         
         if (playerInside != null)
         {
@@ -108,8 +105,6 @@ public class ArmorShell : Shell
             
             Debug.Log("<color=white>🛡 ARMOR REMOVED:</color> Player restored to normal weight and speed.");
             
-            // Clear the reference to avoid memory leaks or ghost interactions
-            playerInside = null;
         }
     }
 
