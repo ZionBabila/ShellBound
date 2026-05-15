@@ -29,6 +29,10 @@ public class PlayerController : MonoBehaviour
     public Vector2 interactCenterOffset = new Vector2(0, 0);
     public float interactRadius = 1.5f;
 
+    [Header("Throw Settings")]
+    public Vector2 throwDirection = new Vector2(1f, 0.5f);
+    public float throwForce = 8f;
+
     [Tooltip("The 'Socket' point on the player where the shell's anchor will attach")]
     public Vector2 shellMountOffset = new Vector2(0, 0.5f); // Player's attachment point
 
@@ -197,7 +201,7 @@ public class PlayerController : MonoBehaviour
             if (currentShell.CurrentState == ShellState.OnBack)
             {
                 float throwDirX = facingRight ? 1f : -1f;
-                Vector2 throwVelocity = new Vector2(throwDirX, 0.5f).normalized * 8f;
+                Vector2 throwVelocity = new Vector2(throwDirX * throwDirection.x, throwDirection.y).normalized * throwForce;
 
                 currentShell.OnThrow(throwVelocity);
                 currentShell = null;
@@ -206,14 +210,26 @@ public class PlayerController : MonoBehaviour
         }
 
         // 2. Pick up a nearby shell from the ground
-        Vector2 checkPosition = (Vector2)transform.position + interactCenterOffset;
-        Collider2D[] hits = Physics2D.OverlapCircleAll(checkPosition, interactRadius);
+        float facingMul = facingRight ? 1f : -1f;
+        Vector2 checkPosition = (Vector2)transform.position + new Vector2(interactCenterOffset.x * facingMul, interactCenterOffset.y);
 
-        foreach (Collider2D hit in hits)
+        // Use ContactFilter2D to GUARANTEE we detect Triggers, regardless of Unity's Project Settings
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.useTriggers = true;
+        
+        Collider2D[] hits = new Collider2D[10];
+        int hitCount = Physics2D.OverlapCircle(checkPosition, interactRadius, filter, hits);
+
+        bool foundAnyShell = false;
+
+        for (int i = 0; i < hitCount; i++)
         {
-            Shell foundShell = hit.GetComponent<Shell>();
+            Collider2D hit = hits[i];
+            // Updated to catch colliders on child objects
+            Shell foundShell = hit.GetComponentInParent<Shell>();
             if (foundShell != null && foundShell.CurrentState == ShellState.OnGround)
             {
+                foundAnyShell = true;
                 currentShell = foundShell;
                 Transform attachParent = visualsRoot != null ? visualsRoot : transform;
                 
@@ -221,6 +237,15 @@ public class PlayerController : MonoBehaviour
                 currentShell.OnCollect(attachParent, shellMountOffset);
                 break;
             }
+        }
+
+        if (!foundAnyShell && hitCount > 0)
+        {
+            Debug.Log($"⚠️ Interact pressed. Found {hitCount} colliders, but none were a valid Shell in 'OnGround' state.");
+        }
+        else if (!foundAnyShell)
+        {
+            Debug.Log("⚠️ Interact pressed, but no colliders were within the interact radius.");
         }
     }
 
@@ -281,17 +306,17 @@ public class PlayerController : MonoBehaviour
     {
         // Draw Ground Check (Green)
         Gizmos.color = Color.green;
-        Vector2 groundCheckPos = (Vector2)transform.position + (Vector2)transform.TransformDirection(groundCheckOffset);
+        Vector2 groundCheckPos = (Vector2)transform.TransformPoint(groundCheckOffset);
         Gizmos.DrawWireSphere(groundCheckPos, groundCheckRadius);
 
         // Draw Interact Radius (Blue)
         Gizmos.color = Color.blue;
-        Vector2 interactPos = (Vector2)transform.position + interactCenterOffset;
+        Vector2 interactPos = (Vector2)transform.TransformPoint(interactCenterOffset);
         Gizmos.DrawWireSphere(interactPos, interactRadius);
 
         // Draw Player Socket / Mount Point (Red Cross)
         Gizmos.color = Color.red;
-        Vector2 mountPos = (Vector2)transform.position + (Vector2)transform.TransformDirection(shellMountOffset);
+        Vector2 mountPos = (Vector2)transform.TransformPoint(shellMountOffset);
         Gizmos.DrawWireSphere(mountPos, 0.1f);
         Gizmos.DrawLine(mountPos + Vector2.left * 0.2f, mountPos + Vector2.right * 0.2f);
         Gizmos.DrawLine(mountPos + Vector2.down * 0.2f, mountPos + Vector2.up * 0.2f);

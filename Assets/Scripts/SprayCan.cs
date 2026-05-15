@@ -20,6 +20,8 @@ public class SprayCan : Shell
     private PlayerController playerInside;
     private bool isDashing = false;
     private float lastDashTime = -100f; // Ensure it's ready immediately
+    private Coroutine dashCoroutine;
+    private float originalGravity;
 
     public override void OnCollect(Transform parentTransform, Vector2 playerMountOffset)
     {
@@ -36,12 +38,35 @@ public class SprayCan : Shell
         // Requires the player to be touching a surface to launch off of it[cite: 1]
         if (!playerInside.IsGrounded) return;
 
-        StartCoroutine(DashRoutine());
+        dashCoroutine = StartCoroutine(DashRoutine());
     }
 
     public override void OnDeactivate()
     {
         // Spray Can doesn't have a sustained InUse state to deactivate manually
+    }
+
+    public override void OnThrow(Vector2 throwVelocity)
+    {
+        ResetDashState();
+        base.OnThrow(throwVelocity);
+    }
+
+    public override void OnDetach()
+    {
+        ResetDashState();
+        base.OnDetach();
+    }
+
+    private void ResetDashState()
+    {
+        if (isDashing && playerInside != null)
+        {
+            if (dashCoroutine != null) StopCoroutine(dashCoroutine);
+            Rigidbody2D playerRb = playerInside.GetComponent<Rigidbody2D>();
+            if (playerRb != null) playerRb.gravityScale = originalGravity;
+            isDashing = false;
+        }
     }
 
 private IEnumerator DashRoutine()
@@ -67,7 +92,7 @@ private IEnumerator DashRoutine()
         float timer = 0f;
 
         // 4. כיבוי כבידה זמני לדאש ישר וחלק (ללא נפילה)
-        float originalGravity = playerRb.gravityScale;
+        originalGravity = playerRb.gravityScale;
         playerRb.gravityScale = 0f;
 
         while (timer < dashDuration)

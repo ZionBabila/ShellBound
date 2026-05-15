@@ -3,18 +3,24 @@ using UnityEngine;
 public class TunaCan : Shell
 {
     [Header("Attachment Settings")]
-    [Tooltip("Control exactly where the can sits on the crab's back offset")]
-    public Vector2 canAttachOffset = new Vector2(0, 0.4f);
+    [Tooltip("Control exactly where the can sits on the crab's back offset (inherited from Shell.anchorOffset)")]
+    // Note: TunaCan uses the base anchorOffset for attachment
 
     [Header("Tuna Can Physics (Hamster Ball)")]
     public Vector2 playerInsideOffset = new Vector2(0, 0); 
-    public float torqueForce = 150f; // Note: Torque needs higher values than linear force
-    public float maxAngularVelocity = 800f; // Max rotation speed
     
     [Header("Sprites & Rotation")]
     public Sprite canSideSprite;
     public Sprite canTopSprite;
     public float spriteAngleThreshold = 45.0f;
+
+    [Header("Rolling Control")]
+    [Tooltip("How strongly the player can steer the tuna can while rolling.")]
+    public float rollAssistForce = 18f;
+
+    [Tooltip("How much torque is applied from left/right input while rolling.")]
+    public float torqueForce = 1500f; 
+    public float maxAngularVelocity = 1200f; 
 
     [Header("Ricochet Settings")]
     public bool canRicochet = true;
@@ -39,6 +45,22 @@ public class TunaCan : Shell
         }
     }
 
+    // --- התיקון: סנכרון המיקום רגע לפני הרינדור מונע ריצודים וניתוקים ---
+  private void LateUpdate()
+    {
+        // 1. מצב התגלגלות (InUse): סנכרון מיקום השחקן לתוך הפחית
+        if (currentState == ShellState.InUse && playerInside != null)
+        {
+            SyncPlayerPosition();
+        }
+        // 2. התיקון החדש: נעילת ה-Offset כשהפחית על הגב של השחקן (OnBack)
+        else if (currentState == ShellState.OnBack && playerInside != null)
+        {
+            // Keep the shell aligned to the player's mount point using the shared anchor offsets.
+            UpdateAttachmentTransform(playerInside.shellMountOffset);
+        }
+    }
+
     public override void OnCollect(Transform parentTransform, Vector2 playerMountOffset)
     {
         base.OnCollect(parentTransform, playerMountOffset);
@@ -47,13 +69,10 @@ public class TunaCan : Shell
         if (playerInside != null)
         {
             input = playerInside.GetComponent<PlayerInputHandler>();
-            
-            // Apply the custom offset for the Tuna Can specifically
-            transform.localPosition = canAttachOffset;
         }
     }
 
-public override void OnActivate()
+    public override void OnActivate()
     {
         currentState = ShellState.InUse;
         
@@ -70,7 +89,6 @@ public override void OnActivate()
 
         if (playerInside != null)
         {
-            // --- התיקון: כיבוי ההתנגשויות והפיזיקה של השחקן ---
             Collider2D[] playerCols = playerInside.GetComponents<Collider2D>();
             foreach (var col in playerCols) col.enabled = false;
 
@@ -81,16 +99,16 @@ public override void OnActivate()
                 playerRb.linearVelocity = Vector2.zero;
             }
 
-            // מיקום השחקן במרכז
-            playerInside.transform.position = transform.position + (Vector3)playerInsideOffset;
+            // סנכרון ראשוני
+            SyncPlayerPosition();
         }
 
         if (input != null) input.OnInteract += CheckThrowInput;
         
-        Debug.Log("<color=green>🥫 TUNA CAN ACTIVE:</color> Hamster ball mode engaged without clipping!");
+        Debug.Log("<color=green>🥫 TUNA CAN ACTIVE:</color> Physics ready!");
     }
 
-  public override void OnDeactivate()
+    public override void OnDeactivate()
     {
         currentState = ShellState.OnBack;
         
@@ -104,21 +122,23 @@ public override void OnActivate()
 
         if (playerInside != null)
         {
-            // --- התעוררות הפיזיקה וההתנגשויות של השחקן ---
-            Collider2D[] playerCols = playerInside.GetComponents<Collider2D>();
-            foreach (var col in playerCols) col.enabled = true;
-
-            Rigidbody2D playerRb = playerInside.GetComponent<Rigidbody2D>();
-            if (playerRb != null) playerRb.bodyType = RigidbodyType2D.Dynamic;
-
+            RestorePlayerPhysics();
             Transform attachParent = playerInside.visualsRoot != null ? playerInside.visualsRoot : playerInside.transform;
             transform.SetParent(attachParent);
-            
-            transform.localPosition = canAttachOffset;
-            transform.localRotation = Quaternion.identity;
+            UpdateAttachmentTransform(playerInside.shellMountOffset);
         }
 
         if (input != null) input.OnInteract -= CheckThrowInput;
+    }
+
+    private void RestorePlayerPhysics()
+    {
+        if (playerInside == null) return;
+        Collider2D[] playerCols = playerInside.GetComponents<Collider2D>();
+        foreach (var col in playerCols) col.enabled = true;
+
+        Rigidbody2D playerRb = playerInside.GetComponent<Rigidbody2D>();
+        if (playerRb != null) playerRb.bodyType = RigidbodyType2D.Dynamic;
     }
 
     private void ApplyRollingPhysics()
@@ -126,44 +146,51 @@ public override void OnActivate()
         if (input == null || rb == null) return;
 
         float moveInputX = input.MoveValue.x;
+        float deadzone = 0.1f;
 
-        // 1. ADD TORQUE: Spin the can based on input
-        // Negative sign because moving Right (Positive X) means spinning Clockwise (Negative Z)
-        if (Mathf.Abs(moveInputX) > 0.1f)
+        // Use a stronger steering assist so the can responds well to left/right input.
+        if (Mathf.Abs(moveInputX) > deadzone)
         {
-            rb.AddTorque(-moveInputX * torqueForce);
+            rb.AddTorque(-moveInputX * torqueForce * rb.mass);
+            rb.AddForce(new Vector2(moveInputX * rollAssistForce, 0f), ForceMode2D.Force);
+        }
+        else
+        {
+            // Apply a small damping when the player is not steering.
+            rb.angularVelocity = Mathf.MoveTowards(rb.angularVelocity, 0f, 200f * Time.fixedDeltaTime);
         }
 
-        // 2. CLAMP SPEED: Prevent infinite acceleration
         if (Mathf.Abs(rb.angularVelocity) > maxAngularVelocity)
         {
             rb.angularVelocity = Mathf.Sign(rb.angularVelocity) * maxAngularVelocity;
         }
+    }
 
-        // 3. SYNC PLAYER: Lock the crab inside the can, but keep the crab upright
-        if (playerInside != null)
-        {
-            // The player's position is the can't position + any offset
-            playerInside.transform.position = transform.position + (Vector3)playerInsideOffset;
-            
-            // Keep the crab standing straight up, ignoring the can's rotation
-            playerInside.transform.rotation = Quaternion.FromToRotation(Vector3.up, playerInside.SurfaceNormal);
-        }
+    private void SyncPlayerPosition()
+    {
+        // 1. מיקום השחקן במרכז הפחית בצורה חלקה
+        playerInside.transform.position = transform.position + (Vector3)playerInsideOffset;
+        
+        // 2. שמירת השחקן זקוף תמיד ביחס למשטח (כפי שנדרש במסמך העיצוב)
+        playerInside.transform.rotation = Quaternion.FromToRotation(Vector3.up, playerInside.SurfaceNormal); //[cite: 1]
     }
 
     private void HandleSpriteRotation()
     {
         if (spriteRenderer == null) return;
 
-        // Determine which sprite to show based on the Z rotation of the can
         float zAngle = Mathf.Abs(transform.rotation.eulerAngles.z) % 180;
-        if (zAngle < spriteAngleThreshold || zAngle > (180 - spriteAngleThreshold))
-            spriteRenderer.sprite = canSideSprite;
-        else
-            spriteRenderer.sprite = canTopSprite;
+        
+        Sprite targetSprite = (zAngle < spriteAngleThreshold || zAngle > (180 - spriteAngleThreshold)) ? canSideSprite : canTopSprite;
+        
+        // החלפת תמונה רק אם נדרש, לחסוך קריאות מיותרות
+        if (spriteRenderer.sprite != targetSprite)
+        {
+            spriteRenderer.sprite = targetSprite;
+        }
     }
 
-  private void CheckThrowInput()
+    private void CheckThrowInput()
     {
         if (currentState == ShellState.InUse && playerInside != null)
         {
@@ -171,14 +198,8 @@ public override void OnActivate()
 
             Vector2 throwMomentum = rb.linearVelocity;
             
-            // --- החזרת הפיזיקה לשחקן רגע לפני הזריקה ---
-            Collider2D[] playerCols = playerInside.GetComponents<Collider2D>();
-            foreach (var col in playerCols) col.enabled = true;
-
-            Rigidbody2D playerRb = playerInside.GetComponent<Rigidbody2D>();
-            if (playerRb != null) playerRb.bodyType = RigidbodyType2D.Dynamic;
-
-            // הרמה קטנה למעלה כדי שהסרטן לא ייתקע ברצפה כשהוא יוצא מהפחית
+            RestorePlayerPhysics();
+            
             playerInside.transform.position += Vector3.up * 0.15f;
 
             playerInside.currentShell = null;
@@ -194,5 +215,14 @@ public override void OnActivate()
                 shellCollider.sharedMaterial = bounceMat;
             }
         }
-}
+    }
+
+    private void OnDestroy()
+    {
+        // הגנה קריטית: אם הפחית מושמדת תוך כדי שימוש, חובה להחזיר לשחקן קוליידרים ופיזיקה!
+        if (currentState == ShellState.InUse)
+        {
+            RestorePlayerPhysics();
+        }
+    }
 }

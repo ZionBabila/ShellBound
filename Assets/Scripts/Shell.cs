@@ -44,37 +44,43 @@ public abstract class Shell : MonoBehaviour
 
         originalScale = transform.localScale;
 
-        PlayerController player = FindAnyObjectByType<PlayerController>();
-        if (player != null)
-        {
-            Collider2D playerCollider = player.GetComponent<Collider2D>();
-            Physics2D.IgnoreCollision(playerCollider, shellCollider, true);
-        }
-
         OnDetach(); 
     }
 
-    public virtual void OnCollect(Transform parentTransform, Vector2 playerMountOffset)
+   public virtual void OnCollect(Transform parentTransform, Vector2 playerMountOffset)
     {
+        // התעלמות מהתנגשות באופן בטוח רק כשהקונכייה נאספת בפועל
+        Collider2D playerCollider = parentTransform.GetComponentInParent<Collider2D>();
+        if (playerCollider != null && shellCollider != null)
+        {
+            Physics2D.IgnoreCollision(playerCollider, shellCollider, true);
+        }
+
         currentState = ShellState.OnBack;
-        
-        rb.bodyType = RigidbodyType2D.Kinematic; 
-        shellCollider.enabled = false;
 
-        if (spriteRenderer != null && shellOnBackSprite != null)
-            spriteRenderer.sprite = shellOnBackSprite;
+        // 1. כיבוי הפיזיקה לחלוטין! זה מה שימנע מהשחקן ליפול דרך הרצפה
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
 
+        // 2. כיבוי הקוליידר של הקונכייה
+        if (shellCollider != null)
+        {
+            shellCollider.enabled = false;
+        }
+
+        // 3. החלפת שכבה כדי שיוניטי יתעלם מהתנגשויות
+        gameObject.layer = LayerMask.NameToLayer("ShellOnPlayer");
+
+        // 4. חיבור פיזי לשחקן
         transform.SetParent(parentTransform);
-        
-        // Compensate for the parent's scale to prevent the shell from shrinking
-        ApplyCompensatedScale(parentTransform);
-        
-        // Apply both position and rotation
         UpdateAttachmentTransform(playerMountOffset);
         
-        StopAllCoroutines(); 
+        Debug.Log($"<color=white>🐚 SHELL COLLECTED:</color> Physics disabled, attached safely to {parentTransform.name}.");
     }
-
     public void ApplyCompensatedScale(Transform newParent)
     {
         if (newParent == null) return;
@@ -91,7 +97,9 @@ public abstract class Shell : MonoBehaviour
     // RENAMED AND UPDATED: Now handles both position and rotation
     public void UpdateAttachmentTransform(Vector2 playerMountOffset)
     {
-        transform.localPosition = (Vector3)(playerMountOffset - anchorOffset);
+        // Rotate the anchor offset by the shell's rotation to get the correct local position
+        Vector2 rotatedAnchorOffset = (Vector2)(Quaternion.Euler(0, 0, anchorRotation) * anchorOffset);
+        transform.localPosition = (Vector3)(playerMountOffset - rotatedAnchorOffset);
         transform.localRotation = Quaternion.Euler(0, 0, anchorRotation);
     }
 
@@ -149,10 +157,10 @@ public abstract class Shell : MonoBehaviour
             spriteRenderer.sprite = shellSprite;
     }
 
-    private void OnDrawGizmosSelected()
+    private void OnDrawGizmos()
     {
         Gizmos.color = Color.magenta;
-        Vector2 anchorPos = (Vector2)transform.position + anchorOffset;
+        Vector3 anchorPos = transform.TransformPoint(anchorOffset);
         Gizmos.DrawWireSphere(anchorPos, 0.1f);
         
         // Draw the gizmo lines with the specific rotation so you can see the tilt in the editor!
@@ -160,14 +168,14 @@ public abstract class Shell : MonoBehaviour
         Vector3 up = rotation * Vector2.up * 0.2f;
         Vector3 right = rotation * Vector2.right * 0.2f;
         
-        Gizmos.DrawLine((Vector3)anchorPos - right, (Vector3)anchorPos + right);
-        Gizmos.DrawLine((Vector3)anchorPos - up, (Vector3)anchorPos + up);
+        Gizmos.DrawLine(anchorPos - right, anchorPos + right);
+        Gizmos.DrawLine(anchorPos - up, anchorPos + up);
     }
 
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        if (Application.isPlaying && currentState == ShellState.OnBack && transform.parent != null)
+        if (currentState == ShellState.OnBack && transform.parent != null)
         {
             PlayerController player = transform.parent.GetComponentInParent<PlayerController>();
             if (player != null)
