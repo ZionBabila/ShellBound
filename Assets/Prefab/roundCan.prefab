@@ -34,11 +34,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.1
+      value: 863.2
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -25.7
+      value: -77.9
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalPosition.z
@@ -50,11 +50,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalRotation.z
@@ -178,14 +178,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d24ebb2a4d285224ab36c16a2fafd206, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TunaCan
-  anchorOffset: {x: 0, y: 0}
+  anchorOffset: {x: 2.66, y: -16.55}
   anchorRotation: 0
   shellWeight: 1
   shellSprite: {fileID: 0}
   shellOnBackSprite: {fileID: 0}
   currentState: 0
   shellCollider: {fileID: 6694095735505125031}
-  playerInsideOffset: {x: 0, y: 0}
+  playerInsideOffset: {x: 0.39, y: -1.67}
   canSideSprite: {fileID: 0}
   canTopSprite: {fileID: 0}
   torqueForce: 6
