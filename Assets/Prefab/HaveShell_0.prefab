@@ -169,7 +169,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 109f4788b45777e48b5ec2b9925d0242, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArmorShell
-  anchorOffset: {x: 2, y: -10.2}
+  anchorOffset: {x: -3.83, y: -0.54}
   anchorRotation: 52
   shellWeight: 1
   shellSprite: {fileID: 0}
@@ -178,8 +178,9 @@ MonoBehaviour:
   shellCollider: {fileID: 3582030864642415037}
   extraMass: 2
   weightPenalty: 0.5
+  extraPushMass: 10
   armorSpriteActive: {fileID: 0}
   crushObjects: 1
   crushLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 8192

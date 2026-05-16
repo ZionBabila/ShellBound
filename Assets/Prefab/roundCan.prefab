@@ -34,11 +34,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -40.4566
+      value: -0.1
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -2.2
+      value: -25.7
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalPosition.z
@@ -181,19 +181,19 @@ MonoBehaviour:
   anchorOffset: {x: 0, y: 0}
   anchorRotation: 0
   shellWeight: 1
-  shellSprite: {fileID: 21300000, guid: f32b95e86a29f0e409612b5e074ad436, type: 3}
-  shellOnBackSprite: {fileID: -5585003164373491211, guid: 531704b01604895429185fe16c4dad45, type: 3}
+  shellSprite: {fileID: 0}
+  shellOnBackSprite: {fileID: 0}
   currentState: 0
   shellCollider: {fileID: 6694095735505125031}
   playerInsideOffset: {x: 0, y: 0}
-  canSideSprite: {fileID: -5585003164373491211, guid: 531704b01604895429185fe16c4dad45, type: 3}
-  canTopSprite: {fileID: -5585003164373491211, guid: 531704b01604895429185fe16c4dad45, type: 3}
-  spriteAngleThreshold: 45
-  rollAssistForce: 18
+  canSideSprite: {fileID: 0}
+  canTopSprite: {fileID: 0}
   torqueForce: 6
-  maxAngularVelocity: 15
-  canRicochet: 1
-  ricochetBounciness: 0.4
+  angularDragWhenStopping: 3
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  jumpForce: 7
 --- !u!212 &1565892199047989855
 SpriteRenderer:
   serializedVersion: 2

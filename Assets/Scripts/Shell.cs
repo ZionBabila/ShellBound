@@ -122,6 +122,11 @@ public abstract class Shell : MonoBehaviour
     public abstract void OnActivate();
     public abstract void OnDeactivate();
 
+    // פונקציה זו נקראת על ידי השחקן כאשר הוא מתנגש במשהו בעודו לובש את הקונכייה
+    public virtual void OnPlayerCollisionEnter(Collision2D collision)
+    {
+    }
+
     public virtual void OnThrow(Vector2 throwVelocity)
     {
         currentState = ShellState.Thrown;
@@ -144,9 +149,15 @@ public abstract class Shell : MonoBehaviour
     private IEnumerator AutoLandRoutine()
     {
         yield return new WaitForSeconds(0.5f);
+        // זמן השהייה התחלתי כדי לתת לקונכייה לעוף מהשחקן
+        yield return new WaitForSeconds(0.2f);
 
-        while (rb.linearVelocity.magnitude > 0.1f)
+        float timeout = 2.0f; // מקסימום שתי שניות  המתנה לפני נחיתה מאולצת
+        
+        // מוודא שהקונכייה נוחתת גם אם הפיזיקה "רועדת" (נפוץ בחפצים כבדים כמו השריון)
+        while (rb.linearVelocity.magnitude > 0.1f && !rb.IsSleeping() && timeout > 0f)
         {
+            timeout -= Time.deltaTime;
             yield return null;
         }
 

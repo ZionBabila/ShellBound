@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - ShellSpray
+  - Breakable
   layers:
   - Default
   - TransparentFX
@@ -19,8 +20,7 @@ TagManager:
   - Player
   - Movable
   - WalkableWall
-  - 
-  - 
+  - Breakable
   - 
   - 
   - 

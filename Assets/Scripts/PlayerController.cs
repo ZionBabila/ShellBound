@@ -16,9 +16,15 @@ public class PlayerController : MonoBehaviour
     [Header("Ground Detection")]
     public Vector2 groundCheckOffset = new Vector2(0, -0.2f);
     public float groundCheckRadius = 0.2f;
+    [Tooltip("המרחק שהחיישן בודק כלפי מטה. בשיפועים צריך מרחק גדול יותר כי הפיזיקה ישרה.")]
+    public float groundCheckDistance = 0.4f;
     public LayerMask groundLayer;
     
     public bool IsGrounded { get; private set; }
+
+    [Header("Physics Stability")]
+    [Tooltip("המהירות שבה התמונה של הסרטן מסתובבת כדי להתאים לשיפוע הרצפה.")]
+    public float visualRotationSpeed = 15f;
 
     [Header("Visuals (PSB & Bones)")]
     public Transform visualsRoot;
@@ -50,6 +56,10 @@ public class PlayerController : MonoBehaviour
     [Tooltip("Radius of the grab probe used to find a Movable in front of the crab.")]
     public float grabCheckRadius = 0.4f;
 
+    [Tooltip("The maximum mass of an object the player can push/pull normally.")]
+    public float baseMaxPushMass = 3.0f;
+    [HideInInspector] public float currentMaxPushMass;
+
     // Active joint while the player is holding a Movable. Null when nothing is grabbed.
     private FixedJoint2D grabJoint;
 
@@ -57,11 +67,16 @@ public class PlayerController : MonoBehaviour
     private PlayerInputHandler input;
     private float currentVelocityX;
     private float moveTimer;
+    private bool wasGrounded;
 
     void Awake()
     {
+        currentMaxPushMass = baseMaxPushMass; // מתחילים עם יכולת הדחיפה הבסיסית
         rb = GetComponent<Rigidbody2D>();
         input = GetComponent<PlayerInputHandler>();
+
+        // נועלים את סיבוב הפיזיקה לחלוטין - הסרטן לעולם לא יתהפך פיזית
+        rb.constraints |= RigidbodyConstraints2D.FreezeRotation;
 
         // Subscribe to input events
         if (input != null)
@@ -88,6 +103,15 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         HandleGroundCheck();
+        
+        // סיבוב ויזואלי בלבד (הפיזיקה נשארת ישרה)
+        if (visualsRoot != null)
+        {
+            // מחשבים את הזווית הרצויה לפי השיפוע של הרצפה
+            Quaternion targetRotation = Quaternion.FromToRotation(Vector3.up, SurfaceNormal);
+            // מסובבים בהדרגתיות כדי שזה ייראה חלק וטבעי
+            visualsRoot.rotation = Quaternion.Lerp(visualsRoot.rotation, targetRotation, Time.deltaTime * visualRotationSpeed);
+        }
     }
 
     void FixedUpdate()
@@ -101,7 +125,7 @@ public class PlayerController : MonoBehaviour
         Vector2 checkPos = (Vector2)transform.position + (Vector2)transform.TransformDirection(groundCheckOffset);
         
         // Use CircleCast to detect the ground and extract the exact surface normal
-        RaycastHit2D hit = Physics2D.CircleCast(checkPos, groundCheckRadius, -transform.up, 0.05f, groundLayer);
+        RaycastHit2D hit = Physics2D.CircleCast(checkPos, groundCheckRadius, Vector2.down, groundCheckDistance, groundLayer);
         
         if (hit.collider != null)
         {
@@ -114,6 +138,8 @@ public class PlayerController : MonoBehaviour
             IsGrounded = false;
             SurfaceNormal = Vector2.up; // Default to flat ground if in the air
         }
+
+        wasGrounded = IsGrounded;
     }
 
     private void HandleMovement()
@@ -122,7 +148,8 @@ public class PlayerController : MonoBehaviour
         if (currentShell != null && currentShell.CurrentState == ShellState.InUse)
         {
             moveTimer = 0f;
-            currentVelocityX = 0f;
+            // קריטי: שומרים את המהירות הנוכחית של הפיזיקה כדי שכשנחזור לשלוט, לא נעצור באוויר במקום!
+            currentVelocityX = rb.linearVelocity.x;
             return;
         }
         
@@ -299,6 +326,13 @@ public class PlayerController : MonoBehaviour
         // Need a non-static Rigidbody2D so the joint can actually move it.
         if (targetRb == null || targetRb.bodyType == RigidbodyType2D.Static) return;
 
+        // בדיקת מסה - האם האובייקט כבד מדי?
+        if (targetRb.mass > currentMaxPushMass)
+        {
+            Debug.Log($"<color=orange>TOO HEAVY:</color> Object mass ({targetRb.mass}) exceeds player's push limit ({currentMaxPushMass}). You need heavy armor!");
+            return;
+        }
+
         grabJoint = gameObject.AddComponent<FixedJoint2D>();
         grabJoint.connectedBody = targetRb;
         grabJoint.autoConfigureConnectedAnchor = true;
@@ -313,6 +347,15 @@ public class PlayerController : MonoBehaviour
         if (grabJoint == null) return;
         Destroy(grabJoint);
         grabJoint = null;
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        // העברת אירוע ההתנגשות לקונכייה (חשוב לקונכיות כמו השריון שמועכות חפצים)
+        if (currentShell != null)
+        {
+            currentShell.OnPlayerCollisionEnter(collision);
+        }
     }
 
     private void OnDrawGizmosSelected()

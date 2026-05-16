@@ -20,18 +20,46 @@ public class SprayCan : Shell
     private bool isDashing = false;
     private float lastDashTime = -100f; // Ensure it's ready immediately
     private Coroutine dashCoroutine;
-    private float originalGravity;
+
+    // משתנים לסנכרון הפיזיקה מול מנוע הפיזיקה של יוניטי
+    private bool pendingDash = false;
+    private Vector2 pendingDashVelocity;
 
     public override void OnActivate()
     {
         // Cancel if not on the back, missing player, currently dashing, or on cooldown
         if (currentState != ShellState.OnBack || playerInside == null) return;
-        if (isDashing || Time.time < lastDashTime + dashCooldown) return;
+        
+        if (isDashing) return;
 
-        // Requires the player to be touching a surface to launch off of it[cite: 1]
-        if (!playerInside.IsGrounded) return;
+        if (Time.time < lastDashTime + dashCooldown)
+        {
+            Debug.Log("<color=orange>Dash is on cooldown!</color>");
+            return;
+        }
+
+        // בדיקת אדמה
+        if (!playerInside.IsGrounded)
+        {
+            Debug.Log("<color=red>Dash Blocked:</color> Player must be touching the ground.");
+            return;
+        }
 
         dashCoroutine = StartCoroutine(DashRoutine());
+    }
+
+    private void FixedUpdate()
+    {
+        // ביצוע הדחיפה הפיזיקלית בדיוק בתחילת פריים הפיזיקה, כדי למנוע התנגשויות שווא עם במות
+        if (pendingDash && playerInside != null)
+        {
+            Rigidbody2D playerRb = playerInside.GetComponent<Rigidbody2D>();
+            if (playerRb != null)
+            {
+                playerRb.linearVelocity = pendingDashVelocity;
+            }
+            pendingDash = false;
+        }
     }
 
     public override void OnDeactivate()
@@ -56,8 +84,6 @@ public class SprayCan : Shell
         if (isDashing && playerInside != null)
         {
             if (dashCoroutine != null) StopCoroutine(dashCoroutine);
-            Rigidbody2D playerRb = playerInside.GetComponent<Rigidbody2D>();
-            if (playerRb != null) playerRb.gravityScale = originalGravity;
             isDashing = false;
         }
     }
@@ -82,23 +108,13 @@ private IEnumerator DashRoutine()
         float angleRad = dashAngle * Mathf.Deg2Rad;
         Vector2 dashDirection = (forwardTangent * Mathf.Cos(angleRad) + surfaceNormal * Mathf.Sin(angleRad)).normalized;
 
-        float timer = 0f;
+        // מכינים את המהירות, ומעבירים ל-FixedUpdate את האחריות לבצע את זה בסנכרון מושלם
+        pendingDashVelocity = dashDirection * dashForce;
+        pendingDash = true;
 
-        // 4. כיבוי כבידה זמני לדאש ישר וחלק (ללא נפילה)
-        originalGravity = playerRb.gravityScale;
-        playerRb.gravityScale = 0f;
+        // ממתינים את זמן ההשתהות (dashDuration). השחקן עדיין באוויר ובקשת, פשוט אין לו שליטת הליכה כרגע
+        yield return new WaitForSeconds(dashDuration);
 
-        while (timer < dashDuration)
-        {
-            // דריסת המהירות לכיוון הדאש
-            playerRb.linearVelocity = dashDirection * dashForce;
-            
-            timer += Time.fixedDeltaTime; // שימוש ב-fixed כי אנחנו מתעסקים בפיזיקה
-            yield return new WaitForFixedUpdate(); 
-        }
-
-        // החזרת הכבידה ומצב הקונכייה
-        playerRb.gravityScale = originalGravity;
         isDashing = false;
         currentState = ShellState.OnBack;
     }

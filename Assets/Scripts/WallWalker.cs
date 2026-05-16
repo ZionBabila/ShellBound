@@ -15,10 +15,12 @@ public class WallWalker : MonoBehaviour
 
     private Rigidbody2D rb;
     private Vector2 currentNormal = Vector2.up; // מתחילים כשהרצפה רגילה
+    private PlayerController playerController;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        playerController = GetComponent<PlayerController>();
         // חובה לכבות את הגרביטציה הרגילה כדי שהשחקן לא ייפול מהתקרה!
         rb.gravityScale = 0f; 
     }
@@ -81,6 +83,10 @@ public class WallWalker : MonoBehaviour
 
     private void MovePlayer()
     {
+        // מניעת דריסת המהירות בזמן שהשחקן משתמש בקונכייה (כמו הדאש של SprayCan)
+        if (playerController != null && playerController.currentShell != null && playerController.currentShell.CurrentState == ShellState.InUse)
+            return;
+
         // קבלת קלט ימינה ושמאלה מהשחקן
         float horizontalInput = Input.GetAxisRaw("Horizontal");
 
@@ -93,6 +99,10 @@ public class WallWalker : MonoBehaviour
 
     private void ApplyCustomGravity()
     {
+        // ביטול זמני של ההצמדה לקיר בזמן שימוש בקונכייה כדי לאפשר ניתוק וקפיצות ביחס למשטח
+        if (playerController != null && playerController.currentShell != null && playerController.currentShell.CurrentState == ShellState.InUse)
+            return;
+
         // הפעלת כוח רציף הדוחף את השחקן אל עבר המשטח (בכיוון ההפוך מהנורמל)
         // זה מה שמדביק אותו לקיר או לתקרה
         rb.AddForce(-currentNormal * customGravityForce);

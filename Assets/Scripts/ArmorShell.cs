@@ -9,6 +9,9 @@ public class ArmorShell : Shell
     [Tooltip("Multiplier for player speed while using armor. 0.5 = half speed.")]
     public float weightPenalty = 0.5f; 
 
+    [Tooltip("How much extra mass the player can push/pull when equipped.")]
+    public float extraPushMass = 10.0f;
+
     [Header("Armor Visuals")]
     [Tooltip("Sprite used when the crab is actively hiding inside the armor.")]
     public Sprite armorSpriteActive; 
@@ -37,8 +40,11 @@ public class ArmorShell : Shell
                 // 1. Apply physical mass increase for pushing heavy objects
                 playerRb.mass = originalPlayerMass + extraMass;
             }
-            
-            // 2. Apply movement speed penalty immediately on collect
+
+            // 2. Increase the mass limit the player can push/pull
+            playerInside.currentMaxPushMass = playerInside.baseMaxPushMass + extraPushMass;
+
+            // 3. Apply movement speed penalty immediately on collect
             playerInside.speedMultiplier = weightPenalty;
             
             Debug.Log($"<color=blue>🛡 ARMOR EQUIPPED:</color> Mass increased, Speed reduced to {weightPenalty * 100}%");
@@ -100,6 +106,9 @@ public class ArmorShell : Shell
                 playerRb.mass = originalPlayerMass;
             }
             
+            // Restore push limit
+            playerInside.currentMaxPushMass = playerInside.baseMaxPushMass;
+
             // Restore full speed multiplier
             playerInside.speedMultiplier = 1.0f;
             
@@ -109,7 +118,7 @@ public class ArmorShell : Shell
     }
 
     // Logic for crushing objects when falling (based on the Design Document)
-    private void OnCollisionEnter2D(Collision2D collision)
+    public override void OnPlayerCollisionEnter(Collision2D collision)
     {
         // Only crush if the crab is hiding inside the heavy armor
         if (currentState == ShellState.InUse && crushObjects)
@@ -122,7 +131,16 @@ public class ArmorShell : Shell
                     // If the impact is from below (normal pointing up), it means we fell on it
                     if (contact.normal.y > 0.5f)
                     {
-                        Destroy(collision.gameObject);
+                        // מחפשים את סקריפט השבירה
+                        Breakable breakableObj = collision.gameObject.GetComponent<Breakable>();
+                        if (breakableObj != null)
+                        {
+                            breakableObj.Smash(); // הפעלת האנימציה והסאונד לפני ההריסה
+                        }
+                        else
+                        {
+                            Destroy(collision.gameObject); // גיבוי: הריסה רגילה
+                        }
                         Debug.Log($"<color=red>💥 CRUSHED:</color> {collision.gameObject.name} was destroyed!");
                         break;
                     }

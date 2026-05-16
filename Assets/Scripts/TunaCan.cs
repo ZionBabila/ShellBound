@@ -12,28 +12,34 @@ public class TunaCan : Shell
     [Header("Sprites & Rotation")]
     public Sprite canSideSprite;
     public Sprite canTopSprite;
-    public float spriteAngleThreshold = 45.0f;
 
-    [Header("Rolling Control")]
-    [Tooltip("How strongly the player can steer the tuna can while rolling.")]
-    public float rollAssistForce = 18f;
+    [Header("Organic Physics Control")]
+    [Tooltip("כוח הסיבוב הטהור שמופעל על הפחית. החיכוך עם הרצפה יהפוך את זה לתנועה.")]
+    public float torqueForce = 25f;
+    [Tooltip("בלימה טבעית (חיכוך זוויתי) כשעוזבים את המקשים.")]
+    public float angularDragWhenStopping = 3f;
 
-    [Tooltip("How much torque is applied from left/right input while rolling.")]
-    public float torqueForce = 1500f; 
-    public float maxAngularVelocity = 1200f; 
-
-    [Header("Ricochet Settings")]
-    public bool canRicochet = true;
-    public float ricochetBounciness = 0.4f;
+    [Header("Hamster Ball Environment")]
+    public LayerMask groundLayer;
+    public float jumpForce = 7f;
+    private float lastJumpTime;
 
     private PlayerInputHandler input;
 
+    protected override void Awake()
+    {
+        base.Awake();
+        if (groundLayer.value == 0)
+        {
+            Debug.LogWarning("<color=orange>🥫 TUNA CAN WARNING:</color> Ground Layer is 'Nothing'! Ground detection and Roll Assist won't work.");
+        }
+    }
+
     private void Update()
     {
-        if (currentState == ShellState.InUse && playerInside != null)
-        {
-            HandleSpriteRotation();
-        }
+        // ביטלנו את החלפת הספרייטים (HandleSpriteRotation) בזמן התגלגלות.
+        // פחית שמתגלגלת כמו גלגל צריכה פשוט להסתובב פיזית בצורה חלקה עם הספרייט העגול שלה,
+        // ולא להחליף תמונות כל 45 מעלות (מה שיצר תחושה של חוסר סנכרון).
     }
 
     private void FixedUpdate()
@@ -94,6 +100,12 @@ public class TunaCan : Shell
 
             // סנכרון ראשוני
             SyncPlayerPosition();
+
+            // הפיכת הפחית לתצוגה העגולה (Top) כדי שתתגלגל חלק כמו כדור אוגר
+            if (spriteRenderer != null && canTopSprite != null)
+            {
+                spriteRenderer.sprite = canTopSprite;
+            }
         }
 
         if (input != null) input.OnInteract += CheckThrowInput;
@@ -121,6 +133,12 @@ public class TunaCan : Shell
             UpdateAttachmentTransform(playerInside);
         }
 
+        // חזרה לתצוגת הצד כשהיא על הגב או נזרקת
+        if (spriteRenderer != null && canSideSprite != null)
+        {
+            spriteRenderer.sprite = canSideSprite;
+        }
+
         if (input != null) input.OnInteract -= CheckThrowInput;
     }
 
@@ -139,23 +157,48 @@ public class TunaCan : Shell
         if (input == null || rb == null) return;
 
         float moveInputX = input.MoveValue.x;
-        float deadzone = 0.1f;
+        float moveInputY = input.MoveValue.y;
 
-        // Use a stronger steering assist so the can responds well to left/right input.
-        if (Mathf.Abs(moveInputX) > deadzone)
+        // 1. חיישן רצפה נועד כעת נטו בשביל לאפשר קפיצה או בלימה (התנועה עצמה קורית מפיזיקה טהורה)
+        bool isGrounded = false;
+        Vector2 groundNormal = Vector2.up;
+        float radius = 0.5f; // הגנת רדיוס למקרה שהקוליידר חסר
+        if (shellCollider != null)
         {
-            rb.AddTorque(-moveInputX * torqueForce * rb.mass);
-            rb.AddForce(new Vector2(moveInputX * rollAssistForce, 0f), ForceMode2D.Force);
-        }
-        else
-        {
-            // Apply a small damping when the player is not steering.
-            rb.angularVelocity = Mathf.MoveTowards(rb.angularVelocity, 0f, 200f * Time.fixedDeltaTime);
+            radius = shellCollider.bounds.extents.y;
+            // יורים קרן מעגלית (CircleCast) קצת מעל תחתית הפחית כלפי מטה כדי למצוא את המשטח המדויק
+            Vector2 origin = (Vector2)transform.position + new Vector2(0, -radius + 0.2f);
+            RaycastHit2D hit = Physics2D.CircleCast(origin, 0.15f, Vector2.down, 0.3f, groundLayer);
+            
+            if (hit.collider != null)
+            {
+                isGrounded = true;
+                groundNormal = hit.normal;
+            }
         }
 
-        if (Mathf.Abs(rb.angularVelocity) > maxAngularVelocity)
+        // 2. קפיצה (כפתור למעלה - W או חץ עליון)
+        bool jumpedThisFrame = false;
+        if (isGrounded && moveInputY > 0.5f && Time.time > lastJumpTime + 0.3f)
         {
-            rb.angularVelocity = Mathf.Sign(rb.angularVelocity) * maxAngularVelocity;
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            lastJumpTime = Time.time;
+            jumpedThisFrame = true;
+            isGrounded = false; // מנתקים מהשיפוע בפריים הזה כדי שהקפיצה תתבצע למעלה
+        }
+
+        // 3. תנועה אורגנית מבוססת מומנט סיבוב (Torque) וחיכוך בלבד!
+        if (Mathf.Abs(moveInputX) > 0.01f)
+        {
+            rb.angularDamping = 0.05f; // התנגדות מינימלית בזמן תנועה
+            // הוספת סיבוב - מינוס כי חץ ימינה אומר סיבוב עם כיוון השעון
+            rb.AddTorque(-moveInputX * torqueForce * rb.mass); 
+        }
+        else if (isGrounded)
+        {
+            // כשהשחקן עוזב את המקשים, אנחנו מעלים את ה"חיכוך הזוויתי" כדי שהפחית תבלום בצורה טבעית
+            rb.angularDamping = angularDragWhenStopping;
         }
     }
 
@@ -166,21 +209,6 @@ public class TunaCan : Shell
         
         // 2. שמירת השחקן זקוף תמיד ביחס למשטח (כפי שנדרש במסמך העיצוב)
         playerInside.transform.rotation = Quaternion.FromToRotation(Vector3.up, playerInside.SurfaceNormal); //[cite: 1]
-    }
-
-    private void HandleSpriteRotation()
-    {
-        if (spriteRenderer == null) return;
-
-        float zAngle = Mathf.Abs(transform.rotation.eulerAngles.z) % 180;
-        
-        Sprite targetSprite = (zAngle < spriteAngleThreshold || zAngle > (180 - spriteAngleThreshold)) ? canSideSprite : canTopSprite;
-        
-        // החלפת תמונה רק אם נדרש, לחסוך קריאות מיותרות
-        if (spriteRenderer.sprite != targetSprite)
-        {
-            spriteRenderer.sprite = targetSprite;
-        }
     }
 
     private void CheckThrowInput()
@@ -198,14 +226,6 @@ public class TunaCan : Shell
             playerInside.currentShell = null;
 
             OnThrow(throwMomentum);
-
-            if (canRicochet && shellCollider != null)
-            {
-                PhysicsMaterial2D bounceMat = new PhysicsMaterial2D();
-                bounceMat.bounciness = ricochetBounciness;
-                bounceMat.friction = 0.5f; 
-                shellCollider.sharedMaterial = bounceMat;
-            }
         }
     }
 
@@ -215,6 +235,20 @@ public class TunaCan : Shell
         if (currentState == ShellState.InUse)
         {
             RestorePlayerPhysics();
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        // ציור החיישן ביוניטי כדי שתוכל לראות בעיניים שהעיגול באמת נוגע ברצפה
+        if (shellCollider != null)
+        {
+            Gizmos.color = Color.cyan;
+            float radius = shellCollider.bounds.extents.y;
+            Vector2 origin = (Vector2)transform.position + new Vector2(0, -radius + 0.2f);
+            Gizmos.DrawWireSphere(origin, 0.15f);
+            // ציור הקרן של החיישן
+            Gizmos.DrawLine(origin, origin + Vector2.down * 0.3f);
         }
     }
 }
