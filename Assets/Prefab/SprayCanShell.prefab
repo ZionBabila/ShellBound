@@ -179,14 +179,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2d0a0cd8e871d645a1f115b2b45cc1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SprayCan
-  anchorOffset: {x: 0.1, y: -2.08}
+  anchorOffset: {x: -0.23, y: -11.22}
   anchorRotation: 0
   shellWeight: 1
   shellSprite: {fileID: 0}
   shellOnBackSprite: {fileID: 0}
   currentState: 0
   shellCollider: {fileID: 6162751587080195601}
-  dashForce: 37.61
-  dashAngle: 45
-  dashDuration: 2.2
-  dashCooldown: 1.5
+  dashForce: 26
+  dashAngle: 30.9
+  dashDuration: 0.4
+  dashCooldown: 1.3
