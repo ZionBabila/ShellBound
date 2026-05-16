@@ -166,6 +166,7 @@ public class TunaCan : Shell
         if (shellCollider != null)
         {
             radius = shellCollider.bounds.extents.y;
+            
             // יורים קרן מעגלית (CircleCast) קצת מעל תחתית הפחית כלפי מטה כדי למצוא את המשטח המדויק
             Vector2 origin = (Vector2)transform.position + new Vector2(0, -radius + 0.2f);
             RaycastHit2D hit = Physics2D.CircleCast(origin, 0.15f, Vector2.down, 0.3f, groundLayer);
