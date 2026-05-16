@@ -56,7 +56,9 @@ public class SprayCan : Shell
             Rigidbody2D playerRb = playerInside.GetComponent<Rigidbody2D>();
             if (playerRb != null)
             {
-                playerRb.linearVelocity = pendingDashVelocity;
+                // שימוש בכוח פיזיקלי טהור (Impulse) במקום לדרוס את המהירות. 
+                playerRb.linearVelocity = Vector2.zero; // איפוס המהירות לפני הזינוק
+                playerRb.AddForce(pendingDashVelocity, ForceMode2D.Impulse);
             }
             pendingDash = false;
         }
