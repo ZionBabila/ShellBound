@@ -124,7 +124,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -179,7 +179,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2d0a0cd8e871d645a1f115b2b45cc1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SprayCan
-  anchorOffset: {x: 3, y: -10.2}
+  anchorOffset: {x: 0.1, y: -2.08}
   anchorRotation: 0
   shellWeight: 1
   shellSprite: {fileID: 0}

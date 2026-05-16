@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3463540939573333471}
   - component: {fileID: 7265794346158292865}
   - component: {fileID: 8261940321702641933}
-  m_Layer: 6
+  m_Layer: 0
   m_Name: OnWayPlatform
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -27,7 +27,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5531210058067550638}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -46.37, y: -1.5, z: 0}
   m_LocalScale: {x: 9.1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.09344964, g: 0.7075472, b: 0.095225476, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
