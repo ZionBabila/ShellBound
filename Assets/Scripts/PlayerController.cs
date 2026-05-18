@@ -43,8 +43,7 @@ public class PlayerController : MonoBehaviour
     [Tooltip("The 'Socket' point on the player where the shell's anchor will attach")]
     public Vector2 shellMountOffset = new Vector2(0, 0.5f); // Player's attachment point
 
-    // This variable is modified by shells (like ArmorShell) to slow the player down
-    public float speedMultiplier  = 1.0f;
+    // הערה: speedMultiplier הוסר מכאן כי עכשיו הוא מחושב דינמית מתוך הקונכייה
 
     [Header("Push / Pull (Movable)")]
     [Tooltip("Items on this layer can be grabbed with Ctrl for push/pull.")]
@@ -156,8 +155,11 @@ public class PlayerController : MonoBehaviour
         float moveInputX = input.MoveValue.x;
         
         // Base speeds affected by the shell's weight penalty
-        float actualBaseSpeed = moveSpeed * speedMultiplier;
-        float actualBaseResp = baseResponsiveness * speedMultiplier;
+        float currentSpeedMultiplier = currentShell != null ? currentShell.MovementSpeedMultiplier : 1.0f;
+        float actualBaseSpeed = moveSpeed * currentSpeedMultiplier;
+        float actualMaxSpeed = maxSpeed * currentSpeedMultiplier;
+        float actualBaseResp = baseResponsiveness * currentSpeedMultiplier;
+        float actualAccel = accelerationRate * currentSpeedMultiplier;
 
         float targetSpeed = 0f;
         float currentAccel = actualBaseResp;
@@ -166,25 +168,15 @@ public class PlayerController : MonoBehaviour
         {
             moveTimer += Time.fixedDeltaTime;
 
-            // TANK LOGIC: If wearing heavy armor (multiplier < 1), disable running completely.
-            if (speedMultiplier < 1.0f)
+            if (moveTimer >= accelerationDelay)
             {
-                targetSpeed = moveInputX * actualBaseSpeed; // Locked to slow walk speed
-                currentAccel = actualBaseResp;              // Slower, heavier acceleration
+                targetSpeed = moveInputX * actualMaxSpeed;
+                currentAccel = actualAccel;
             }
-            // NORMAL LOGIC: Start walking, then accelerate to max sprint speed.
             else
             {
-                if (moveTimer >= accelerationDelay)
-                {
-                    targetSpeed = moveInputX * maxSpeed;
-                    currentAccel = accelerationRate;
-                }
-                else
-                {
-                    targetSpeed = moveInputX * moveSpeed;
-                    currentAccel = baseResponsiveness;
-                }
+                targetSpeed = moveInputX * actualBaseSpeed;
+                currentAccel = actualBaseResp;
             }
 
             // Smoothly transition current velocity towards the target speed

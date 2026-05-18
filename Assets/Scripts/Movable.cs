@@ -37,8 +37,8 @@ public class Movable : MonoBehaviour
         // בדיקה: האם האובייקט כבד מדי עבור השחקן במצבו הנוכחי?
         if (rb.mass > player.currentMaxPushMass) // השוואה בין המסה של הקופסה ליכולת הדחיפה של השחקן
         {
-            // נועלים את ציר ה-X כדי שהשחקן לא יוכל לדחוף את זה סתם בהליכה לתוכו
-            rb.constraints = baseConstraints | RigidbodyConstraints2D.FreezePositionX; // מוסיף לנעילות המקוריות גם נעילה של ציר התנועה האופקי (X)
+            // נועלים את כל הצירים כדי שהשחקן לא יוכל להזיז את הקופסה, והיא לא תקפוץ מעליו
+            rb.constraints = baseConstraints | RigidbodyConstraints2D.FreezeAll; 
         }
         else
         {

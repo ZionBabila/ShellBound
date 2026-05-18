@@ -20,6 +20,12 @@ public abstract class Shell : MonoBehaviour
     public float anchorRotation = 0f; // NEW: שליטה בזווית הקונכייה
     
     public float shellWeight = 1.0f;
+
+    // מאפשר לקונכיות לשנות את נקודת העגינה בזמן אמת (למשל כשהסרטן מתחבא) בלי לדרוס את המשתנה המקורי
+    public virtual Vector2 ActiveAnchorOffset => anchorOffset;
+
+    // מאפשר לקונכיות להשפיע באופן דינמי על מהירות השחקן ללא קוד מסובך (1 = רגיל)
+    public virtual float MovementSpeedMultiplier => 1.0f;
     
     [Header("Visual Settings")]
     public Sprite shellSprite;
@@ -114,7 +120,7 @@ public abstract class Shell : MonoBehaviour
         Vector3 targetLocalPos = transform.parent != null ? transform.parent.InverseTransformPoint(worldMountPos) : worldMountPos;
 
         // Rotate the anchor offset by the shell's rotation to get the correct local position
-        Vector2 rotatedAnchorOffset = (Vector2)(Quaternion.Euler(0, 0, anchorRotation) * anchorOffset);
+        Vector2 rotatedAnchorOffset = (Vector2)(Quaternion.Euler(0, 0, anchorRotation) * ActiveAnchorOffset);
         transform.localPosition = targetLocalPos - (Vector3)rotatedAnchorOffset;
         transform.localRotation = Quaternion.Euler(0, 0, anchorRotation);
     }
@@ -191,7 +197,7 @@ public abstract class Shell : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.magenta;
-        Vector3 anchorPos = transform.TransformPoint(anchorOffset);
+        Vector3 anchorPos = transform.TransformPoint(ActiveAnchorOffset);
         Gizmos.DrawWireSphere(anchorPos, 0.1f);
         
         // Draw the gizmo lines with the specific rotation so you can see the tilt in the editor!

@@ -3,14 +3,9 @@ using UnityEngine;
 public class ArmorShell : Shell
 {
     [Header("Armor Physics Settings")]
-    [Tooltip("How much mass to add to the player when equipped.")]
-    public float extraMass = 2.0f; 
-    
-    [Tooltip("Multiplier for player speed while using armor. 0.5 = half speed.")]
-    public float weightPenalty = 0.5f; 
-
-    [Tooltip("How much extra mass the player can push/pull when equipped.")]
-    public float extraPushMass = 10.0f;
+    [Tooltip("Speed multiplier: values under 1 slow the player down, over 1 speed them up.")]
+    [Range(0.1f, 3.0f)]
+    public float speedMultiplier = 0.5f; 
 
     [Header("Armor Visuals")]
     [Tooltip("Sprite used when the crab is actively hiding inside the armor.")]
@@ -23,7 +18,15 @@ public class ArmorShell : Shell
     [Tooltip("The Layer of objects that can be crushed.")]
     public LayerMask crushLayer; 
 
-    private float originalPlayerMass;
+    [Header("Hide Settings")]
+    [Tooltip("The anchor offset when the crab is hiding inside. (Centers the shell on the crab)")]
+    public Vector2 hidingAnchorOffset = new Vector2(0, 0f);
+
+    // דורס את המהירות הבסיסית ומדווח על הקנס הנוכחי של השריון בזמן אמת
+    public override float MovementSpeedMultiplier => speedMultiplier;
+
+    // דורס את נקודת העגינה כדי להשתמש במיקום ההתחבאות כשלוחצים רווח
+    public override Vector2 ActiveAnchorOffset => currentState == ShellState.InUse ? hidingAnchorOffset : anchorOffset;
 
     public override void OnCollect(PlayerController player)
     {
@@ -31,23 +34,10 @@ public class ArmorShell : Shell
         
         if (playerInside != null)
         {
-            Rigidbody2D playerRb = playerInside.GetComponent<Rigidbody2D>();
-            if (playerRb != null)
-            {
-                // Store original mass to restore it later when detached
-                originalPlayerMass = playerRb.mass;
-                
-                // 1. Apply physical mass increase for pushing heavy objects
-                playerRb.mass = originalPlayerMass + extraMass;
-            }
+            // נותן לשחקן כוח דחיפה אינסופי לקוביות כבדות (במקום לחשב מסות מורכבות)
+            playerInside.currentMaxPushMass = Mathf.Infinity;
 
-            // 2. Increase the mass limit the player can push/pull
-            playerInside.currentMaxPushMass = playerInside.baseMaxPushMass + extraPushMass;
-
-            // 3. Apply movement speed penalty immediately on collect
-            playerInside.speedMultiplier = weightPenalty;
-            
-            Debug.Log($"<color=blue>🛡 ARMOR EQUIPPED:</color> Mass increased, Speed reduced to {weightPenalty * 100}%");
+            Debug.Log($"<color=blue>🛡 ARMOR EQUIPPED:</color> Can push heavy objects!");
         }
     }
 
@@ -58,6 +48,8 @@ public class ArmorShell : Shell
 
         currentState = ShellState.InUse;
         
+        UpdateAttachmentTransform(playerInside);
+
         // Change to the "Active/Hidden" sprite as defined in the GDD
         if (spriteRenderer != null && armorSpriteActive != null)
         {
@@ -73,6 +65,8 @@ public class ArmorShell : Shell
         if (currentState != ShellState.InUse || playerInside == null) return;
 
         currentState = ShellState.OnBack;
+
+        UpdateAttachmentTransform(playerInside);
 
         // Return to the standard 'OnBack' sprite
         if (spriteRenderer != null && shellOnBackSprite != null)
@@ -99,19 +93,9 @@ public class ArmorShell : Shell
     {
         if (playerInside != null)
         {
-            Rigidbody2D playerRb = playerInside.GetComponent<Rigidbody2D>();
-            if (playerRb != null)
-            {
-                // Restore original mass
-                playerRb.mass = originalPlayerMass;
-            }
-            
             // Restore push limit
             playerInside.currentMaxPushMass = playerInside.baseMaxPushMass;
 
-            // Restore full speed multiplier
-            playerInside.speedMultiplier = 1.0f;
-            
             Debug.Log("<color=white>🛡 ARMOR REMOVED:</color> Player restored to normal weight and speed.");
             
         }
