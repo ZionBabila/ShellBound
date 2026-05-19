@@ -176,7 +176,7 @@ MonoBehaviour:
   shellOnBackSprite: {fileID: 0}
   currentState: 0
   shellCollider: {fileID: 3582030864642415037}
-  speedMultiplier: 0.28
+  speedMultiplier: 0.73
   armorSpriteActive: {fileID: 0}
   crushObjects: 1
   crushLayer:
