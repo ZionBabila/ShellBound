@@ -15,8 +15,10 @@ public class PlayerController : MonoBehaviour
     
     [Header("Ground Detection")]
     public Vector2 groundCheckOffset = new Vector2(0, -0.2f);
-    [Tooltip("המרחק שהקרן בודקת כלפי מטה. בשיפועים צריך מרחק גדול יותר כי הפיזיקה ישרה.")]
+    public float groundCheckRadius = 0.2f;
+    [Tooltip("המרחק שהחיישן בודק כלפי מטה. בשיפועים צריך מרחק גדול יותר כי הפיזיקה ישרה.")]
     public float groundCheckDistance = 0.4f;
+    public LayerMask groundLayer;
     
     public bool IsGrounded { get; private set; }
 
@@ -118,30 +120,22 @@ public class PlayerController : MonoBehaviour
 
     private void HandleGroundCheck()
     {
-        // מחשבים את נקודת תחילת הקרן
+        // Calculate the check position relative to the crab's rotation
         Vector2 checkPos = (Vector2)transform.position + (Vector2)transform.TransformDirection(groundCheckOffset);
         
-        // יורים קרן (Raycast) כלפי מטה, ובודקים את כל האובייקטים שפגענו בהם
-        RaycastHit2D[] hits = Physics2D.RaycastAll(checkPos, Vector2.down, groundCheckDistance);
+        // Use CircleCast to detect the ground and extract the exact surface normal
+        RaycastHit2D hit = Physics2D.CircleCast(checkPos, groundCheckRadius, Vector2.down, groundCheckDistance, groundLayer);
         
-        bool foundGround = false;
-
-        foreach (RaycastHit2D hit in hits)
+        if (hit.collider != null)
         {
-            // מתעלמים מהשחקן עצמו, מטריגרים, ומהקונכייה שעל הגב
-            if (hit.collider.gameObject == gameObject || hit.collider.isTrigger) continue;
-            if (currentShell != null && hit.collider.gameObject == currentShell.gameObject) continue;
-
             IsGrounded = true;
-            SurfaceNormal = hit.normal; // שמירת זווית השיפוע
-            foundGround = true;
-            break; // מצאנו רצפה ולידית, אין צורך להמשיך לבדוק
+            Debug.DrawLine(checkPos, hit.point, Color.green);
+            SurfaceNormal = hit.normal; // Save the angle of the surface
         }
-
-        if (!foundGround)
+        else
         {
             IsGrounded = false;
-            SurfaceNormal = Vector2.up; // ברירת מחדל כשאנחנו באוויר
+            SurfaceNormal = Vector2.up; // Default to flat ground if in the air
         }
 
         wasGrounded = IsGrounded;
@@ -358,10 +352,10 @@ public class PlayerController : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        // Draw Ground Check (Line)
-        Gizmos.color = IsGrounded ? Color.green : Color.red;
+        // Draw Ground Check (Green)
+        Gizmos.color = Color.green;
         Vector2 groundCheckPos = (Vector2)transform.TransformPoint(groundCheckOffset);
-        Gizmos.DrawLine(groundCheckPos, groundCheckPos + Vector2.down * groundCheckDistance);
+        Gizmos.DrawWireSphere(groundCheckPos, groundCheckRadius);
 
         // Draw Interact Radius (Blue)
         Gizmos.color = Color.blue;
