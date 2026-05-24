@@ -20,7 +20,6 @@ public class TunaCan : Shell
     public float angularDragWhenStopping = 3f;
 
     [Header("Hamster Ball Environment")]
-    public LayerMask groundLayer;
     public float jumpForce = 7f;
     private float lastJumpTime;
 
@@ -29,10 +28,6 @@ public class TunaCan : Shell
     protected override void Awake()
     {
         base.Awake();
-        if (groundLayer.value == 0)
-        {
-            Debug.LogWarning("<color=orange>🥫 TUNA CAN WARNING:</color> Ground Layer is 'Nothing'! Ground detection and Roll Assist won't work.");
-        }
     }
 
     private void Update()
@@ -167,14 +162,19 @@ public class TunaCan : Shell
         {
             radius = shellCollider.bounds.extents.y;
             
-            // יורים קרן מעגלית (CircleCast) קצת מעל תחתית הפחית כלפי מטה כדי למצוא את המשטח המדויק
+            // יורים קרן ישרה (Raycast) קצת מעל תחתית הפחית כלפי מטה
             Vector2 origin = (Vector2)transform.position + new Vector2(0, -radius + 0.2f);
-            RaycastHit2D hit = Physics2D.CircleCast(origin, 0.15f, Vector2.down, 0.3f, groundLayer);
+            RaycastHit2D[] hits = Physics2D.RaycastAll(origin, Vector2.down, 0.3f);
             
-            if (hit.collider != null)
+            foreach (RaycastHit2D hit in hits)
             {
+                // מתעלמים מהפחית עצמה, מהשחקן שבפנים, ומטריגרים
+                if (hit.collider.gameObject == gameObject || hit.collider.isTrigger) continue;
+                if (playerInside != null && hit.collider.gameObject == playerInside.gameObject) continue;
+
                 isGrounded = true;
                 groundNormal = hit.normal;
+                break;
             }
         }
 
@@ -241,13 +241,11 @@ public class TunaCan : Shell
 
     private void OnDrawGizmosSelected()
     {
-        // ציור החיישן ביוניטי כדי שתוכל לראות בעיניים שהעיגול באמת נוגע ברצפה
         if (shellCollider != null)
         {
             Gizmos.color = Color.cyan;
             float radius = shellCollider.bounds.extents.y;
             Vector2 origin = (Vector2)transform.position + new Vector2(0, -radius + 0.2f);
-            Gizmos.DrawWireSphere(origin, 0.15f);
             // ציור הקרן של החיישן
             Gizmos.DrawLine(origin, origin + Vector2.down * 0.3f);
         }

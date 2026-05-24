@@ -186,7 +186,7 @@ MonoBehaviour:
   shellOnBackSprite: {fileID: 0}
   currentState: 0
   shellCollider: {fileID: 6162751587080195601}
-  dashForce: 26
+  dashForce: 55
   dashAngle: 30.9
   dashDuration: 0.4
   dashCooldown: 1.3
