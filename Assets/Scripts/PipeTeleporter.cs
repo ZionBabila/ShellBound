@@ -58,8 +58,11 @@ public class PipeTeleporter : MonoBehaviour
 
         Vector3 originalScale = player.transform.localScale;
 
-        // --- TODO: Disable Player Input Here ---
-        // Example: player.GetComponent<PlayerMovement>().enabled = false;
+        PlayerController playerController = player.GetComponent<PlayerController>();
+        if (playerController != null)
+        {
+            playerController.SetControlEnabled(false);
+        }
 
         if (rb != null)
         {
@@ -125,8 +128,10 @@ public class PipeTeleporter : MonoBehaviour
         // Ensure scale is exactly as it was (preserves left/right flipping)
         player.transform.localScale = originalScale;
 
-        // --- TODO: Enable Player Input Here ---
-        // Example: player.GetComponent<PlayerMovement>().enabled = true;
+        if (playerController != null)
+        {
+            playerController.SetControlEnabled(true);
+        }
 
         // 7. Unlock pipes
         yield return new WaitForSeconds(0.2f);

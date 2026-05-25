@@ -57,6 +57,14 @@ public class PlayerController : MonoBehaviour
     public float baseMaxPushMass = 3.0f;
     [HideInInspector] public float currentMaxPushMass;
 
+    [Header("Push Mass Speed Mapping")]
+    [Tooltip("The minimum mass where slowdown begins.")]
+    public float massMapMin = 1.0f;
+    [Tooltip("The mass where the maximum slowdown is reached.")]
+    public float massMapMax = 10.0f;
+    [Tooltip("The minimum speed multiplier when pushing an object with massMapMax or higher.")]
+    public float speedMultAtMaxMass = 0.2f;
+
     // Active joint while the player is holding a Movable. Null when nothing is grabbed.
     private FixedJoint2D grabJoint;
 
@@ -94,6 +102,18 @@ public class PlayerController : MonoBehaviour
             input.OnAbility -= TryUseAbility;
             input.OnGrabStart -= TryStartGrab;
             input.OnGrabEnd -= ReleaseGrab;
+        }
+    }
+
+    public void SetControlEnabled(bool isEnabled)
+    {
+        enabled = isEnabled;
+        if (input != null) input.enabled = isEnabled;
+        
+        if (!isEnabled)
+        {
+            currentVelocityX = 0f;
+            moveTimer = 0f;
         }
     }
 
@@ -161,7 +181,42 @@ public class PlayerController : MonoBehaviour
         float moveInputX = input.MoveValue.x;
         
         // Base speeds affected by the shell's weight penalty
-        float currentSpeedMultiplier = currentShell != null ? currentShell.MovementSpeedMultiplier : 1.0f;
+        float baseSpeedMultiplier = currentShell != null ? currentShell.MovementSpeedMultiplier : 1.0f;
+        float currentSpeedMultiplier = baseSpeedMultiplier;
+        
+        float interactedMass = 0f;
+
+        // בדיקה 1: האם אנחנו מושכים/דוחפים בעזרת אחיזה (Ctrl)?
+        if (grabJoint != null && grabJoint.connectedBody != null)
+        {
+            interactedMass = grabJoint.connectedBody.mass;
+        }
+        // בדיקה 2: האם אנחנו דוחפים אובייקט רק על ידי הליכה לתוכו?
+        else if (Mathf.Abs(moveInputX) > 0.01f)
+        {
+            float facingMul = facingRight ? 1f : -1f;
+            // מוודאים שכיוון ההליכה הוא לאותו כיוון שהשחקן פונה אליו (כדי שלא נאט אם אנחנו הולכים אחורה מהקופסה)
+            if (Mathf.Sign(moveInputX) == Mathf.Sign(facingMul))
+            {
+                Vector2 origin = (Vector2)transform.TransformPoint(new Vector2(0, grabCheckOffset.y));
+                Vector2 direction = transform.right * facingMul;
+                RaycastHit2D hit = Physics2D.CircleCast(origin, grabCheckRadius, direction, grabCheckOffset.x, movableLayer);
+                
+                if (hit.collider != null && hit.collider.attachedRigidbody != null)
+                {
+                    interactedMass = hit.collider.attachedRigidbody.mass;
+                }
+            }
+        }
+
+        // החלת ההאטה הדינמית בהתאם למסה שמצאנו
+        if (interactedMass > 0f)
+        {
+            float t = Mathf.InverseLerp(massMapMin, massMapMax, interactedMass);
+            // המרת האחוז למהירות בפועל: החל ממהירות הקונכייה (למשל 0.8) ועד למהירות המינימום (0.2)
+            currentSpeedMultiplier = Mathf.Lerp(baseSpeedMultiplier, speedMultAtMaxMass, t);
+        }
+
         float actualBaseSpeed = moveSpeed * currentSpeedMultiplier;
         float actualMaxSpeed = maxSpeed * currentSpeedMultiplier;
         float actualBaseResp = baseResponsiveness * currentSpeedMultiplier;
