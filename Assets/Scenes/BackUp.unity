@@ -320,7 +320,7 @@ Transform:
   m_GameObject: {fileID: 41673257}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -11.963111, y: 0.5700002, z: -10}
+  m_LocalPosition: {x: -11.783111, y: 0.5700002, z: -10}
   m_LocalScale: {x: 0.17, y: 0.17, z: 0.17}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1463,7 +1463,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4482004065749626843, guid: 97240e96fbd243d44abf41e5ea66f2ac, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -13
+      value: -12.82
       objectReference: {fileID: 0}
     - target: {fileID: 4482004065749626843, guid: 97240e96fbd243d44abf41e5ea66f2ac, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2207,7 +2207,7 @@ Transform:
   m_GameObject: {fileID: 1123916752}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -11.963111, y: 0.5700002, z: -10}
+  m_LocalPosition: {x: -11.783111, y: 0.5700002, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2863,8 +2863,10 @@ MonoBehaviour:
   rayLength: 1.5
   rayOffset: 0.5
   groundLayer:
-    serializedVersion: 2
     m_Bits: 64
+  rb: {fileID: 0}
+  currentNormal: {x: 0, y: 1}
+  playerController: {fileID: 0}
 --- !u!50 &1660918837
 Rigidbody2D:
   serializedVersion: 5

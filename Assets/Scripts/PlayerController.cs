@@ -10,6 +10,8 @@ public class PlayerController : MonoBehaviour
     public float accelerationDelay = 1.0f;
     public float accelerationRate = 2.0f;
     public float baseResponsiveness = 20.0f;
+    [Tooltip("How fast the crab stops when no input is pressed. Higher = snappier stop.")]
+    public float decelerationRate = 40.0f;
     
     public Vector2 SurfaceNormal { get; private set; } = Vector2.up;
     
@@ -65,6 +67,9 @@ public class PlayerController : MonoBehaviour
     [Tooltip("The minimum speed multiplier when pushing an object with massMapMax or higher.")]
     public float speedMultAtMaxMass = 0.2f;
 
+    [Tooltip("How much acceleration is penalized when pushing heavy objects. Lower = more struggle to get it moving.")]
+    public float heavyPushAccelPenalty = 0.15f;
+
     // Active joint while the player is holding a Movable. Null when nothing is grabbed.
     private FixedJoint2D grabJoint;
 
@@ -119,49 +124,50 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        HandleGroundCheck();
+        HandleGroundCheck(); // Continuously check if the crab is touching the ground
         
-        // סיבוב ויזואלי בלבד (הפיזיקה נשארת ישרה)
+        // Handle visual rotation (The physics body remains upright, only the sprite rotates)
         if (visualsRoot != null)
         {
-            // מחשבים את הזווית הרצויה לפי השיפוע של הרצפה
+            // Calculate the target rotation based on the normal (angle) of the ground surface
             Quaternion targetRotation = Quaternion.FromToRotation(Vector3.up, SurfaceNormal);
-            // מסובבים בהדרגתיות כדי שזה ייראה חלק וטבעי
+            
+            // Smoothly rotate the visual root towards the target rotation to look natural
             visualsRoot.rotation = Quaternion.Lerp(visualsRoot.rotation, targetRotation, Time.deltaTime * visualRotationSpeed);
         }
     }
 
     void FixedUpdate()
     {
-        HandleMovement();
+        HandleMovement(); // Physics-based movement should always be in FixedUpdate
     }
 
     private void HandleGroundCheck()
     {
-        // מחשבים את נקודת תחילת הקרן
+        // Calculate the starting position of the raycast (offset from the center of the player)
         Vector2 checkPos = (Vector2)transform.position + (Vector2)transform.TransformDirection(groundCheckOffset);
         
-        // יורים קרן (Raycast) כלפי מטה, ובודקים את כל האובייקטים שפגענו בהם
+        // Shoot a raycast downwards and get all objects it hits within the groundCheckDistance
         RaycastHit2D[] hits = Physics2D.RaycastAll(checkPos, Vector2.down, groundCheckDistance);
         
         bool foundGround = false;
 
         foreach (RaycastHit2D hit in hits)
         {
-            // מתעלמים מהשחקן עצמו, מטריגרים, ומהקונכייה שעל הגב
+            // Ignore collisions with the player itself, trigger zones, and the currently equipped shell
             if (hit.collider.gameObject == gameObject || hit.collider.isTrigger) continue;
             if (currentShell != null && hit.collider.gameObject == currentShell.gameObject) continue;
 
-            IsGrounded = true;
-            SurfaceNormal = hit.normal; // שמירת זווית השיפוע
+            IsGrounded = true; // We found valid ground!
+            SurfaceNormal = hit.normal; // Save the slope angle to adjust visuals later
             foundGround = true;
-            break; // מצאנו רצפה ולידית, אין צורך להמשיך לבדוק
+            break; // Stop checking further since we already found the ground
         }
 
         if (!foundGround)
         {
-            IsGrounded = false;
-            SurfaceNormal = Vector2.up; // ברירת מחדל כשאנחנו באוויר
+            IsGrounded = false; // Player is in the air
+            SurfaceNormal = Vector2.up; // Reset normal to default straight up
         }
 
         wasGrounded = IsGrounded;
@@ -173,12 +179,12 @@ public class PlayerController : MonoBehaviour
         if (currentShell != null && currentShell.CurrentState == ShellState.InUse)
         {
             moveTimer = 0f;
-            // קריטי: שומרים את המהירות הנוכחית של הפיזיקה כדי שכשנחזור לשלוט, לא נעצור באוויר במקום!
+            // CRITICAL: Save current X velocity so the player doesn't freeze mid-air when regaining control
             currentVelocityX = rb.linearVelocity.x;
             return;
         }
         
-        float moveInputX = input.MoveValue.x;
+        float moveInputX = input.MoveValue.x; // Get horizontal input (-1 for left, 1 for right, 0 for idle)
         
         // Base speeds affected by the shell's weight penalty
         float baseSpeedMultiplier = currentShell != null ? currentShell.MovementSpeedMultiplier : 1.0f;
@@ -186,18 +192,19 @@ public class PlayerController : MonoBehaviour
         
         float interactedMass = 0f;
 
-        // בדיקה 1: האם אנחנו מושכים/דוחפים בעזרת אחיזה (Ctrl)?
+        // Check 1: Is the player actively grabbing (Ctrl) and pulling/pushing an object?
         if (grabJoint != null && grabJoint.connectedBody != null)
         {
             interactedMass = grabJoint.connectedBody.mass;
         }
-        // בדיקה 2: האם אנחנו דוחפים אובייקט רק על ידי הליכה לתוכו?
+        // Check 2: Is the player simply walking into and pushing a movable object?
         else if (Mathf.Abs(moveInputX) > 0.01f)
         {
             float facingMul = facingRight ? 1f : -1f;
-            // מוודאים שכיוון ההליכה הוא לאותו כיוון שהשחקן פונה אליו (כדי שלא נאט אם אנחנו הולכים אחורה מהקופסה)
+            // Ensure the input direction matches the facing direction so we don't slow down if walking away from the box
             if (Mathf.Sign(moveInputX) == Mathf.Sign(facingMul))
             {
+                // Cast a circle forward to detect if we are pushing against a movable object
                 Vector2 origin = (Vector2)transform.TransformPoint(new Vector2(0, grabCheckOffset.y));
                 Vector2 direction = transform.right * facingMul;
                 RaycastHit2D hit = Physics2D.CircleCast(origin, grabCheckRadius, direction, grabCheckOffset.x, movableLayer);
@@ -209,11 +216,11 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // החלת ההאטה הדינמית בהתאם למסה שמצאנו
+        // Apply dynamic slowdown based on the mass of the pushed/pulled object
         if (interactedMass > 0f)
         {
             float t = Mathf.InverseLerp(massMapMin, massMapMax, interactedMass);
-            // המרת האחוז למהירות בפועל: החל ממהירות הקונכייה (למשל 0.8) ועד למהירות המינימום (0.2)
+            // Convert the mass percentage to an actual speed multiplier (e.g., from 0.8 down to a minimum of 0.2)
             currentSpeedMultiplier = Mathf.Lerp(baseSpeedMultiplier, speedMultAtMaxMass, t);
         }
 
@@ -221,23 +228,63 @@ public class PlayerController : MonoBehaviour
         float actualMaxSpeed = maxSpeed * currentSpeedMultiplier;
         float actualBaseResp = baseResponsiveness * currentSpeedMultiplier;
         float actualAccel = accelerationRate * currentSpeedMultiplier;
+        float actualDecel = decelerationRate * currentSpeedMultiplier;
+
+        if (interactedMass > 0f)
+        {
+            // 1. Anti-Plowing: Instantly kill excess momentum when hitting a heavy object
+            // This prevents the crab from blasting through heavy boxes with its running start.
+            if (Mathf.Abs(currentVelocityX) > actualMaxSpeed)
+            {
+                currentVelocityX = Mathf.Sign(currentVelocityX) * actualMaxSpeed;
+            }
+
+            // 2. Struggle Phase: Drastically reduce acceleration so it takes effort to build up push speed
+            if (interactedMass > baseMaxPushMass)
+            {
+                actualBaseResp *= heavyPushAccelPenalty;
+                actualAccel *= heavyPushAccelPenalty;
+            }
+            else
+            {
+                actualBaseResp *= 0.5f; // Even normal objects take a little extra effort to start pushing
+                actualAccel *= 0.5f;
+            }
+        }
 
         float targetSpeed = 0f;
         float currentAccel = actualBaseResp;
 
+        // If the player is actively pressing left or right
         if (Mathf.Abs(moveInputX) > 0.01f)
         {
-            moveTimer += Time.fixedDeltaTime;
-
-            if (moveTimer >= accelerationDelay)
+            // Check if the player is trying to move in the opposite direction of their current movement
+            bool isTurning = (moveInputX > 0 && currentVelocityX < -0.1f) || (moveInputX < 0 && currentVelocityX > 0.1f);
+            
+            if (isTurning)
             {
-                targetSpeed = moveInputX * actualMaxSpeed;
-                currentAccel = actualAccel;
+                moveTimer = 0f; // Reset timer when changing direction so we don't slide!
+            }
+
+            moveTimer += Time.fixedDeltaTime; // Track how long the button is held
+
+            if (isTurning)
+            {
+                // Snappy turn-around: use the high deceleration rate to brake quickly and switch direction
+                targetSpeed = moveInputX * actualBaseSpeed;
+                currentAccel = actualDecel; 
+            }
+            else if (moveTimer >= accelerationDelay)
+            {
+                // Player has been moving long enough; accelerate to MAX speed
+                targetSpeed = moveInputX * actualMaxSpeed; 
+                currentAccel = actualAccel; // Use the slower acceleration rate for smooth top-speed transition
             }
             else
             {
+                // Player just started moving; accelerate quickly to BASE speed
                 targetSpeed = moveInputX * actualBaseSpeed;
-                currentAccel = actualBaseResp;
+                currentAccel = actualBaseResp; // High responsiveness for snappy initial movement
             }
 
             // Smoothly transition current velocity towards the target speed
@@ -245,9 +292,9 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            // Decelerate smoothly when no input is pressed
-            moveTimer = 0f;
-            currentVelocityX = Mathf.MoveTowards(currentVelocityX, 0f, actualBaseResp * Time.fixedDeltaTime);
+            // No input detected - decelerate smoothly to a stop using the dedicated deceleration rate
+            moveTimer = 0f; // Reset the movement timer
+            currentVelocityX = Mathf.MoveTowards(currentVelocityX, 0f, actualDecel * Time.fixedDeltaTime); 
         }
 
         // Apply the calculated horizontal velocity while keeping the current vertical velocity (gravity)
