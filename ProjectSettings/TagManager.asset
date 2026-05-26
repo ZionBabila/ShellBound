@@ -46,12 +46,6 @@ TagManager:
   - name: BG SKY
     uniqueID: 273567399
     locked: 0
-  - name: haze
-    uniqueID: 3863382275
-    locked: 0
-  - name: Far
-    uniqueID: 2938178787
-    locked: 0
   - name: MID
     uniqueID: 410136985
     locked: 0
@@ -60,9 +54,6 @@ TagManager:
     locked: 0
   - name: UI
     uniqueID: 2778886187
-    locked: 0
-  - name: ForGround
-    uniqueID: 98510449
     locked: 0
   m_RenderingLayers:
   - Default

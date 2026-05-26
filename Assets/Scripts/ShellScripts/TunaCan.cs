@@ -14,9 +14,9 @@ public class TunaCan : Shell
     public Sprite canTopSprite;
 
     [Header("Organic Physics Control")]
-    [Tooltip("The pure torque applied to the can. Ground friction will convert this into movement.")]
+    [Tooltip("כוח הסיבוב הטהור שמופעל על הפחית. החיכוך עם הרצפה יהפוך את זה לתנועה.")]
     public float torqueForce = 25f;
-    [Tooltip("Natural braking (angular drag) when movement keys are released.")]
+    [Tooltip("בלימה טבעית (חיכוך זוויתי) כשעוזבים את המקשים.")]
     public float angularDragWhenStopping = 3f;
 
     [Header("Hamster Ball Environment")]
@@ -32,8 +32,9 @@ public class TunaCan : Shell
 
     private void Update()
     {
-        // Sprite swapping during rolling is disabled. 
-        // A rolling can should physically rotate smoothly with its round sprite.
+        // ביטלנו את החלפת הספרייטים (HandleSpriteRotation) בזמן התגלגלות.
+        // פחית שמתגלגלת כמו גלגל צריכה פשוט להסתובב פיזית בצורה חלקה עם הספרייט העגול שלה,
+        // ולא להחליף תמונות כל 45 מעלות (מה שיצר תחושה של חוסר סנכרון).
     }
 
     private void FixedUpdate()
@@ -48,7 +49,7 @@ public class TunaCan : Shell
     {
         base.LateUpdate(); // Handles OnBack alignment automatically
         
-        // 1. Rolling mode (InUse): Sync player position into the can
+        // 1. מצב התגלגלות (InUse): סנכרון מיקום השחקן לתוך הפחית
         if (currentState == ShellState.InUse && playerInside != null)
         {
             SyncPlayerPosition();
@@ -69,12 +70,12 @@ public class TunaCan : Shell
     {
         currentState = ShellState.InUse;
         
-        // Release the can into the world space
+        // שחרור הפחית למרחב
         transform.SetParent(null);
         transform.localScale = originalScale; 
         transform.rotation = Quaternion.identity; 
         
-        // Enable can physics
+        // הפעלת הפיזיקה של הפחית
         rb.bodyType = RigidbodyType2D.Dynamic;
         shellCollider.enabled = true;
         shellCollider.isTrigger = false;
@@ -92,10 +93,10 @@ public class TunaCan : Shell
                 playerRb.linearVelocity = Vector2.zero;
             }
 
-            // Initial sync
+            // סנכרון ראשוני
             SyncPlayerPosition();
 
-            // Switch can to the round (Top) sprite so it rolls smoothly
+            // הפיכת הפחית לתצוגה העגולה (Top) כדי שתתגלגל חלק כמו כדור אוגר
             if (spriteRenderer != null && canTopSprite != null)
             {
                 spriteRenderer.sprite = canTopSprite;
@@ -111,7 +112,7 @@ public class TunaCan : Shell
     {
         currentState = ShellState.OnBack;
         
-        // Disable can physics
+        // כיבוי הפיזיקה של הפחית
         rb.bodyType = RigidbodyType2D.Kinematic;
         rb.linearVelocity = Vector2.zero;
         rb.angularVelocity = 0f;
@@ -127,7 +128,7 @@ public class TunaCan : Shell
             UpdateAttachmentTransform(playerInside);
         }
 
-        // Return to side view sprite when on back or thrown
+        // חזרה לתצוגת הצד כשהיא על הגב או נזרקת
         if (spriteRenderer != null && canSideSprite != null)
         {
             spriteRenderer.sprite = canSideSprite;
@@ -153,21 +154,21 @@ public class TunaCan : Shell
         float moveInputX = input.MoveValue.x;
         float moveInputY = input.MoveValue.y;
 
-        // 1. Ground sensor is now purely for jumping/braking logic (movement is pure physics)
+        // 1. חיישן רצפה נועד כעת נטו בשביל לאפשר קפיצה או בלימה (התנועה עצמה קורית מפיזיקה טהורה)
         bool isGrounded = false;
         Vector2 groundNormal = Vector2.up;
-        float radius = 0.5f; // Fallback radius in case collider is missing
+        float radius = 0.5f; // הגנת רדיוס למקרה שהקוליידר חסר
         if (shellCollider != null)
         {
             radius = shellCollider.bounds.extents.y;
             
-            // Shoot a straight raycast slightly above the can's bottom downwards
+            // יורים קרן ישרה (Raycast) קצת מעל תחתית הפחית כלפי מטה
             Vector2 origin = (Vector2)transform.position + new Vector2(0, -radius + 0.2f);
             RaycastHit2D[] hits = Physics2D.RaycastAll(origin, Vector2.down, 0.3f);
             
             foreach (RaycastHit2D hit in hits)
             {
-                // Ignore the can itself, the player inside, and triggers
+                // מתעלמים מהפחית עצמה, מהשחקן שבפנים, ומטריגרים
                 if (hit.collider.gameObject == gameObject || hit.collider.isTrigger) continue;
                 if (playerInside != null && hit.collider.gameObject == playerInside.gameObject) continue;
 
@@ -177,7 +178,7 @@ public class TunaCan : Shell
             }
         }
 
-        // 2. Jump (Up button - W or Up Arrow)
+        // 2. קפיצה (כפתור למעלה - W או חץ עליון)
         bool jumpedThisFrame = false;
         if (isGrounded && moveInputY > 0.5f && Time.time > lastJumpTime + 0.3f)
         {
@@ -185,29 +186,29 @@ public class TunaCan : Shell
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             lastJumpTime = Time.time;
             jumpedThisFrame = true;
-            isGrounded = false; // Disconnect from slope this frame so jump goes straight up
+            isGrounded = false; // מנתקים מהשיפוע בפריים הזה כדי שהקפיצה תתבצע למעלה
         }
 
-        // 3. Organic movement based entirely on torque and friction!
+        // 3. תנועה אורגנית מבוססת מומנט סיבוב (Torque) וחיכוך בלבד!
         if (Mathf.Abs(moveInputX) > 0.01f)
         {
-            rb.angularDamping = 0.05f; // Minimal drag while moving
-            // Add torque (minus because right input = clockwise rotation)
+            rb.angularDamping = 0.05f; // התנגדות מינימלית בזמן תנועה
+            // הוספת סיבוב - מינוס כי חץ ימינה אומר סיבוב עם כיוון השעון
             rb.AddTorque(-moveInputX * torqueForce * rb.mass); 
         }
         else if (isGrounded)
         {
-            // When releasing keys, increase angular drag so the can brakes naturally
+            // כשהשחקן עוזב את המקשים, אנחנו מעלים את ה"חיכוך הזוויתי" כדי שהפחית תבלום בצורה טבעית
             rb.angularDamping = angularDragWhenStopping;
         }
     }
 
     private void SyncPlayerPosition()
     {
-        // 1. Smoothly center player inside the can
+        // 1. מיקום השחקן במרכז הפחית בצורה חלקה
         playerInside.transform.position = transform.position + (Vector3)playerInsideOffset;
         
-        // 2. Keep the player upright relative to the surface normal
+        // 2. שמירת השחקן זקוף תמיד ביחס למשטח (כפי שנדרש במסמך העיצוב)
         playerInside.transform.rotation = Quaternion.FromToRotation(Vector3.up, playerInside.SurfaceNormal); //[cite: 1]
     }
 
@@ -231,7 +232,7 @@ public class TunaCan : Shell
 
     private void OnDestroy()
     {
-        // Critical safeguard: If the can is destroyed while in use, restore player physics!
+        // הגנה קריטית: אם הפחית מושמדת תוך כדי שימוש, חובה להחזיר לשחקן קוליידרים ופיזיקה!
         if (currentState == ShellState.InUse)
         {
             RestorePlayerPhysics();
@@ -245,7 +246,7 @@ public class TunaCan : Shell
             Gizmos.color = Color.cyan;
             float radius = shellCollider.bounds.extents.y;
             Vector2 origin = (Vector2)transform.position + new Vector2(0, -radius + 0.2f);
-            // Draw the ground sensor raycast
+            // ציור הקרן של החיישן
             Gizmos.DrawLine(origin, origin + Vector2.down * 0.3f);
         }
     }
