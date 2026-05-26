@@ -1,12 +1,15 @@
+using System.Collections;
 using UnityEngine;
 
 public class AudioManager : MonoBehaviour
 {
-    private AudioSource source;
+    public static AudioManager instance;
 
-    //Sounds and Variables
+    private AudioSource musicSource;
+    private AudioSource ambientSource;
+
+    [Header("Audio Clips")]
     public AudioClip ouch;
-
     public AudioClip click;
     public AudioClip ghost;
     public AudioClip winLevel;
@@ -20,162 +23,147 @@ public class AudioManager : MonoBehaviour
     public AudioClip bone3;
     public AudioClip bone4;
 
+    private Coroutine fadeCoroutine;
+    private float originalMusicVolume;
 
-    public static bool OuchSound = false;
-    public static bool hitFirstSound = false;
-    public static bool hitSecondSound = false;
-    public static bool hitLastSound = false;
-    public static bool clickSound = false;
-    public static bool ghostSound = false;
-    public static bool winLevelSound = false;
-    public static bool loseLevelSound = false;
-    public static bool booSound = false;
-    public static bool crackBones1 = false;
-    public static bool crackBones2 = false;
-    public static bool crackBones3 = false;
-    public static bool crackBones4 = false;
-
-
-
-
-    void Start()
+    void Awake()
     {
-        source = GetComponent<AudioSource>();
-        OuchSound = false;
-        hitFirstSound = false;
-        hitSecondSound = false;
-        hitLastSound = false;
-        clickSound = false;
-        ghostSound = false;
-        winLevelSound = false;
-        loseLevelSound = false;
-        booSound = false;
-        crackBones1 = false;
-        crackBones2 = false;
-        crackBones3 = false;
-        crackBones4 = false;
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
 
+        // תפיסת שני רכיבי האודיו סורס שעל האובייקט
+        AudioSource[] sources = GetComponents<AudioSource>();
+
+        if (sources.Length >= 2)
+        {
+            musicSource = sources[0];
+            ambientSource = sources[1];
+        }
+        else
+        {
+            // הגנה במקרה ושכחת להוסיף ידנית ב-Inspector
+            musicSource = sources.Length > 0 ? sources[0] : gameObject.AddComponent<AudioSource>();
+            ambientSource = gameObject.AddComponent<AudioSource>();
+        }
+
+        originalMusicVolume = musicSource.volume;
     }
 
-    void Update()
+    // =================================================================
+    // שליטה במוזיקת רקע (כולל פייד אאוט של 4 שניות)
+    // =================================================================
+
+    public static void PlayBackgroundMusic(AudioClip clip, bool loop = true)
     {
-        Ouch();
-        Click();
-        Ghost();
-        WinLevel();
-        HitFirst();
-        HitSecond();
-        HitLast();
-        LoseLevel();
-        Boo();
-        CrackB1();
-        CrackB2();
-        CrackB3();
-        CrackB4();
+        if (instance == null || instance.musicSource == null || clip == null) return;
+
+        // אם יש פייד אאוט שרץ כרגע, נעצור אותו ונחזיר את הווליום
+        if (instance.fadeCoroutine != null)
+        {
+            instance.StopCoroutine(instance.fadeCoroutine);
+        }
+
+        instance.musicSource.volume = instance.originalMusicVolume;
+
+        if (instance.musicSource.clip == clip && instance.musicSource.isPlaying) return;
+
+        instance.musicSource.clip = clip;
+        instance.musicSource.loop = loop;
+        instance.musicSource.Play();
     }
 
-    private void CrackB1()
+    /// <summary>
+    /// עוצר את המוזיקה בהדרגתיות (פייד אאוט) לאורך 4 שניות
+    /// </summary>
+    public static void StopBackgroundMusic()
     {
-        if (crackBones1 == true)
+        if (instance == null || instance.musicSource == null) return;
+
+        if (instance.fadeCoroutine != null)
         {
-            source.PlayOneShot(bone1);
-            crackBones1 = false;
+            instance.StopCoroutine(instance.fadeCoroutine);
+        }
+
+        // הפעלת תהליך הפייד אאוט של 4 שניות
+        instance.fadeCoroutine = instance.StartCoroutine(instance.FadeOutMusic(4f));
+    }
+    /// <summary>
+    /// בודק האם שיר ספציפי מתנגן כרגע בערוץ המוזיקה הראשי
+    /// </summary>
+    public static bool IsPlaying(AudioClip clip)
+    {
+        if (instance == null || instance.musicSource == null) return false;
+        return instance.musicSource.clip == clip && instance.musicSource.isPlaying;
+    }
+    private Coroutine ambientFadeCoroutine;
+
+    // קורוטינה שמורידה את הווליום לאפס לאורך זמן ועוצרת את השיר
+    private IEnumerator FadeOutMusic(float duration)
+    {
+        float startVolume = musicSource.volume;
+
+        while (musicSource.volume > 0)
+        {
+            musicSource.volume -= startVolume * (Time.deltaTime / duration);
+            yield return null;
+        }
+
+        musicSource.Stop();
+        musicSource.volume = startVolume; // מאפס את הווליום חזרה לברירת המחדל לפעם הבאה
+    }
+
+    // =================================================================
+    // שליטה ברצועת האמביינט (Ambient) במקביל למוזיקה
+    // =================================================================
+
+    public static void PlayAmbient(AudioClip clip, bool loop = true)
+    {
+        if (instance == null || instance.ambientSource == null || clip == null) return;
+        if (instance.ambientSource.clip == clip && instance.ambientSource.isPlaying) return;
+
+        instance.ambientSource.clip = clip;
+        instance.ambientSource.loop = loop;
+        instance.ambientSource.Play();
+    }
+
+    public static void StopAmbient()
+    {
+        if (instance != null && instance.ambientSource != null)
+        {
+            instance.ambientSource.Stop();
         }
     }
-    private void CrackB2()
+
+    // =================================================================
+    // אפקטים קוליים (SFX) - משתמשים במוזיקה סורס הראשי כ-PlayOneShot
+    // =================================================================
+    public static void PlayOuch() => PlaySFX(instance?.ouch);
+    public static void PlayClick() => PlaySFX(instance?.click);
+    public static void PlayGhost() => PlaySFX(instance?.ghost);
+    public static void PlayWinLevel() => PlaySFX(instance?.winLevel);
+    public static void PlayLoseLevel() => PlaySFX(instance?.loseLevel);
+    public static void PlayHitFirst() => PlaySFX(instance?.hitFirst);
+    public static void PlayHitSecond() => PlaySFX(instance?.hitSecond);
+    public static void PlayHitLast() => PlaySFX(instance?.hitLast);
+    public static void PlayBoo() => PlaySFX(instance?.boo);
+    public static void PlayBone1() => PlaySFX(instance?.bone1);
+    public static void PlayBone2() => PlaySFX(instance?.bone2);
+    public static void PlayBone3() => PlaySFX(instance?.bone3);
+    public static void PlayBone4() => PlaySFX(instance?.bone4);
+
+    private static void PlaySFX(AudioClip clip)
     {
-        if (crackBones2 == true)
+        if (instance != null && instance.musicSource != null && clip != null)
         {
-            source.PlayOneShot(bone2);
-            crackBones2 = false;
-        }
-    }
-    private void CrackB3()
-    {
-        if (crackBones3 == true)
-        {
-            source.PlayOneShot(bone3);
-            crackBones3 = false;
-        }
-    }
-    private void CrackB4()
-    {
-        if (crackBones4 == true)
-        {
-            source.PlayOneShot(bone4);
-            crackBones4 = false;
-        }
-    }
-    private void Boo()
-    {
-        if (booSound == true)
-        {
-            source.PlayOneShot(boo);
-            booSound = false;
-        }
-    }
-    private void Ouch()
-    {
-        if (OuchSound == true)
-        {
-            source.PlayOneShot(ouch);
-            OuchSound = false;
-        }
-    }
-    private void Click()
-    {
-        if (clickSound == true)
-        {
-            source.PlayOneShot(click);
-            clickSound = false;
-        }
-    }
-    private void Ghost()
-    {
-        if (ghostSound == true)
-        {
-            source.PlayOneShot(ghost);
-            ghostSound = false;
-        }
-    }
-    private void WinLevel()
-    {
-        if (winLevelSound == true)
-        {
-            source.PlayOneShot(winLevel);
-            winLevelSound = false;
-        }
-    }
-    private void LoseLevel()
-    {
-        if (loseLevelSound == true)
-        {
-            source.PlayOneShot(loseLevel);
-            loseLevelSound = false;
-        }
-    }
-    private void HitFirst()
-    {
-        if (hitFirstSound == true)
-        {
-            source.PlayOneShot(hitFirst);
-            hitFirstSound = false;
-        }
-    }
-    private void HitSecond()
-    {
-        if (hitSecondSound == true)
-        {
-            source.PlayOneShot(hitSecond);
-            hitSecondSound = false;
-        }
-    }
-    private void HitLast()
-    {
-        if (hitLastSound == true)
-        {
-            source.PlayOneShot(hitLast);
-            hitLastSound = false;
+            instance.musicSource.PlayOneShot(clip);
         }
     }
 }
