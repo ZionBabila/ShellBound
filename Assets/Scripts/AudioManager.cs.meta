@@ -1,0 +1,24 @@
+fileFormatVersion: 2
+guid: 06d1e981d3905fa449c3fd8c2e589825
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - ouch: {fileID: 8300000, guid: f42ed689a0df15b4681d6630af1f6318, type: 3}
+  - click: {instanceID: 0}
+  - ghost: {instanceID: 0}
+  - winLevel: {instanceID: 0}
+  - loseLevel: {instanceID: 0}
+  - hitFirst: {instanceID: 0}
+  - hitSecond: {instanceID: 0}
+  - hitLast: {instanceID: 0}
+  - boo: {instanceID: 0}
+  - bone1: {instanceID: 0}
+  - bone2: {instanceID: 0}
+  - bone3: {instanceID: 0}
+  - bone4: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
