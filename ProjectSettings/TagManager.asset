@@ -43,5 +43,17 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: BG SKY
+    uniqueID: 273567399
+    locked: 0
+  - name: MID
+    uniqueID: 410136985
+    locked: 0
+  - name: MID2
+    uniqueID: 1079440875
+    locked: 0
+  - name: UI
+    uniqueID: 2778886187
+    locked: 0
   m_RenderingLayers:
   - Default
