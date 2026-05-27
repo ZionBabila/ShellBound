@@ -52,8 +52,14 @@ TagManager:
   - name: Far
     uniqueID: 2938178787
     locked: 0
+  - name: City
+    uniqueID: 558388277
+    locked: 0
   - name: MID
     uniqueID: 410136985
+    locked: 0
+  - name: MID1
+    uniqueID: 2937026913
     locked: 0
   - name: MID2
     uniqueID: 1079440875

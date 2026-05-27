@@ -4,8 +4,13 @@ using UnityEngine;
 public class Parallax : MonoBehaviour
 {
     public Camera cam;
-    [Tooltip("0 = Completely static (normal gameplay), 1 = Moves exactly with the camera (very distant background)")]
-    public float parallaxEffect = 0.0f;
+
+    [Header("Parallax Settings")]
+    [Tooltip("Controls the horizontal (X) parallax. 0 = Static, 1 = Moves with cam")]
+    public float parallaxEffect = 0.5f;
+    
+    [Tooltip("Controls the vertical (Y) parallax. 0 = Static, 1 = Moves with cam")]
+    public float parallaxEffectY = 0.5f;
 
     private Vector2 startPosition;
     private Vector2 camStartPosition;
@@ -32,7 +37,7 @@ public class Parallax : MonoBehaviour
 
         // Calculate how much the camera has moved since the start
         float distMovedX = (cam.transform.position.x - camStartPosition.x) * parallaxEffect;
-        float distMovedY = (cam.transform.position.y - camStartPosition.y) * parallaxEffect;
+        float distMovedY = (cam.transform.position.y - camStartPosition.y) * parallaxEffectY;
 
         // Apply the calculated distance to the object's starting position
         transform.position = new Vector3(startPosition.x + distMovedX, startPosition.y + distMovedY, transform.position.z);
