@@ -95,6 +95,94 @@ ScriptedImporter:
     spritePosition: {x: 0, y: 0}
   multiSpriteImportData: []
   layeredSpriteImportData:
+  - name: Eye Lid R
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 186
+      y: 128
+      width: 12
+      height: 22
+    spriteID: 7e0e30402edbc0e479215a8d9b091114
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 186, y: 128}
+    spritePosition: {x: 140, y: 107}
+  - name: Eye Lid L
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 162
+      y: 128
+      width: 16
+      height: 22
+    spriteID: 125f39b38d28b5c49bd622b41f27581d
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 162, y: 128}
+    spritePosition: {x: 124, y: 106}
+  - name: EYE R MASK
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 206
+      y: 128
+      width: 8
+      height: 18
+    spriteID: 012b9c126d06a074886e9ed5b673100e
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 206, y: 128}
+    spritePosition: {x: 143, y: 108}
+  - name: EYE L MASK
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 154
+      y: 4
+      width: 10
+      height: 20
+    spriteID: e5996e3b1b0c3324f848ef9fbc1840e0
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 154, y: 4}
+    spritePosition: {x: 127, y: 107}
   - name: Eye L
     originalName: 
     pivot: {x: 0.5, y: 0.5}
@@ -2465,8 +2553,8 @@ ScriptedImporter:
     customData: 
     rect:
       serializedVersion: 2
-      x: 162
-      y: 128
+      x: 172
+      y: 4
       width: 12
       height: 14
     spriteID: aedd753f530325e4491621cf0d5d65d4
@@ -2616,7 +2704,7 @@ ScriptedImporter:
     - {x: 8, y: 9}
     - {x: 9, y: 10}
     tessellationDetail: 0
-    uvTransform: {x: 162, y: 128}
+    uvTransform: {x: 172, y: 4}
     spritePosition: {x: 130, y: 78}
   - name: Body
     originalName: 
@@ -3719,6 +3807,46 @@ ScriptedImporter:
     flatten: 0
     isImported: 0
     isVisible: 0
+  - name: Eye Lid R
+    spriteName: Eye Lid R
+    isGroup: 0
+    parentIndex: -1
+    spriteID: 7e0e30402edbc0e479215a8d9b091114
+    layerID: 52
+    mosaicPosition: {x: 186, y: 128}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Eye Lid L
+    spriteName: Eye Lid L
+    isGroup: 0
+    parentIndex: -1
+    spriteID: 125f39b38d28b5c49bd622b41f27581d
+    layerID: 51
+    mosaicPosition: {x: 162, y: 128}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: EYE R MASK
+    spriteName: EYE R MASK
+    isGroup: 0
+    parentIndex: -1
+    spriteID: 012b9c126d06a074886e9ed5b673100e
+    layerID: 57
+    mosaicPosition: {x: 206, y: 128}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: EYE L MASK
+    spriteName: EYE L MASK
+    isGroup: 0
+    parentIndex: -1
+    spriteID: e5996e3b1b0c3324f848ef9fbc1840e0
+    layerID: 56
+    mosaicPosition: {x: 154, y: 4}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
   - name: Eye L
     spriteName: Eye L
     isGroup: 0
@@ -3752,7 +3880,7 @@ ScriptedImporter:
   - name: Layer 2
     spriteName: 
     isGroup: 0
-    parentIndex: 3
+    parentIndex: 7
     spriteID: e60a5c5df0476974dbee26d88068267b
     layerID: 5
     mosaicPosition: {x: 0, y: 0}
@@ -3762,7 +3890,7 @@ ScriptedImporter:
   - name: Layer 5
     spriteName: 
     isGroup: 0
-    parentIndex: 3
+    parentIndex: 7
     spriteID: aadeb2b37a757f34f974237074933245
     layerID: 9
     mosaicPosition: {x: 0, y: 0}
@@ -3825,7 +3953,7 @@ ScriptedImporter:
     parentIndex: -1
     spriteID: aedd753f530325e4491621cf0d5d65d4
     layerID: 18
-    mosaicPosition: {x: 162, y: 128}
+    mosaicPosition: {x: 172, y: 4}
     flatten: 0
     isImported: 1
     isVisible: 1
@@ -3842,7 +3970,7 @@ ScriptedImporter:
   - name: Spry Hatch
     spriteName: 
     isGroup: 0
-    parentIndex: 12
+    parentIndex: 16
     spriteID: b66b7dfb583fc3549a25a6c66f1e2954
     layerID: 27
     mosaicPosition: {x: 0, y: 0}
@@ -3852,7 +3980,7 @@ ScriptedImporter:
   - name: Spray Line
     spriteName: 
     isGroup: 0
-    parentIndex: 12
+    parentIndex: 16
     spriteID: 1cdc14b48fb296d47b0f503b7c630acb
     layerID: 25
     mosaicPosition: {x: 0, y: 0}
@@ -3862,7 +3990,7 @@ ScriptedImporter:
   - name: Spray Col
     spriteName: 
     isGroup: 0
-    parentIndex: 12
+    parentIndex: 16
     spriteID: 4d0cccf75ad8e6b41b833a057b376085
     layerID: 26
     mosaicPosition: {x: 0, y: 0}
@@ -3882,7 +4010,7 @@ ScriptedImporter:
   - name: Layer 6
     spriteName: Layer 6
     isGroup: 0
-    parentIndex: 16
+    parentIndex: 20
     spriteID: 87e48a75987be3f40bfd690ea9c01def
     layerID: 37
     mosaicPosition: {x: 4, y: 4}
@@ -3892,7 +4020,7 @@ ScriptedImporter:
   - name: Layer 7
     spriteName: Layer 7
     isGroup: 0
-    parentIndex: 16
+    parentIndex: 20
     spriteID: 64e689e57244c7d44adb57774c6305e9
     layerID: 36
     mosaicPosition: {x: 326, y: 4}
@@ -3912,7 +4040,7 @@ ScriptedImporter:
   - name: Layer 6
     spriteName: Layer 6
     isGroup: 0
-    parentIndex: 19
+    parentIndex: 23
     spriteID: 724777f92f5db264c9767d79452f420e
     layerID: 31
     mosaicPosition: {x: 165, y: 4}
@@ -3922,7 +4050,7 @@ ScriptedImporter:
   - name: Layer 7
     spriteName: Layer 7
     isGroup: 0
-    parentIndex: 19
+    parentIndex: 23
     spriteID: c9319cc17d030be45a9d0159361f80af
     layerID: 32
     mosaicPosition: {x: 4, y: 155}
