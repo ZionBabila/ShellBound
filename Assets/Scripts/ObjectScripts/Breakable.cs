@@ -3,12 +3,7 @@ using UnityEngine;
 public class Breakable : MonoBehaviour
 {
     [Header("Sprites")]
-    public Sprite unbrokenSprite;
     public Sprite brokenSprite;
-
-    [Header("Break Effects")]
-    [Tooltip("Visual effect or animation prefab to spawn when broken.")]
-    public GameObject breakEffectPrefab;
 
     private bool isBroken = false;
     private SpriteRenderer spriteRenderer;
@@ -17,43 +12,38 @@ public class Breakable : MonoBehaviour
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
-        col = GetComponent<Collider2D>();
-
-        // טעינת הספרייט השלם כבר בתחילת המשחק
-        if (spriteRenderer != null && unbrokenSprite != null)
+        
+        // If the SpriteRenderer was removed in the editor, add it dynamically
+        if (spriteRenderer == null)
         {
-            spriteRenderer.sprite = unbrokenSprite;
+            spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
         }
+
+        col = GetComponent<Collider2D>();
     }
 
-    // פונקציה זו נקראת על ידי ArmorShell או כל מנגנון אחר ששובר את האובייקט
+    // This function is called by ArmorShell or any other mechanism that can break objects
     public void Smash()
     {
-        // מוודאים שלא שוברים את האובייקט פעמיים באותו פריים
+        // Ensure the object isn't smashed twice in the same frame
         if (isBroken) return;
         isBroken = true;
 
-        // הפעלת סאונד השבירה דרך הטריגר שלנו ב-AudioManager
-        AudioManager.breakPlatformSound = true;
+        // Trigger the global break sound via our AudioManager property
+        AudioManager.PlayBreakPlatform();
 
-        // החלפת הספרייט לגרסה השבורה
+        // Swap the sprite to the broken version
         if (spriteRenderer != null && brokenSprite != null)
         {
             spriteRenderer.sprite = brokenSprite;
         }
 
-        // כיבוי הקוליידר כדי שהשחקן יוכל לעבור דרך השברים
+        // Disable the collider so the player can pass through the debris
         if (col != null)
         {
             col.enabled = false;
         }
 
-        // יצירת אפקט החלקיקים / אנימציית השבירה במקום שבו האובייקט היה
-        if (breakEffectPrefab != null)
-        {
-            Instantiate(breakEffectPrefab, transform.position, Quaternion.identity);
-        }
-
-        // הסרנו את הפקודה Destroy(gameObject) כדי שהספרייט השבור יישאר בסביבה
+        // We don't call Destroy(gameObject) so the broken sprite remains in the scene
     }
 }

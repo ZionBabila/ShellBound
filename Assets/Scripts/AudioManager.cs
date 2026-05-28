@@ -159,6 +159,7 @@ public class AudioManager : MonoBehaviour
     public static void PlayBone2() => PlaySFX(instance?.bone2);
     public static void PlayBone3() => PlaySFX(instance?.bone3);
     public static void PlayBone4() => PlaySFX(instance?.bone4);
+    public static void PlayBreakPlatform() => PlaySFX(instance?.breakPlatform);
 
     private static void PlaySFX(AudioClip clip)
     {
