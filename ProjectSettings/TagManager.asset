@@ -64,6 +64,9 @@ TagManager:
   - name: MID2
     uniqueID: 1079440875
     locked: 0
+  - name: Player
+    uniqueID: 307504175
+    locked: 0
   - name: UI
     uniqueID: 2778886187
     locked: 0
