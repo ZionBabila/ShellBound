@@ -29,6 +29,11 @@ public class PlayerController : MonoBehaviour
     [Header("Visuals (PSB & Bones)")]
     public Transform visualsRoot;
     public bool facingRight = true;
+    
+    [Tooltip("Reference to the Animator component (optional).")]
+    public Animator animator;
+    [Tooltip("Multiplier for the walking animation speed.")]
+    public float animationSpeedMultiplier = 1.0f;
 
     [Header("Shell System & Interaction")]
     public Shell currentShell;
@@ -78,6 +83,8 @@ public class PlayerController : MonoBehaviour
     private float currentVelocityX;
     private float moveTimer;
     private bool wasGrounded;
+
+    private static readonly int SpeedHash = Animator.StringToHash("Speed");
 
     void Awake()
     {
@@ -306,6 +313,12 @@ public class PlayerController : MonoBehaviour
         {
             if (moveInputX > 0 && !facingRight) Flip();
             else if (moveInputX < 0 && facingRight) Flip();
+        }
+
+        // Update Animator speed parameter if an Animator is assigned
+        if (animator != null)
+        {
+            animator.SetFloat(SpeedHash, Mathf.Abs(currentVelocityX) * animationSpeedMultiplier);
         }
     }
 
