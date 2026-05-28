@@ -9,6 +9,7 @@ public class AudioManager : MonoBehaviour
     private AudioSource ambientSource;
 
     [Header("Audio Clips")]
+    public AudioClip breakPlatform;
     public AudioClip ouch;
     public AudioClip click;
     public AudioClip ghost;
@@ -39,7 +40,7 @@ public class AudioManager : MonoBehaviour
             return;
         }
 
-        // ъфйсъ щрй шлйбй даегйе сешс щтм даебййчи
+        // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         AudioSource[] sources = GetComponents<AudioSource>();
 
         if (sources.Length >= 2)
@@ -49,7 +50,7 @@ public class AudioManager : MonoBehaviour
         }
         else
         {
-            // дврд бочшд ещлзъ мдесйу йгрйъ б-Inspector
+            // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ-Inspector
             musicSource = sources.Length > 0 ? sources[0] : gameObject.AddComponent<AudioSource>();
             ambientSource = gameObject.AddComponent<AudioSource>();
         }
@@ -58,14 +59,14 @@ public class AudioManager : MonoBehaviour
     }
 
     // =================================================================
-    // щмйид боежйчъ шчт (лемм фййг ааеи щм 4 щрйеъ)
+    // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ 4 пїЅпїЅпїЅпїЅпїЅ)
     // =================================================================
 
     public static void PlayBackgroundMusic(AudioClip clip, bool loop = true)
     {
         if (instance == null || instance.musicSource == null || clip == null) return;
 
-        // ан йщ фййг ааеи щшх лшвт, ртцеш аеъе ерзжйш аъ деемйен
+        // пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         if (instance.fadeCoroutine != null)
         {
             instance.StopCoroutine(instance.fadeCoroutine);
@@ -81,7 +82,7 @@ public class AudioManager : MonoBehaviour
     }
 
     /// <summary>
-    /// тецш аъ доежйчд бдгшвъйеъ (фййг ааеи) маешк 4 щрйеъ
+    /// пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ) пїЅпїЅпїЅпїЅпїЅ 4 пїЅпїЅпїЅпїЅпїЅ
     /// </summary>
     public static void StopBackgroundMusic()
     {
@@ -92,11 +93,11 @@ public class AudioManager : MonoBehaviour
             instance.StopCoroutine(instance.fadeCoroutine);
         }
 
-        // дфтмъ ъдмйк дфййг ааеи щм 4 щрйеъ
+        // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ 4 пїЅпїЅпїЅпїЅпїЅ
         instance.fadeCoroutine = instance.StartCoroutine(instance.FadeOutMusic(4f));
     }
     /// <summary>
-    /// бегч дан щйш сфцйфй оървп лшвт бтшех доежйчд дшащй
+    /// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
     /// </summary>
     public static bool IsPlaying(AudioClip clip)
     {
@@ -105,7 +106,7 @@ public class AudioManager : MonoBehaviour
     }
     private Coroutine ambientFadeCoroutine;
 
-    // чешеийрд щоешйгд аъ деемйен мафс маешк жоп етецшъ аъ дщйш
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ
     private IEnumerator FadeOutMusic(float duration)
     {
         float startVolume = musicSource.volume;
@@ -117,11 +118,11 @@ public class AudioManager : MonoBehaviour
         }
 
         musicSource.Stop();
-        musicSource.volume = startVolume; // оафс аъ деемйен зжшд мбшйшъ дозгм мфтн дбад
+        musicSource.volume = startVolume; // пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
     }
 
     // =================================================================
-    // щмйид бшцетъ даобййри (Ambient) бочбйм моежйчд
+    // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (Ambient) пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     // =================================================================
 
     public static void PlayAmbient(AudioClip clip, bool loop = true)
@@ -143,7 +144,7 @@ public class AudioManager : MonoBehaviour
     }
 
     // =================================================================
-    // афчийн чемййн (SFX) - ощъощйн боежйчд сешс дшащй л-PlayOneShot
+    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (SFX) - пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ-PlayOneShot
     // =================================================================
     public static void PlayOuch() => PlaySFX(instance?.ouch);
     public static void PlayClick() => PlaySFX(instance?.click);
@@ -158,6 +159,7 @@ public class AudioManager : MonoBehaviour
     public static void PlayBone2() => PlaySFX(instance?.bone2);
     public static void PlayBone3() => PlaySFX(instance?.bone3);
     public static void PlayBone4() => PlaySFX(instance?.bone4);
+    public static void PlayBreakPlatform() => PlaySFX(instance?.breakPlatform);
 
     private static void PlaySFX(AudioClip clip)
     {

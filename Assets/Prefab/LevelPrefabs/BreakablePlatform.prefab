@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 9213891684173307395}
   - component: {fileID: 8324897353210835587}
   - component: {fileID: 1506149609099840719}
-  - component: {fileID: 2370781177349285598}
+  - component: {fileID: 7237409180806465345}
   m_Layer: 13
   m_Name: BreakablePlatform
   m_TagString: Untagged
@@ -29,7 +29,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 3.85, y: -13.55, z: 0}
-  m_LocalScale: {x: 9.1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -79,11 +79,11 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1079440875
+  m_SortingLayer: 7
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
+  m_Sprite: {fileID: 4194658366085432031, guid: 77ff7d2bcdebd504c81ac3fad08367ac, type: 3}
   m_Color: {r: 0.7403799, g: 0.13274297, b: 0.740566, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -131,7 +131,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
+    oldSize: {x: 15.71, y: 3.74}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -139,7 +139,7 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
---- !u!114 &2370781177349285598
+--- !u!114 &7237409180806465345
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -151,5 +151,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a488c698088199049835621efdccc706, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Breakable
-  breakSound: {fileID: 0}
-  breakEffectPrefab: {fileID: 0}
+  brokenSprite: {fileID: -2077274745388444419, guid: 77ff7d2bcdebd504c81ac3fad08367ac, type: 3}

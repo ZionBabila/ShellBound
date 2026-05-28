@@ -2,35 +2,48 @@ using UnityEngine;
 
 public class Breakable : MonoBehaviour
 {
-    [Header("Break Effects")]
-    [Tooltip("Sound to play when the object is broken.")]
-    public AudioClip breakSound;
-
-    [Tooltip("Visual effect or animation prefab to spawn when broken.")]
-    public GameObject breakEffectPrefab;
+    [Header("Sprites")]
+    public Sprite brokenSprite;
 
     private bool isBroken = false;
+    private SpriteRenderer spriteRenderer;
+    private Collider2D col;
 
-    // פונקציה זו נקראת על ידי ArmorShell או כל מנגנון אחר ששובר את האובייקט
+    private void Awake()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        
+        // If the SpriteRenderer was removed in the editor, add it dynamically
+        if (spriteRenderer == null)
+        {
+            spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
+        }
+
+        col = GetComponent<Collider2D>();
+    }
+
+    // This function is called by ArmorShell or any other mechanism that can break objects
     public void Smash()
     {
-        // מוודאים שלא שוברים את האובייקט פעמיים באותו פריים
+        // Ensure the object isn't smashed twice in the same frame
         if (isBroken) return;
         isBroken = true;
 
-        // הפעלת סאונד במיקום של האובייקט (מכיוון שהאובייקט עצמו יימחק מיד)
-        if (breakSound != null)
+        // Trigger the global break sound via our AudioManager property
+        AudioManager.PlayBreakPlatform();
+
+        // Swap the sprite to the broken version
+        if (spriteRenderer != null && brokenSprite != null)
         {
-            AudioSource.PlayClipAtPoint(breakSound, transform.position);
+            spriteRenderer.sprite = brokenSprite;
         }
 
-        // יצירת אפקט החלקיקים / אנימציית השבירה במקום שבו האובייקט היה
-        if (breakEffectPrefab != null)
+        // Disable the collider so the player can pass through the debris
+        if (col != null)
         {
-            Instantiate(breakEffectPrefab, transform.position, Quaternion.identity);
+            col.enabled = false;
         }
 
-        // הריסת האובייקט השלם
-        Destroy(gameObject);
+        // We don't call Destroy(gameObject) so the broken sprite remains in the scene
     }
 }
