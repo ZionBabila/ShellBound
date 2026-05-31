@@ -9864,7 +9864,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 886251e9a18ece04ea8e61686c173e1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachinePositionComposer
-  CameraDistance: 10
+  CameraDistance: 15
   DeadZoneDepth: 0
   Composition:
     ScreenPosition: {x: -0.38, y: 0.1}
@@ -9903,7 +9903,7 @@ MonoBehaviour:
   m_StreamingVersion: 20241001
   m_LegacyPriority: 0
   Target:
-    TrackingTarget: {fileID: 0}
+    TrackingTarget: {fileID: 6965287324728574012}
     LookAtTarget: {fileID: 0}
     CustomLookAtTarget: 0
   Lens:
@@ -9935,7 +9935,7 @@ Transform:
   m_GameObject: {fileID: 247587794}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -58.32605, y: -40.943527, z: -9.91}
+  m_LocalPosition: {x: -417.641, y: -48.34353, z: -15}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -44447,7 +44447,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineTriggerAction
   LayerMask:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 1025
   WithTag: Player
   WithoutTag: 
   SkipFirst: 0
@@ -44464,7 +44464,7 @@ MonoBehaviour:
   OnObjectExit:
     Action: 1
     Target: {fileID: 247587794}
-    BoostAmount: -4
+    BoostAmount: -2
     StartTime: 0
     Mode: 0
     Event:
@@ -44504,7 +44504,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 26.476616, y: -0.46462345}
+  m_Offset: {x: 23.153967, y: 1.0579824}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -44514,7 +44514,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 54.923233, y: 16.026857}
+  m_Size: {x: 39.41924, y: 12.981646}
   m_EdgeRadius: 0
 --- !u!4 &1118689618
 Transform:
@@ -44524,12 +44524,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1118689615}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 674.7, y: -28.1, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -444.80005, y: -51.69353, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1967637926}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1123560738
 GameObject:
@@ -57162,8 +57162,9 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1325694222}
   - {fileID: 519420032}
+  - {fileID: 1325694222}
+  - {fileID: 1967637926}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1453553482
@@ -75108,6 +75109,38 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &1967637925
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1967637926}
+  m_Layer: 0
+  m_Name: cameraTriggers
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1967637926
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1967637925}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1118689618}
+  m_Father: {fileID: 1453021331}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1971275719
 GameObject:
   m_ObjectHideFlags: 0
@@ -78820,6 +78853,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+--- !u!1 &2052035415 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7922627117949727221, guid: 1a4f50b2345617c4ca7eeedd3afe0549, type: 3}
+  m_PrefabInstance: {fileID: 2641546623711912350}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2052769298
 GameObject:
   m_ObjectHideFlags: 0
@@ -82923,7 +82961,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7922627117949727221, guid: 1a4f50b2345617c4ca7eeedd3afe0549, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6965287324728574019}
   m_SourcePrefab: {fileID: 100100000, guid: 1a4f50b2345617c4ca7eeedd3afe0549, type: 3}
 --- !u!1001 &3949080646772967814
 PrefabInstance:
@@ -83044,6 +83085,52 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3227177804198321867, guid: 1a4f50b2345617c4ca7eeedd3afe0549, type: 3}
   m_PrefabInstance: {fileID: 2641546623711912350}
   m_PrefabAsset: {fileID: 0}
+--- !u!61 &6965287324728574019
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2052035415}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: -0.14, y: 1.2827895}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1.54, y: 1.5545187}
+  m_EdgeRadius: 0
 --- !u!1001 &7601242515284487474
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -83248,7 +83335,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4236663322783489650, guid: 96e329fc1b10af346a50d587903ded22, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8880209092839642427, guid: 96e329fc1b10af346a50d587903ded22, type: 3}
       propertyPath: m_Name
@@ -83272,7 +83359,6 @@ SceneRoots:
   - {fileID: 511517813}
   - {fileID: 1132312579}
   - {fileID: 1223057522}
-  - {fileID: 1118689618}
   - {fileID: 793645913}
   - {fileID: 1992558767}
   - {fileID: 716428766}
