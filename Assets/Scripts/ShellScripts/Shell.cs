@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using TMPro;
 
 public enum ShellState
 {
@@ -31,6 +32,21 @@ public abstract class Shell : MonoBehaviour
     public Sprite shellSprite;
     public Sprite shellOnBackSprite;
 
+    [Header("Tutorial UI - Near Shell")]
+    [Tooltip("Reference to the TextMeshPro UI element for the 'Near' message.")]
+    public TMP_Text nearTextUI;
+
+    [Header("Tutorial UI - Equip Shell")]
+    [Tooltip("Reference to the TextMeshPro UI element for the 'Equip' message.")]
+    public TMP_Text equipTextUI;
+
+    [Header("Tutorial UI - General")]
+    [Tooltip("How many times the ENTIRE sequence (Near -> Equip) should be shown. (-1 for infinite)")]
+    public int maxSequenceShows = 1;
+
+    [Tooltip("How long the message will stay on screen.")]
+    public float tutorialDisplayTime = 4f;
+
     [Header("State")]
     [SerializeField] protected ShellState currentState = ShellState.OnGround;
     public ShellState CurrentState => currentState;
@@ -42,6 +58,7 @@ public abstract class Shell : MonoBehaviour
     protected Vector3 originalScale;
     protected int originalLayer; // שומר את שכבת הפיזיקה המקורית
     protected PlayerController playerInside; // נשמר ברמת הבסיס כדי למנוע כפילויות בכל הקונכיות
+    protected int sequenceCompletedCount = 0;
 
     protected virtual void Awake()
     {
@@ -94,6 +111,12 @@ public abstract class Shell : MonoBehaviour
         UpdateAttachmentTransform(player);
         
         Debug.Log($"<color=white>🐚 SHELL COLLECTED:</color> Physics disabled, attached safely to {attachParent.name}.");
+
+        if (maxSequenceShows == -1 || sequenceCompletedCount < maxSequenceShows)
+        {
+            ShowEquipTutorialText();
+            sequenceCompletedCount++; // סופר את השלמת הסיקוונס רק אחרי שהקונכייה נאספה
+        }
     }
     public void ApplyCompensatedScale(Transform newParent)
     {
@@ -215,6 +238,75 @@ public abstract class Shell : MonoBehaviour
         if (currentState == ShellState.OnBack && playerInside != null)
         {
             UpdateAttachmentTransform(playerInside);
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        // מפעיל את הטקסט רק אם הקונכייה על הרצפה, השחקן נוגע בה, ועוד לא חרגנו מכמות הפעמים המותרת
+        if (currentState == ShellState.OnGround && collision.CompareTag("Player"))
+        {
+            Debug.Log($"<color=yellow>TUTORIAL:</color> Player entered {gameObject.name} trigger.");
+            if (maxSequenceShows == -1 || sequenceCompletedCount < maxSequenceShows)
+            {
+                ShowNearTutorialText();
+            }
+        }
+    }
+
+    public void ShowNearTutorialText()
+    {
+        // מכבה מיד את הודעת הלבישה (Equip) למקרה שהיא דלוקה
+        HideEquipTutorialText();
+        CancelInvoke(nameof(HideEquipTutorialText));
+
+        if (nearTextUI != null)
+        {
+            Debug.Log($"<color=yellow>TUTORIAL:</color> Showing Near message for {gameObject.name}");
+            nearTextUI.gameObject.SetActive(true); // מדליק את האובייקט גם אם הוא כבוי בקנבס
+            
+            CancelInvoke(nameof(HideNearTutorialText)); // מאפס את הטיימר אם נכנסנו שוב
+            Invoke(nameof(HideNearTutorialText), tutorialDisplayTime);
+        }
+        else
+        {
+            Debug.LogWarning($"<color=red>TUTORIAL ERROR:</color> Cannot show 'Near' text on {gameObject.name}. Is nearTextUI assigned?");
+        }
+    }
+
+    private void HideNearTutorialText()
+    {
+        if (nearTextUI != null)
+        {
+            nearTextUI.gameObject.SetActive(false);
+        }
+    }
+
+    public void ShowEquipTutorialText()
+    {
+        // מכבה מיד את הודעת ההתקרבות (Near) כדי שלא יעלו אחת על השנייה
+        HideNearTutorialText();
+        CancelInvoke(nameof(HideNearTutorialText));
+
+        if (equipTextUI != null)
+        {
+            Debug.Log($"<color=yellow>TUTORIAL:</color> Showing Equip message for {gameObject.name}");
+            equipTextUI.gameObject.SetActive(true); // מדליק את האובייקט גם אם הוא כבוי בקנבס
+            
+            CancelInvoke(nameof(HideEquipTutorialText));
+            Invoke(nameof(HideEquipTutorialText), tutorialDisplayTime);
+        }
+        else
+        {
+            Debug.LogWarning($"<color=red>TUTORIAL ERROR:</color> Cannot show 'Equip' text on {gameObject.name}. Is equipTextUI assigned?");
+        }
+    }
+
+    private void HideEquipTutorialText()
+    {
+        if (equipTextUI != null)
+        {
+            equipTextUI.gameObject.SetActive(false);
         }
     }
 

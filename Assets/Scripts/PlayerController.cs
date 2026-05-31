@@ -12,6 +12,8 @@ public class PlayerController : MonoBehaviour
     public float baseResponsiveness = 20.0f;
     [Tooltip("How fast the crab stops when no input is pressed. Higher = snappier stop.")]
     public float decelerationRate = 40.0f;
+    [Tooltip("How high the player can jump without a shell ability.")]
+    public float jumpForce = 12.0f;
     
     public Vector2 SurfaceNormal { get; private set; } = Vector2.up;
     
@@ -102,6 +104,7 @@ public class PlayerController : MonoBehaviour
             input.OnAbility += TryUseAbility;
             input.OnGrabStart += TryStartGrab;
             input.OnGrabEnd += ReleaseGrab;
+            input.OnJump += TryJump;
         }
     }
 
@@ -114,6 +117,7 @@ public class PlayerController : MonoBehaviour
             input.OnAbility -= TryUseAbility;
             input.OnGrabStart -= TryStartGrab;
             input.OnGrabEnd -= ReleaseGrab;
+            input.OnJump -= TryJump;
         }
     }
 
@@ -413,6 +417,20 @@ public class PlayerController : MonoBehaviour
         else if (currentShell != null && currentShell.CurrentState == ShellState.InUse)
         {
             currentShell.OnDeactivate();
+        }
+    }
+
+    private void TryJump()
+    {
+        // חוסם קפיצה רגילה אם הקונכייה השתלטה על הפיזיקה (למשל במצב מתגלגל או בתוך השריון)
+        if (currentShell != null && currentShell.CurrentState == ShellState.InUse) return;
+
+        if (IsGrounded)
+        {
+            // איפוס המהירות האנכית כדי שהקפיצה תהיה עקבית, למקרה שהשחקן מחליק קצת במורד שיפוע
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+            
+            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
         }
     }
 

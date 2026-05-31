@@ -26,6 +26,9 @@ public class PlayerInputHandler : MonoBehaviour
     [Tooltip("Hold to grab a Movable item for push/pull (Ctrl).")]
     public InputAction GrabAction;
 
+    [Tooltip("Jump action (e.g., Up Arrow / W / Gamepad A).")]
+    public InputAction JumpAction;
+
     // Read on access so the timing matches the previous direct ReadValue call.
     public Vector2 MoveValue => MoveAction.ReadValue<Vector2>();
 
@@ -44,12 +47,16 @@ public class PlayerInputHandler : MonoBehaviour
     // Fired when the grab key is released.
     public event Action OnGrabEnd;
 
+    // Fired once when the jump key transitions to performed.
+    public event Action OnJump;
+
     void Awake()
     {
         InteractAction.performed += HandleInteractPerformed;
         AbilityAction.performed += HandleAbilityPerformed;
         GrabAction.performed += HandleGrabPerformed;
         GrabAction.canceled += HandleGrabCanceled;
+        JumpAction.performed += HandleJumpPerformed;
     }
 
     void OnDestroy()
@@ -58,6 +65,7 @@ public class PlayerInputHandler : MonoBehaviour
         AbilityAction.performed -= HandleAbilityPerformed;
         GrabAction.performed -= HandleGrabPerformed;
         GrabAction.canceled -= HandleGrabCanceled;
+        JumpAction.performed -= HandleJumpPerformed;
     }
 
     void OnEnable()
@@ -66,6 +74,7 @@ public class PlayerInputHandler : MonoBehaviour
         InteractAction.Enable();
         AbilityAction.Enable();
         GrabAction.Enable();
+        JumpAction.Enable();
     }
 
     void OnDisable()
@@ -74,10 +83,12 @@ public class PlayerInputHandler : MonoBehaviour
         InteractAction.Disable();
         AbilityAction.Disable();
         GrabAction.Disable();
+        JumpAction.Disable();
     }
 
     private void HandleInteractPerformed(InputAction.CallbackContext _) => OnInteract?.Invoke();
     private void HandleAbilityPerformed(InputAction.CallbackContext _) => OnAbility?.Invoke();
     private void HandleGrabPerformed(InputAction.CallbackContext _) => OnGrabStart?.Invoke();
     private void HandleGrabCanceled(InputAction.CallbackContext _) => OnGrabEnd?.Invoke();
+    private void HandleJumpPerformed(InputAction.CallbackContext _) => OnJump?.Invoke();
 }
