@@ -721,6 +721,37 @@ MonoBehaviour:
     m_Extent: {x: 0.20337993, y: 0.31499988, z: 0}
   m_AlwaysUpdate: 1
   m_AutoRebind: 0
+--- !u!1 &1222761360151988914
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8852679418963037343}
+  m_Layer: 10
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8852679418963037343
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1222761360151988914}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3227177804198321867}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1246089878086038798
 GameObject:
   m_ObjectHideFlags: 0
@@ -2557,6 +2588,7 @@ Transform:
   m_LocalScale: {x: 2.7, y: 2.7, z: 2.7}
   m_ConstrainProportionsScale: 1
   m_Children:
+  - {fileID: 8852679418963037343}
   - {fileID: 4420009928569545152}
   - {fileID: 8772630506033890424}
   - {fileID: 112763379926068992}
@@ -2651,6 +2683,7 @@ MonoBehaviour:
   accelerationRate: 2.5
   baseResponsiveness: 20
   decelerationRate: 50.2
+  jumpForce: 30
   groundCheckOffset: {x: -0.16, y: 0.89}
   groundCheckDistance: 1.44
   visualRotationSpeed: 15
@@ -2911,6 +2944,23 @@ MonoBehaviour:
       m_Processors: 
       m_Groups: 
       m_Action: Grab
+      m_Flags: 0
+    m_Flags: 0
+  JumpAction:
+    m_Name: Jump
+    m_Type: 1
+    m_ExpectedControlType: Button
+    m_Id: be4fdd9b-69bd-4c8c-9c9c-93aabf732aa5
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: bb19600a-c979-4dbb-a2ad-0e1e325516c3
+      m_Path: <Keyboard>/space
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Jump
       m_Flags: 0
     m_Flags: 0
 --- !u!1 &7944562429842621222
