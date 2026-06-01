@@ -34,43 +34,43 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 176.6
+      value: -178.9
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 89.2
+      value: -182.7
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.918549
+      value: 0.9186189
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.004566907
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.011461568
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.3951146
+      value: 0.39514467
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: -1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 46.541
+      value: 46.55
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: 531704b01604895429185fe16c4dad45, type: 3}
       propertyPath: m_ConstrainProportionsScale
@@ -183,6 +183,10 @@ MonoBehaviour:
   shellWeight: 1
   shellSprite: {fileID: 0}
   shellOnBackSprite: {fileID: 0}
+  nearTextUI: {fileID: 0}
+  equipTextUI: {fileID: 0}
+  maxSequenceShows: 1
+  tutorialDisplayTime: 4
   currentState: 0
   shellCollider: {fileID: 6694095735505125031}
   playerInsideOffset: {x: 0.39, y: -1.67}
@@ -236,8 +240,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1079440875
+  m_SortingLayer: 7
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: -5585003164373491211, guid: 531704b01604895429185fe16c4dad45, type: 3}

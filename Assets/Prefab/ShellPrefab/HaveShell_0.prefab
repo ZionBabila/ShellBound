@@ -80,8 +80,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1079440875
+  m_SortingLayer: 7
   m_SortingOrder: 3
   m_MaskInteraction: 0
   m_Sprite: {fileID: -4944710449674009087, guid: 3670aaed415be8046a1de0a8253774aa, type: 3}
@@ -174,6 +174,10 @@ MonoBehaviour:
   shellWeight: 1
   shellSprite: {fileID: 0}
   shellOnBackSprite: {fileID: 0}
+  nearTextUI: {fileID: 0}
+  equipTextUI: {fileID: 0}
+  maxSequenceShows: 1
+  tutorialDisplayTime: 4
   currentState: 0
   shellCollider: {fileID: 3582030864642415037}
   speedMultiplier: 0.6

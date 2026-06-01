@@ -184,9 +184,13 @@ MonoBehaviour:
   shellWeight: 1
   shellSprite: {fileID: 0}
   shellOnBackSprite: {fileID: 0}
+  nearTextUI: {fileID: 0}
+  equipTextUI: {fileID: 0}
+  maxSequenceShows: 1
+  tutorialDisplayTime: 4
   currentState: 0
   shellCollider: {fileID: 6162751587080195601}
   dashForce: 55
-  dashAngle: 30.9
+  dashAngle: 33.5
   dashDuration: 0.4
   dashCooldown: 1.3
