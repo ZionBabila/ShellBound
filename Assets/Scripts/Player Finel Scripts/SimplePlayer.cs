@@ -166,5 +166,16 @@ public class SimplePlayer : MonoBehaviour
         Gizmos.color = Color.red;
         Vector2 checkPos = (Vector2)transform.position + groundCheckOffset;
         Gizmos.DrawLine(checkPos, checkPos + Vector2.down * groundCheckDistance);
+
+        // 🛠️ דיבאג: ציור נקודת מרכז המסה (Center of Mass) כדי לעזור לאפס את קוליידר הגלגול והריג
+        Rigidbody2D editorRb = GetComponent<Rigidbody2D>();
+        if (editorRb != null)
+        {
+            Gizmos.color = Color.yellow;
+            Vector2 centerOfMassWorld = transform.TransformPoint(editorRb.centerOfMass);
+            Gizmos.DrawWireSphere(centerOfMassWorld, 0.15f);
+            // קו קטן כדי לראות את כיוון הסיבוב הפיזיקלי
+            Gizmos.DrawLine(centerOfMassWorld, centerOfMassWorld + (Vector2)(transform.up * 0.3f));
+        }
     }
 }

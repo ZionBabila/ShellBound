@@ -52,12 +52,12 @@ public class RollingShell : BaseShell
         // 2. Disable the player's main regular collider
         if (player.standingCollider != null) player.standingCollider.enabled = false;
         
-        // 3. Enable the pre-configured rolling collider on the player
-        if (player.rollingCollider != null) player.rollingCollider.enabled = true;
-        
-        // Store original mass and apply rolling mass
+        // Store original mass and center of mass
         originalPlayerMass = player.Rb.mass;
         player.Rb.mass = rollingMass;
+
+        // 3. Enable the pre-configured rolling collider on the player
+        if (player.rollingCollider != null) player.rollingCollider.enabled = true;
 
         // Move the shell graphic to the true center of the player so it spins perfectly in place
         transform.localPosition = Vector3.zero;
