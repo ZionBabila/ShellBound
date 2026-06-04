@@ -18,14 +18,14 @@ public abstract class Shell : MonoBehaviour
     public Vector2 anchorOffset = new Vector2(0, -0.2f);
     
     [Tooltip("The specific rotation (in degrees) for THIS shell when sitting on the crab's back.")]
-    public float anchorRotation = 0f; // NEW: שליטה בזווית הקונכייה
+    public float anchorRotation = 0f; // NEW: Control the shell's rotation
     
     public float shellWeight = 1.0f;
 
-    // מאפשר לקונכיות לשנות את נקודת העגינה בזמן אמת (למשל כשהסרטן מתחבא) בלי לדרוס את המשתנה המקורי
+    // Allows shells to dynamically change the anchor point (e.g. when the crab hides) without overriding the original variable
     public virtual Vector2 ActiveAnchorOffset => anchorOffset;
 
-    // מאפשר לקונכיות להשפיע באופן דינמי על מהירות השחקן ללא קוד מסובך (1 = רגיל)
+    // Allows shells to dynamically affect player speed without complex code (1 = normal)
     public virtual float MovementSpeedMultiplier => 1.0f;
     
     [Header("Visual Settings")]
@@ -56,8 +56,8 @@ public abstract class Shell : MonoBehaviour
     protected SpriteRenderer spriteRenderer;
 
     protected Vector3 originalScale;
-    protected int originalLayer; // שומר את שכבת הפיזיקה המקורית
-    protected PlayerController playerInside; // נשמר ברמת הבסיס כדי למנוע כפילויות בכל הקונכיות
+    protected int originalLayer; // Saves the original physics layer
+    protected PlayerController playerInside; // Kept at base level to prevent duplication in all shells
     protected int sequenceCompletedCount = 0;
 
     protected virtual void Awake()
@@ -79,7 +79,7 @@ public abstract class Shell : MonoBehaviour
         
         playerInside = player;
 
-        // התעלמות מהתנגשות באופן בטוח רק כשהקונכייה נאספת בפועל
+        // Safely ignore collisions only when the shell is actually collected
         Collider2D playerCollider = player.GetComponent<Collider2D>();
         if (playerCollider != null && shellCollider != null)
         {
@@ -88,7 +88,7 @@ public abstract class Shell : MonoBehaviour
 
         currentState = ShellState.OnBack;
 
-        // 1. כיבוי הפיזיקה לחלוטין! זה מה שימנע מהשחקן ליפול דרך הרצפה
+        // 1. Completely disable physics! This prevents the player from falling through the floor
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Kinematic;
@@ -96,16 +96,16 @@ public abstract class Shell : MonoBehaviour
             rb.angularVelocity = 0f;
         }
 
-        // 2. כיבוי הקוליידר של הקונכייה
+        // 2. Disable the shell's collider
         if (shellCollider != null)
         {
             shellCollider.enabled = false;
         }
 
-        // 3. החלפת שכבה כדי שיוניטי יתעלם מהתנגשויות
+        // 3. Change layer so Unity ignores collisions
         gameObject.layer = LayerMask.NameToLayer("ShellOnPlayer");
 
-        // 4. חיבור פיזי לשחקן
+        // 4. Physically attach to the player
         Transform attachParent = player.visualsRoot != null ? player.visualsRoot : player.transform;
         transform.SetParent(attachParent);
         UpdateAttachmentTransform(player);
@@ -115,7 +115,7 @@ public abstract class Shell : MonoBehaviour
         if (maxSequenceShows == -1 || sequenceCompletedCount < maxSequenceShows)
         {
             ShowEquipTutorialText();
-            sequenceCompletedCount++; // סופר את השלמת הסיקוונס רק אחרי שהקונכייה נאספה
+            sequenceCompletedCount++; // Count sequence completion only after the shell is collected
         }
     }
     public void ApplyCompensatedScale(Transform newParent)
@@ -136,10 +136,10 @@ public abstract class Shell : MonoBehaviour
     {
         if (player == null) return;
 
-        // מוצאים את המיקום המדויק של נקודת העגינה בעולם, בהתייחס לשחקן הראשי
+        // Find the exact world position of the anchor point, relative to the main player
         Vector3 worldMountPos = player.transform.TransformPoint(player.shellMountOffset);
         
-        // ממירים את המיקום העולמי הזה למיקום הלוקאלי של האובייקט שאליו אנחנו מחוברים בפועל (למשל visualsRoot)
+        // Convert this world position to the local position of the object we are actually attached to (e.g. visualsRoot)
         Vector3 targetLocalPos = transform.parent != null ? transform.parent.InverseTransformPoint(worldMountPos) : worldMountPos;
 
         // Rotate the anchor offset by the shell's rotation to get the correct local position
@@ -151,7 +151,7 @@ public abstract class Shell : MonoBehaviour
     public abstract void OnActivate();
     public abstract void OnDeactivate();
 
-    // פונקציה זו נקראת על ידי השחקן כאשר הוא מתנגש במשהו בעודו לובש את הקונכייה
+    // This function is called by the player when they collide with something while wearing the shell
     public virtual void OnPlayerCollisionEnter(Collision2D collision)
     {
     }
@@ -162,7 +162,7 @@ public abstract class Shell : MonoBehaviour
         playerInside = null;
         transform.SetParent(null);
         transform.localScale = originalScale; 
-        gameObject.layer = originalLayer; // החזרת השכבה כדי שנוכל לאסוף אותה שוב
+        gameObject.layer = originalLayer; // Restore layer so we can collect it again
 
         rb.bodyType = RigidbodyType2D.Dynamic;
         shellCollider.enabled = true; 
@@ -178,12 +178,12 @@ public abstract class Shell : MonoBehaviour
     private IEnumerator AutoLandRoutine()
     {
         yield return new WaitForSeconds(0.5f);
-        // זמן השהייה התחלתי כדי לתת לקונכייה לעוף מהשחקן
+        // Initial delay to let the shell fly away from the player
         yield return new WaitForSeconds(0.2f);
 
-        float timeout = 2.0f; // מקסימום שתי שניות  המתנה לפני נחיתה מאולצת
+        float timeout = 2.0f; // Maximum two seconds wait before forced landing
         
-        // מוודא שהקונכייה נוחתת גם אם הפיזיקה "רועדת" (נפוץ בחפצים כבדים כמו השריון)
+        // Ensure the shell lands even if physics "jitters" (common with heavy objects like armor)
         while (rb.linearVelocity.magnitude > 0.1f && !rb.IsSleeping() && timeout > 0f)
         {
             timeout -= Time.deltaTime;
@@ -202,7 +202,7 @@ public abstract class Shell : MonoBehaviour
         playerInside = null;
         transform.SetParent(null);
         transform.localScale = originalScale;
-        gameObject.layer = originalLayer; // החזרת השכבה בעת ניתוק
+        gameObject.layer = originalLayer; // Restore layer upon detachment
         
         shellCollider.sharedMaterial = null;
 
@@ -232,7 +232,7 @@ public abstract class Shell : MonoBehaviour
         Gizmos.DrawLine(anchorPos - up, anchorPos + up);
     }
 
-    // סנכרון תצוגה מדויק לכל הקונכיות - מונע רעידות ומבטיח שהקונכייה ממוקמת נכון תמיד
+    // Exact visual synchronization for all shells - prevents jitter and ensures correct positioning always
     protected virtual void LateUpdate()
     {
         if (currentState == ShellState.OnBack && playerInside != null)
@@ -243,7 +243,7 @@ public abstract class Shell : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        // מפעיל את הטקסט רק אם הקונכייה על הרצפה, השחקן נוגע בה, ועוד לא חרגנו מכמות הפעמים המותרת
+        // Activate text only if the shell is on the ground, player touches it, and we haven't exceeded allowed times
         if (currentState == ShellState.OnGround && collision.CompareTag("Player"))
         {
             Debug.Log($"<color=yellow>TUTORIAL:</color> Player entered {gameObject.name} trigger.");
@@ -256,16 +256,16 @@ public abstract class Shell : MonoBehaviour
 
     public void ShowNearTutorialText()
     {
-        // מכבה מיד את הודעת הלבישה (Equip) למקרה שהיא דלוקה
+        // Immediately turn off the Equip message in case it's on
         HideEquipTutorialText();
         CancelInvoke(nameof(HideEquipTutorialText));
 
         if (nearTextUI != null)
         {
             Debug.Log($"<color=yellow>TUTORIAL:</color> Showing Near message for {gameObject.name}");
-            nearTextUI.gameObject.SetActive(true); // מדליק את האובייקט גם אם הוא כבוי בקנבס
+            nearTextUI.gameObject.SetActive(true); // Turn on object even if it's disabled in canvas
             
-            CancelInvoke(nameof(HideNearTutorialText)); // מאפס את הטיימר אם נכנסנו שוב
+            CancelInvoke(nameof(HideNearTutorialText)); // Reset timer if we entered again
             Invoke(nameof(HideNearTutorialText), tutorialDisplayTime);
         }
         else
@@ -284,14 +284,14 @@ public abstract class Shell : MonoBehaviour
 
     public void ShowEquipTutorialText()
     {
-        // מכבה מיד את הודעת ההתקרבות (Near) כדי שלא יעלו אחת על השנייה
+        // Immediately turn off the Near message so they don't overlap
         HideNearTutorialText();
         CancelInvoke(nameof(HideNearTutorialText));
 
         if (equipTextUI != null)
         {
             Debug.Log($"<color=yellow>TUTORIAL:</color> Showing Equip message for {gameObject.name}");
-            equipTextUI.gameObject.SetActive(true); // מדליק את האובייקט גם אם הוא כבוי בקנבס
+            equipTextUI.gameObject.SetActive(true); // Turn on object even if it's disabled in canvas
             
             CancelInvoke(nameof(HideEquipTutorialText));
             Invoke(nameof(HideEquipTutorialText), tutorialDisplayTime);

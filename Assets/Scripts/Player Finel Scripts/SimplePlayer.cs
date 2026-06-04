@@ -22,23 +22,45 @@ public class SimplePlayer : MonoBehaviour
 
     [Header("Ground Detection")]
     [Tooltip("Offset from the player's center to start the ground check raycast.")]
-    public Vector2 groundCheckOffset = new Vector2(0, -0.5f);
+    public Vector2 groundCheckOffset = new Vector2(0, 0f); // Start from player center to avoid getting stuck in slopes
     
-    public float groundCheckDistance = 0.6f;
+    public float groundCheckDistance = 1.0f; // Lengthen raycast to reach the ground safely
     public LayerMask groundLayer;
+    
+    [Header("Colliders")]
+    [Tooltip("The regular collider used for walking (e.g., Capsule or Box).")]
+    public Collider2D standingCollider;
+    [Tooltip("The round collider used for rolling.")]
+    public Collider2D rollingCollider;
+
+    // TODO: Handle sprite rotation in the future when the player goes down a slope (currently the raycast might miss the ground and straighten the player)
+    // TODO: Handle jumps/stutters when Raycast hits vertical seams between adjacent colliders.
 
     private Rigidbody2D rb;
     private PlayerInputHandler inputHandler;
     private float moveInputX;
     private Vector2 surfaceNormal = Vector2.up;
 
+    // Public read-only properties (for animation system and other scripts)
+    // Ignoring micro-movements so the animator gets a "clean" 0 when the player barely moves
+    public float CurrentSpeed => Mathf.Abs(rb.linearVelocity.x) < 0.15f ? 0f : Mathf.Abs(rb.linearVelocity.x);
+    public bool IsGrounded { get; private set; }
+
+    // מאפיינים ציבוריים לקונכיות שרוצות להשתלט על הפיזיקה (כמו קונכיית גלגול)
+    [HideInInspector] public bool isPhysicsOverridden = false;
+    public Rigidbody2D Rb => rb;
+    public PlayerInputHandler Input => inputHandler;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         inputHandler = GetComponent<PlayerInputHandler>();
         
-        // אנחנו נועלים את סיבוב הפיזיקה כדי למנוע באגים של התהפכות.
-        // ההטיה לשיפועים תתבצע רק ברמת התצוגה (visualsRoot)
+        if (standingCollider == null) standingCollider = GetComponent<Collider2D>();
+        if (rollingCollider != null) rollingCollider.enabled = false; // מוודאים שהעגול כבוי בהתחלה
+        
+        // Lock physics rotation to prevent flipping bugs.
+        // Slope tilting will be handled only visually (visualsRoot)
         rb.freezeRotation = true; 
     }
 
@@ -50,7 +72,7 @@ public class SimplePlayer : MonoBehaviour
 
     private void Update()
     {
-        // משיכת ערך התנועה אוטומטית ממערכת הקלט הקיימת
+        // Pull movement value automatically from the existing input system
         if (inputHandler != null)
         {
             moveInputX = inputHandler.MoveValue.x;
@@ -61,20 +83,31 @@ public class SimplePlayer : MonoBehaviour
 
     private void HandleMovement()
     {
-        // הפעלת כוח בסיסי לתנועה לפי בקשתך
+        // ביטול ההליכה הרגילה אם קונכייה השתלטה על הפיזיקה
+        if (isPhysicsOverridden) return;
+
+        // Apply basic movement force
         if (Mathf.Abs(moveInputX) > 0.01f)
         {
-            rb.AddForce(new Vector2(moveInputX * speed, 0f), ForceMode2D.Force);
+            // Calculate Tangent to the slope angle to move the player parallel to the ground
+            // This prevents "getting stuck" into the slope and creates smoother, more organic movement
+            Vector2 moveDirection = new Vector2(surfaceNormal.y, -surfaceNormal.x).normalized;
+            
+            rb.AddForce(moveDirection * (moveInputX * speed), ForceMode2D.Force);
         }
         else
         {
-            // עצירה חלקה כשאין קלט מהשחקן
+            // Smooth stop when there is no player input
             Vector2 vel = rb.linearVelocity;
             vel.x = Mathf.Lerp(vel.x, 0, Time.fixedDeltaTime * deceleration);
+            
+            // Snap to 0 to prevent infinite Lerp trails and small slides on slopes
+            if (Mathf.Abs(vel.x) < 0.05f) vel.x = 0f;
+            
             rb.linearVelocity = vel;
         }
 
-        // הגבלת מהירות התנועה כדי שהשחקן לא יאיץ עד אינסוף
+        // Limit movement speed so the player doesn't accelerate infinitely
         if (Mathf.Abs(rb.linearVelocity.x) > maxSpeed)
         {
             rb.linearVelocity = new Vector2(Mathf.Sign(rb.linearVelocity.x) * maxSpeed, rb.linearVelocity.y);
@@ -83,15 +116,23 @@ public class SimplePlayer : MonoBehaviour
 
     private void HandleGroundDetection()
     {
-        // קרן (Raycast) פשוטה לבדיקת זווית הרצפה שתחת השחקן
         Vector2 checkPos = (Vector2)transform.position + groundCheckOffset;
-        RaycastHit2D hit = Physics2D.Raycast(checkPos, Vector2.down, groundCheckDistance, groundLayer);
-
-        if (hit.collider != null)
+        // Switch to using RaycastAll to filter triggers and self-collisions
+        RaycastHit2D[] hits = Physics2D.RaycastAll(checkPos, Vector2.down, groundCheckDistance, groundLayer);
+        
+        bool foundGround = false;
+        foreach (RaycastHit2D hit in hits)
         {
+            if (hit.collider.isTrigger || hit.collider.gameObject == gameObject) continue;
+            
             surfaceNormal = hit.normal;
+            foundGround = true;
+            break;
         }
-        else
+
+        IsGrounded = foundGround;
+
+        if (!foundGround)
         {
             surfaceNormal = Vector2.up;
         }
@@ -99,15 +140,18 @@ public class SimplePlayer : MonoBehaviour
 
     private void HandleVisualRotation()
     {
+        // ביטול סיבוב ידני אם הפיזיקה מסובבת את כל השחקן כרגע
+        if (isPhysicsOverridden) return;
+
         if (visualsRoot == null) return;
 
-        // חישוב זווית המטרה לפי הנורמל (השיפוע) שגילינו מהקרן
+        // Calculate target rotation based on the normal (slope) discovered by the raycast
         Quaternion targetRotation = Quaternion.FromToRotation(Vector3.up, surfaceNormal);
         
-        // סיבוב חלק של הספרייט כדי למנוע "קפיצות" חדות בתפרים בין רצפות
+        // Smoothly rotate the sprite to prevent sharp "jumps" at floor seams
         visualsRoot.rotation = Quaternion.Lerp(visualsRoot.rotation, targetRotation, Time.deltaTime * rotationSpeed);
         
-        // הפיכת הספרייט (Flip) שמאלה או ימינה לפי כיוון ההליכה
+        // Flip the sprite left or right based on walking direction
         if (Mathf.Abs(moveInputX) > 0.01f)
         {
             Vector3 scale = visualsRoot.localScale;
@@ -118,7 +162,7 @@ public class SimplePlayer : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        // ציור הקרן בעורך כדי שיהיה קל לכוון את ההיסט (Offset) והמרחק
+        // Draw the raycast in the editor to easily adjust the offset and distance
         Gizmos.color = Color.red;
         Vector2 checkPos = (Vector2)transform.position + groundCheckOffset;
         Gizmos.DrawLine(checkPos, checkPos + Vector2.down * groundCheckDistance);
