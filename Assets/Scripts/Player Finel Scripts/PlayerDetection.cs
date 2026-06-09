@@ -54,10 +54,10 @@ public class PlayerDetection : MonoBehaviour
         Collider2D[] colliders = Physics2D.OverlapCircleAll(checkPosition, interactRadius, shellLayer);
         foreach (Collider2D col in colliders)
         {
-            BaseShell foundShell = col.GetComponentInParent<BaseShell>();
-            if (foundShell != null && foundShell.CurrentState == ShellState.OnGround)
+            ShellPickup foundPickup = col.GetComponentInParent<ShellPickup>();
+            if (foundPickup != null)
             {
-                shellSystem.EquipShell(foundShell);
+                shellSystem.EquipShell(foundPickup);
                 break; // Equip only one
             }
         }
