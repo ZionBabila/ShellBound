@@ -2,21 +2,43 @@ using UnityEngine;
 
 public class HeavyArmorShell : BaseShell
 {
-    [Header("Armor Settings")]
-    [Tooltip("Sprite used when the crab is hiding inside.")]
-    public Sprite activeSprite;
+    [Header("Push & Crush Settings")]
+    [Tooltip("Layer mask for breakable objects.")]
+    public LayerMask crushLayer;
     
-    private Sprite defaultSprite;
-    private SpriteRenderer spriteRenderer;
+    [Tooltip("The mass the player can push while wearing the armor.")]
+    public float armorPushMass = Mathf.Infinity;
+    
+    [Tooltip("How much the armor slows the player down.")]
+    public float armorSpeedMultiplier = 0.5f;
 
-    protected override void Awake()
+    [Header("Visuals")]
+    [Tooltip("The GameObject (sprite) shown when the shell is on the crab's back.")]
+    public GameObject onBackVisuals;
+    
+    [Tooltip("The GameObject (sprite) shown when the crab is hiding inside the armor.")]
+    public GameObject hidingVisuals;
+
+    public override void Equip(PlayerShellSystem player)
     {
-        base.Awake();
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        if (spriteRenderer != null) 
-        {
-            defaultSprite = spriteRenderer.sprite;
-        }
+        base.Equip(player);
+        
+        // Set default visual state when equipped
+        if (onBackVisuals != null) onBackVisuals.SetActive(true);
+        if (hidingVisuals != null) hidingVisuals.SetActive(false);
+
+        // Apply Heavy Armor stats
+        playerSystem.Player.currentMaxPushMass = armorPushMass;
+        playerSystem.Player.currentSpeedMultiplier = armorSpeedMultiplier;
+    }
+
+    public override void Throw()
+    {
+        // Remove Heavy Armor stats
+        playerSystem.Player.currentMaxPushMass = playerSystem.Player.baseMaxPushMass;
+        playerSystem.Player.currentSpeedMultiplier = 1f;
+        
+        base.Throw();
     }
 
     public override void ActivateAbility()
@@ -24,8 +46,17 @@ public class HeavyArmorShell : BaseShell
         if (CurrentState != ShellState.OnBack) return;
         
         CurrentState = ShellState.InUse;
-        if (spriteRenderer != null && activeSprite != null) spriteRenderer.sprite = activeSprite;
+        
+        // Swap visual objects
+        if (onBackVisuals != null) onBackVisuals.SetActive(false);
+        if (hidingVisuals != null) hidingVisuals.SetActive(true);
             
+        // Hide the main crab visuals
+        playerSystem.SetCrabVisualsActive(false);
+
+        // Disable manual input so the crab drops straight down to crush things
+        playerSystem.Player.isMovementDisabled = true;
+
         Debug.Log("[HeavyArmorShell] Activated! Crab is hiding.");
     }
 
@@ -34,8 +65,35 @@ public class HeavyArmorShell : BaseShell
         if (CurrentState != ShellState.InUse) return;
         
         CurrentState = ShellState.OnBack;
-        if (spriteRenderer != null && defaultSprite != null) spriteRenderer.sprite = defaultSprite;
+        
+        // Swap visual objects back
+        if (onBackVisuals != null) onBackVisuals.SetActive(true);
+        if (hidingVisuals != null) hidingVisuals.SetActive(false);
             
+        // Show the main crab visuals
+        playerSystem.SetCrabVisualsActive(true);
+
+        // Re-enable manual input
+        playerSystem.Player.isMovementDisabled = false;
+
         Debug.Log("[HeavyArmorShell] Deactivated! Crab is carrying the shell.");
+    }
+
+    public override void OnPlayerCollision(Collision2D collision)
+    {
+        // Only crush things if hiding inside the armor
+        if (CurrentState != ShellState.InUse) return;
+
+        // Check if the collided object is in the crush layer
+        if (((1 << collision.gameObject.layer) & crushLayer) != 0)
+        {
+            ContactPoint2D contact = collision.contacts[0];
+            // Break logic fixed according to Code Review 2.1 (Needs to be a hard fall)
+            if (contact.normal.y > 0.5f && collision.relativeVelocity.y < -3f)
+            {
+                // Trigger the generic Break method on the Breakable.cs
+                collision.gameObject.SendMessage("Break", SendMessageOptions.DontRequireReceiver);
+            }
+        }
     }
 }

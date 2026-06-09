@@ -14,6 +14,14 @@ public class PlayerShellSystem : MonoBehaviour
     public SimplePlayer Player { get; private set; }
     public Transform VisualsRoot => Player.visualsRoot;
 
+    [Header("Rig Shells")]
+    [Tooltip("Assign all the shell script components located on the player's Rig here.")]
+    public BaseShell[] rigShells;
+
+    [Header("Player Visuals")]
+    [Tooltip("The main GameObject containing the crab's rig/sprites. Hidden when rolling or hiding.")]
+    public GameObject crabVisuals;
+
     public BaseShell CurrentShell { get; private set; }
     public bool HasShell => CurrentShell != null;
 
@@ -28,6 +36,12 @@ public class PlayerShellSystem : MonoBehaviour
         {
             inputHandler.OnAbility += HandleAbility;
         }
+
+        // Ensure all rig shells start disabled properly to avoid Awake() lifecycle bugs
+        foreach (BaseShell shell in rigShells)
+        {
+            if (shell != null) shell.gameObject.SetActive(false);
+        }
     }
 
     private void OnDestroy()
@@ -38,14 +52,31 @@ public class PlayerShellSystem : MonoBehaviour
         }
     }
 
-    public void EquipShell(BaseShell newShell)
+    public void EquipShell(ShellPickup pickup)
     {
         if (HasShell) return;
         
-        CurrentShell = newShell;
-        CurrentShell.Equip(this);
+        // Find the matching shell in the Rig
+        foreach (BaseShell rigShell in rigShells)
+        {
+            if (rigShell.shellID == pickup.shellID)
+            {
+                CurrentShell = rigShell;
+                CurrentShell.Equip(this);
+                
+                // Swap to the larger 'with shell' collider
+                if (Player.standingCollider != null) Player.standingCollider.enabled = false;
+                if (Player.withShellCollider != null) Player.withShellCollider.enabled = true;
+
+                // Destroy the world pickup object completely
+                Destroy(pickup.gameObject);
+                
+                Debug.Log($"[PlayerShellSystem] Equipped {pickup.shellID}");
+                return;
+            }
+        }
         
-        Debug.Log($"[PlayerShellSystem] Equipped {newShell.gameObject.name}");
+        Debug.LogWarning($"[PlayerShellSystem] Shell ID '{pickup.shellID}' not found in the Rig!");
     }
 
     public void ThrowCurrentShell()
@@ -58,11 +89,26 @@ public class PlayerShellSystem : MonoBehaviour
             CurrentShell.DeactivateAbility();
         }
 
-        // Determine throw direction based on where the player is facing
-        float facingDir = VisualsRoot.localScale.x > 0 ? 1f : -1f;
-        Vector2 throwVelocity = new Vector2(facingDir * throwDirection.x, throwDirection.y).normalized * throwForce;
+        // Swap back to the regular standing collider
+        if (Player.withShellCollider != null) Player.withShellCollider.enabled = false;
+        if (Player.standingCollider != null) Player.standingCollider.enabled = true;
 
-        CurrentShell.Throw(throwVelocity);
+        // 1. Instantiate the world prefab
+        if (CurrentShell.worldPrefab != null)
+        {
+            float facingDir = VisualsRoot.localScale.x > 0 ? 1f : -1f;
+            Vector2 throwVelocity = new Vector2(facingDir * throwDirection.x, throwDirection.y).normalized * throwForce;
+            
+            // Spawn slightly above the player to avoid clipping into the ground immediately
+            Vector3 spawnPos = transform.position + Vector3.up * 0.5f;
+            GameObject spawned = Instantiate(CurrentShell.worldPrefab, spawnPos, Quaternion.identity);
+            
+            Rigidbody2D rb = spawned.GetComponent<Rigidbody2D>();
+            if (rb != null) rb.linearVelocity = throwVelocity;
+        }
+
+        // 2. Turn off the Rig shell
+        CurrentShell.Throw();
         CurrentShell = null;
         
         Debug.Log("[PlayerShellSystem] Shell thrown.");
@@ -80,5 +126,10 @@ public class PlayerShellSystem : MonoBehaviour
         {
             CurrentShell.DeactivateAbility();
         }
+    }
+
+    public void SetCrabVisualsActive(bool isActive)
+    {
+        if (crabVisuals != null) crabVisuals.SetActive(isActive);
     }
 }
