@@ -43,6 +43,15 @@ public class PlayerShellSystem : MonoBehaviour
         if (HasShell) return;
         
         CurrentShell = newShell;
+        
+        // 1. Shut down all physics on the shell so it doesn't alter the player's pivot or mass
+        Rigidbody2D shellRb = CurrentShell.GetComponent<Rigidbody2D>();
+        if (shellRb != null) shellRb.simulated = false;
+
+        Collider2D[] shellColliders = CurrentShell.GetComponentsInChildren<Collider2D>();
+        foreach (Collider2D col in shellColliders) col.enabled = false;
+
+        // BaseShell.Equip handles parenting it to VisualsRoot and applying offsets.
         CurrentShell.Equip(this);
         
         Debug.Log($"[PlayerShellSystem] Equipped {newShell.gameObject.name}");
@@ -57,6 +66,16 @@ public class PlayerShellSystem : MonoBehaviour
         {
             CurrentShell.DeactivateAbility();
         }
+
+        // 1. Disconnect the shell from the player
+        CurrentShell.transform.SetParent(null);
+
+        // 2. Re-enable physics and visuals so it can fly and land
+        Rigidbody2D shellRb = CurrentShell.GetComponent<Rigidbody2D>();
+        if (shellRb != null) shellRb.simulated = true;
+
+        Collider2D[] shellColliders = CurrentShell.GetComponentsInChildren<Collider2D>();
+        foreach (Collider2D col in shellColliders) col.enabled = true;
 
         // Determine throw direction based on where the player is facing
         float facingDir = VisualsRoot.localScale.x > 0 ? 1f : -1f;

@@ -140,7 +140,7 @@ public class SimplePlayer : MonoBehaviour
 
     private void HandleVisualRotation()
     {
-        // ביטול סיבוב ידני אם הפיזיקה מסובבת את כל השחקן כרגע
+        // Disable manual rotation and flipping if physics is overriding the player
         if (isPhysicsOverridden) return;
 
         if (visualsRoot == null) return;
