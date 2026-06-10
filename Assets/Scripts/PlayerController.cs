@@ -62,20 +62,10 @@ public class PlayerController : MonoBehaviour
     [Tooltip("Radius of the grab probe used to find a Movable in front of the crab.")]
     public float grabCheckRadius = 0.4f;
 
-    [Tooltip("The maximum mass of an object the player can push/pull normally.")]
-    public float baseMaxPushMass = 3.0f;
-    [HideInInspector] public float currentMaxPushMass;
-
-    [Header("Push Mass Speed Mapping")]
-    [Tooltip("The minimum mass where slowdown begins.")]
-    public float massMapMin = 1.0f;
-    [Tooltip("The mass where the maximum slowdown is reached.")]
-    public float massMapMax = 10.0f;
-    [Tooltip("The minimum speed multiplier when pushing an object with massMapMax or higher.")]
-    public float speedMultAtMaxMass = 0.2f;
-
-    [Tooltip("How much acceleration is penalized when pushing heavy objects. Lower = more struggle to get it moving.")]
-    public float heavyPushAccelPenalty = 0.15f;
+    [Tooltip("Mass threshold above which an object is considered 'heavy'.")]
+    public float heavyObjectMassThreshold = 3.0f;
+    
+    [HideInInspector] public bool canPushHeavyObjects = false;
 
     // Active joint while the player is holding a Movable. Null when nothing is grabbed.
     private FixedJoint2D grabJoint;
@@ -90,7 +80,7 @@ public class PlayerController : MonoBehaviour
 
     void Awake()
     {
-        currentMaxPushMass = baseMaxPushMass; // מתחילים עם יכולת הדחיפה הבסיסית
+        canPushHeavyObjects = false;
         rb = GetComponent<Rigidbody2D>();
         input = GetComponent<PlayerInputHandler>();
 
@@ -197,42 +187,13 @@ public class PlayerController : MonoBehaviour
         
         float moveInputX = input.MoveValue.x; // Get horizontal input (-1 for left, 1 for right, 0 for idle)
         
-        // Base speeds affected by the shell's weight penalty
-        float baseSpeedMultiplier = currentShell != null ? currentShell.MovementSpeedMultiplier : 1.0f;
-        float currentSpeedMultiplier = baseSpeedMultiplier;
-        
-        float interactedMass = 0f;
+        // The ONLY thing that determines the player's base speed is the shell they are wearing.
+        float currentSpeedMultiplier = currentShell != null ? currentShell.MovementSpeedMultiplier : 1.0f;
 
-        // Check 1: Is the player actively grabbing (Ctrl) and pulling/pushing an object?
-        if (grabJoint != null && grabJoint.connectedBody != null)
+        // Apply a slight speed penalty when grabbing a box, UNLESS the player is wearing armor.
+        if (grabJoint != null && !canPushHeavyObjects)
         {
-            interactedMass = grabJoint.connectedBody.mass;
-        }
-        // Check 2: Is the player simply walking into and pushing a movable object?
-        else if (Mathf.Abs(moveInputX) > 0.01f)
-        {
-            float facingMul = facingRight ? 1f : -1f;
-            // Ensure the input direction matches the facing direction so we don't slow down if walking away from the box
-            if (Mathf.Sign(moveInputX) == Mathf.Sign(facingMul))
-            {
-                // Cast a circle forward to detect if we are pushing against a movable object
-                Vector2 origin = (Vector2)transform.TransformPoint(new Vector2(0, grabCheckOffset.y));
-                Vector2 direction = transform.right * facingMul;
-                RaycastHit2D hit = Physics2D.CircleCast(origin, grabCheckRadius, direction, grabCheckOffset.x, movableLayer);
-                
-                if (hit.collider != null && hit.collider.attachedRigidbody != null)
-                {
-                    interactedMass = hit.collider.attachedRigidbody.mass;
-                }
-            }
-        }
-
-        // Apply dynamic slowdown based on the mass of the pushed/pulled object
-        if (interactedMass > 0f)
-        {
-            float t = Mathf.InverseLerp(massMapMin, massMapMax, interactedMass);
-            // Convert the mass percentage to an actual speed multiplier (e.g., from 0.8 down to a minimum of 0.2)
-            currentSpeedMultiplier = Mathf.Lerp(baseSpeedMultiplier, speedMultAtMaxMass, t);
+             currentSpeedMultiplier *= 0.8f;
         }
 
         float actualBaseSpeed = moveSpeed * currentSpeedMultiplier;
@@ -240,28 +201,6 @@ public class PlayerController : MonoBehaviour
         float actualBaseResp = baseResponsiveness * currentSpeedMultiplier;
         float actualAccel = accelerationRate * currentSpeedMultiplier;
         float actualDecel = decelerationRate * currentSpeedMultiplier;
-
-        if (interactedMass > 0f)
-        {
-            // 1. Anti-Plowing: Instantly kill excess momentum when hitting a heavy object
-            // This prevents the crab from blasting through heavy boxes with its running start.
-            if (Mathf.Abs(currentVelocityX) > actualMaxSpeed)
-            {
-                currentVelocityX = Mathf.Sign(currentVelocityX) * actualMaxSpeed;
-            }
-
-            // 2. Struggle Phase: Drastically reduce acceleration so it takes effort to build up push speed
-            if (interactedMass > baseMaxPushMass)
-            {
-                actualBaseResp *= heavyPushAccelPenalty;
-                actualAccel *= heavyPushAccelPenalty;
-            }
-            else
-            {
-                actualBaseResp *= 0.5f; // Even normal objects take a little extra effort to start pushing
-                actualAccel *= 0.5f;
-            }
-        }
 
         float targetSpeed = 0f;
         float currentAccel = actualBaseResp;
@@ -458,9 +397,9 @@ public class PlayerController : MonoBehaviour
         if (targetRb == null || targetRb.bodyType == RigidbodyType2D.Static) return;
 
         // בדיקת מסה - האם האובייקט כבד מדי?
-        if (targetRb.mass > currentMaxPushMass)
+        if (targetRb.mass >= heavyObjectMassThreshold && !canPushHeavyObjects)
         {
-            Debug.Log($"<color=orange>TOO HEAVY:</color> Object mass ({targetRb.mass}) exceeds player's push limit ({currentMaxPushMass}). You need heavy armor!");
+            Debug.Log($"<color=orange>TOO HEAVY:</color> Object mass ({targetRb.mass}) requires heavy armor!");
             return;
         }
 

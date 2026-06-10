@@ -34,8 +34,7 @@ public class ArmorShell : Shell
         
         if (playerInside != null)
         {
-            // נותן לשחקן כוח דחיפה אינסופי לקוביות כבדות (במקום לחשב מסות מורכבות)
-            playerInside.currentMaxPushMass = Mathf.Infinity;
+            playerInside.canPushHeavyObjects = true;
 
             Debug.Log($"<color=blue>🛡 ARMOR EQUIPPED:</color> Can push heavy objects!");
         }
@@ -93,8 +92,7 @@ public class ArmorShell : Shell
     {
         if (playerInside != null)
         {
-            // Restore push limit
-            playerInside.currentMaxPushMass = playerInside.baseMaxPushMass;
+            playerInside.canPushHeavyObjects = false;
 
             Debug.Log("<color=white>🛡 ARMOR REMOVED:</color> Player restored to normal weight and speed.");
             

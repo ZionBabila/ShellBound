@@ -1,0 +1,916 @@
+fileFormatVersion: 2
+guid: 05b5e37997df8e145b9e58c5d3e79a6a
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: b2a9591990af98743ba3ff7cf1000886, type: 3}
+  textureImporterSettings:
+    alphaSource: 1
+    mipMapMode: 0
+    enableMipMap: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+    convertToNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+    swizzle: 50462976
+    isReadable: 0
+    streamingMipmaps: 0
+    streamingMipmapsPriority: 0
+    vTOnly: 0
+    ignoreMipmapLimit: 0
+    nPOTScale: 1
+    sRGBTexture: 1
+    spriteMode: 2
+    spriteExtrude: 1
+    spriteMeshType: 1
+    alignment: 0
+    spritePivot: {x: 0.5, y: 0.5}
+    spritePixelsToUnits: 100
+    spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+    spriteGenerateFallbackPhysicsShape: 0
+    generateCubemap: 6
+    cubemapConvolution: 0
+    seamlessCubemap: 0
+    alphaIsTransparency: 1
+    spriteTessellationDetail: -1
+    textureType: 8
+    textureShape: 1
+    singleChannelComponent: 0
+    flipbookRows: 0
+    flipbookColumns: 0
+    ignorePngGamma: 0
+    cookieMode: 0
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 0
+    wrapV: 0
+    wrapW: 0
+    normalMap: 0
+    textureFormat: 0
+    maxTextureSize: 0
+    lightmap: 0
+    compressionQuality: 0
+    linearTexture: 0
+    grayScaleToAlpha: 0
+    rGBM: 0
+    cubemapConvolutionSteps: 0
+    cubemapConvolutionExponent: 0
+    maxTextureSizeSet: 0
+    compressionQualitySet: 0
+    textureFormatSet: 0
+    applyGammaDecoding: 0
+  singleSpriteImportData:
+  - name: 
+    originalName: 
+    pivot: {x: 0, y: 0}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 0
+      height: 0
+    spriteID: 5bdcbeb1602ba4146aae2d91bb4934a1
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 0, y: 0}
+    spritePosition: {x: 0, y: 0}
+  multiSpriteImportData: []
+  layeredSpriteImportData:
+  - name: Hill Acid
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 1271
+      y: 686
+      width: 1920
+      height: 565
+    spriteID: 3aeed640c7ec96d499f80ea81db22086
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 1271, y: 686}
+    spritePosition: {x: 0, y: 0}
+  - name: Shadow Hill Acid
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 2897
+      y: 4
+      width: 1171
+      height: 521
+    spriteID: 8902f12c1ec16d645896b5c8238a45c4
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 2897, y: 4}
+    spritePosition: {x: 23, y: 0}
+  - name: Hill Acid
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 3600
+      y: 1770
+      width: 259
+      height: 121
+    spriteID: 018bebd4de8d0cd4eb4497de99b671fb
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 3600, y: 1770}
+    spritePosition: {x: 884, y: 374}
+  - name: Pit1
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 3600
+      y: 1259
+      width: 397
+      height: 288
+    spriteID: 5070d6dbc3660ac42a9b72bdd4508319
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 3600, y: 1259}
+    spritePosition: {x: 753, y: 40}
+  - name: Shadow_Pit1
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 3600
+      y: 1555
+      width: 423
+      height: 207
+    spriteID: e84758225666a1d4d8c916b3f9f794bd
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 3600, y: 1555}
+    spritePosition: {x: 737, y: 50}
+  - name: Acid1
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 3759
+      y: 2426
+      width: 310
+      height: 141
+    spriteID: 33e894e42d81a8e40ac8795abd8a28ca
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 3759, y: 2426}
+    spritePosition: {x: 809, y: 118}
+  - name: Pit2
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 3542
+      y: 2426
+      width: 209
+      height: 240
+    spriteID: 51e4151bbf40b18448147f252e60e16f
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 3542, y: 2426}
+    spritePosition: {x: 1512, y: 135}
+  - name: Shadow pit 2
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 3705
+      y: 2097
+      width: 292
+      height: 196
+    spriteID: 6ada726ca8df9754bac10abc87a2de7b
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 3705, y: 2097}
+    spritePosition: {x: 1455, y: 103}
+  - name: Acid2
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 3705
+      y: 2301
+      width: 135
+      height: 106
+    spriteID: 5c77d0a3c8133964495b0d2040c93ef8
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 3705, y: 2301}
+    spritePosition: {x: 1540, y: 181}
+  - name: Big Tunnel
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 1271
+      y: 4
+      width: 1618
+      height: 674
+    spriteID: 99bdd24d06149694eb04dcf6d71a9d22
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 1271, y: 4}
+    spritePosition: {x: 112, y: 372}
+  - name: Big Tunnel Shadow
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 4
+      y: 4
+      width: 1259
+      height: 1080
+    spriteID: b2340fe0bf3f6934289b032678d67e67
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 4, y: 4}
+    spritePosition: {x: 334, y: 0}
+  - name: Tunnel Color
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 1271
+      y: 1922
+      width: 1023
+      height: 496
+    spriteID: 799d8f03a7a56ea499b88d2ce33b6748
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 1271, y: 1922}
+    spritePosition: {x: 574, y: 481}
+  - name: Shadow Tunnel Acid1
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 2581
+      y: 1259
+      width: 1011
+      height: 519
+    spriteID: d9b750f057365434cbaf5301233a3849
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 2581, y: 1259}
+    spritePosition: {x: 0, y: 561}
+  - name: Tunnel Acid1
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 3199
+      y: 2426
+      width: 335
+      height: 163
+    spriteID: 6bb32de63ef502e4799e254e20dde7e3
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 3199, y: 2426}
+    spritePosition: {x: 158, y: 800}
+  - name: Shadow Tunnel Acid 2
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 1271
+      y: 2678
+      width: 1264
+      height: 248
+    spriteID: 0a9381555ff03534681c669236382d54
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 1271, y: 2678}
+    spritePosition: {x: 105, y: 741}
+  - name: Tunnel Acid 2
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 3705
+      y: 1922
+      width: 349
+      height: 167
+    spriteID: a91489759eb491e428b9558f5eea5e05
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 3705, y: 1922}
+    spritePosition: {x: 915, y: 778}
+  - name: Big Hill
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 1271
+      y: 1259
+      width: 1302
+      height: 655
+    spriteID: df5006a219bd7eb48865e2a80bead7e6
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 1271, y: 1259}
+    spritePosition: {x: 317, y: 143}
+  - name: Moving Rock
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 3867
+      y: 1770
+      width: 220
+      height: 117
+    spriteID: 82fc3c1d1e9443b4f917ef5e0d435e13
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 3867, y: 1770}
+    spritePosition: {x: 188, y: 182}
+  - name: GRound
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 1271
+      y: 2426
+      width: 1920
+      height: 244
+    spriteID: c4ec18b8fc7617c4787bd5d1d49cd7e3
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 1271, y: 2426}
+    spritePosition: {x: 0, y: 0}
+  - name: Big Hill Shadow
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 2302
+      y: 1922
+      width: 1395
+      height: 358
+    spriteID: 58fb7019312867948ad6c5788e738b38
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 2302, y: 1922}
+    spritePosition: {x: 164, y: 56}
+  spriteImportData: []
+  rigSpriteImportData: []
+  sharedRigSpriteImportData: []
+  mosaicSpriteImportData: []
+  sharedRigCharacterData:
+    bones: []
+    parts: []
+    dimension: {x: 0, y: 0}
+    characterGroups: []
+    pivot: {x: 0, y: 0}
+    boneReadOnly: 0
+  characterData:
+    bones: []
+    parts: []
+    dimension: {x: 0, y: 0}
+    characterGroups: []
+    pivot: {x: 0, y: 0}
+    boneReadOnly: 0
+  platformSettings:
+  - name: DefaultTexturePlatform
+    overridden: 0
+    ignorePlatformSupport: 0
+    maxTextureSize: 16384
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    androidETC2FallbackOverride: 0
+  - name: Standalone
+    overridden: 0
+    ignorePlatformSupport: 0
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    androidETC2FallbackOverride: 0
+  - name: Android
+    overridden: 0
+    ignorePlatformSupport: 0
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    androidETC2FallbackOverride: 0
+  - name: iPhone
+    overridden: 0
+    ignorePlatformSupport: 0
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    androidETC2FallbackOverride: 0
+  - name: WebGL
+    overridden: 0
+    ignorePlatformSupport: 0
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    androidETC2FallbackOverride: 0
+  mosaicLayers: 1
+  characterMode: 1
+  documentPivot: {x: 0, y: 0}
+  documentAlignment: 7
+  importHiddenLayers: 0
+  layerMappingOption: 2
+  generatePhysicsShape: 0
+  paperDollMode: 0
+  keepDupilcateSpriteName: 1
+  generateTileAssets: 0
+  tilePaletteCellLayout: 0
+  tilePaletteHexagonLayout: 0
+  tilePaletteCellSize: {x: 1, y: 1, z: 0}
+  tilePaletteCellSizing: 0
+  transparencySortMode: 0
+  transparencySortAxis: {x: 0, y: 0, z: 1}
+  tileTemplate: {instanceID: 0}
+  padding: 4
+  spriteSizeExpand: 0
+  skeletonAssetReferenceID: 
+  pipeline: {instanceID: 0}
+  pipelineVersion: 
+  spriteCategoryList:
+    categories: []
+  spritePackingTag: 
+  resliceFromLayer: 0
+  pSDLayerImportSetting: []
+  psdLayers:
+  - name: Hill Acid
+    spriteName: 
+    isGroup: 1
+    parentIndex: -1
+    spriteID: 1eae88b357398ed468c8a52cc4e5b25d
+    layerID: 39
+    mosaicPosition: {x: 0, y: 0}
+    flatten: 0
+    isImported: 0
+    isVisible: 1
+  - name: Hill Acid
+    spriteName: Hill Acid
+    isGroup: 0
+    parentIndex: 0
+    spriteID: 3aeed640c7ec96d499f80ea81db22086
+    layerID: 36
+    mosaicPosition: {x: 1271, y: 686}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Shadow Hill Acid
+    spriteName: Shadow Hill Acid
+    isGroup: 0
+    parentIndex: 0
+    spriteID: 8902f12c1ec16d645896b5c8238a45c4
+    layerID: 38
+    mosaicPosition: {x: 2897, y: 4}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Hill Acid
+    spriteName: Hill Acid
+    isGroup: 0
+    parentIndex: 0
+    spriteID: 018bebd4de8d0cd4eb4497de99b671fb
+    layerID: 37
+    mosaicPosition: {x: 3600, y: 1770}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Acid Pit 1
+    spriteName: 
+    isGroup: 1
+    parentIndex: -1
+    spriteID: 30caa9bc4d6c2294094c6df8e338116b
+    layerID: 27
+    mosaicPosition: {x: 0, y: 0}
+    flatten: 0
+    isImported: 0
+    isVisible: 1
+  - name: Pit1
+    spriteName: Pit1
+    isGroup: 0
+    parentIndex: 4
+    spriteID: 5070d6dbc3660ac42a9b72bdd4508319
+    layerID: 24
+    mosaicPosition: {x: 3600, y: 1259}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Shadow_Pit1
+    spriteName: Shadow_Pit1
+    isGroup: 0
+    parentIndex: 4
+    spriteID: e84758225666a1d4d8c916b3f9f794bd
+    layerID: 26
+    mosaicPosition: {x: 3600, y: 1555}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Acid1
+    spriteName: Acid1
+    isGroup: 0
+    parentIndex: 4
+    spriteID: 33e894e42d81a8e40ac8795abd8a28ca
+    layerID: 25
+    mosaicPosition: {x: 3759, y: 2426}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Acid Pit 2
+    spriteName: 
+    isGroup: 1
+    parentIndex: -1
+    spriteID: fed69ee296d14b548915a36b93ec1071
+    layerID: 29
+    mosaicPosition: {x: 0, y: 0}
+    flatten: 0
+    isImported: 0
+    isVisible: 1
+  - name: Pit2
+    spriteName: Pit2
+    isGroup: 0
+    parentIndex: 8
+    spriteID: 51e4151bbf40b18448147f252e60e16f
+    layerID: 21
+    mosaicPosition: {x: 3542, y: 2426}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Shadow pit 2
+    spriteName: Shadow pit 2
+    isGroup: 0
+    parentIndex: 8
+    spriteID: 6ada726ca8df9754bac10abc87a2de7b
+    layerID: 23
+    mosaicPosition: {x: 3705, y: 2097}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Acid2
+    spriteName: Acid2
+    isGroup: 0
+    parentIndex: 8
+    spriteID: 5c77d0a3c8133964495b0d2040c93ef8
+    layerID: 22
+    mosaicPosition: {x: 3705, y: 2301}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Big Tunnel
+    spriteName: 
+    isGroup: 1
+    parentIndex: -1
+    spriteID: 4fe5c281d49dcb8478409a9cdd1a271f
+    layerID: 32
+    mosaicPosition: {x: 0, y: 0}
+    flatten: 0
+    isImported: 0
+    isVisible: 1
+  - name: Big Tunnel
+    spriteName: Big Tunnel
+    isGroup: 0
+    parentIndex: 12
+    spriteID: 99bdd24d06149694eb04dcf6d71a9d22
+    layerID: 12
+    mosaicPosition: {x: 1271, y: 4}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Big Tunnel Shadow
+    spriteName: Big Tunnel Shadow
+    isGroup: 0
+    parentIndex: 12
+    spriteID: b2340fe0bf3f6934289b032678d67e67
+    layerID: 15
+    mosaicPosition: {x: 4, y: 4}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Tunnel Color
+    spriteName: Tunnel Color
+    isGroup: 0
+    parentIndex: 12
+    spriteID: 799d8f03a7a56ea499b88d2ce33b6748
+    layerID: 31
+    mosaicPosition: {x: 1271, y: 1922}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Shadow Tunnel Acid1
+    spriteName: Shadow Tunnel Acid1
+    isGroup: 0
+    parentIndex: 12
+    spriteID: d9b750f057365434cbaf5301233a3849
+    layerID: 20
+    mosaicPosition: {x: 2581, y: 1259}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Tunnel Acid1
+    spriteName: Tunnel Acid1
+    isGroup: 0
+    parentIndex: 12
+    spriteID: 6bb32de63ef502e4799e254e20dde7e3
+    layerID: 17
+    mosaicPosition: {x: 3199, y: 2426}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Shadow Tunnel Acid 2
+    spriteName: Shadow Tunnel Acid 2
+    isGroup: 0
+    parentIndex: 12
+    spriteID: 0a9381555ff03534681c669236382d54
+    layerID: 18
+    mosaicPosition: {x: 1271, y: 2678}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Tunnel Acid 2
+    spriteName: Tunnel Acid 2
+    isGroup: 0
+    parentIndex: 12
+    spriteID: a91489759eb491e428b9558f5eea5e05
+    layerID: 16
+    mosaicPosition: {x: 3705, y: 1922}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Hill Shadow
+    spriteName: 
+    isGroup: 1
+    parentIndex: -1
+    spriteID: 1b50f5680b4fa864d9969931b5e8df6b
+    layerID: 9
+    mosaicPosition: {x: 0, y: 0}
+    flatten: 0
+    isImported: 0
+    isVisible: 1
+  - name: Big Hill
+    spriteName: Big Hill
+    isGroup: 0
+    parentIndex: 20
+    spriteID: df5006a219bd7eb48865e2a80bead7e6
+    layerID: 5
+    mosaicPosition: {x: 1271, y: 1259}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Moving Rock
+    spriteName: Moving Rock
+    isGroup: 0
+    parentIndex: 20
+    spriteID: 82fc3c1d1e9443b4f917ef5e0d435e13
+    layerID: 4
+    mosaicPosition: {x: 3867, y: 1770}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: GRound
+    spriteName: GRound
+    isGroup: 0
+    parentIndex: 20
+    spriteID: c4ec18b8fc7617c4787bd5d1d49cd7e3
+    layerID: 3
+    mosaicPosition: {x: 1271, y: 2426}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Big Hill Shadow
+    spriteName: Big Hill Shadow
+    isGroup: 0
+    parentIndex: 20
+    spriteID: 58fb7019312867948ad6c5788e738b38
+    layerID: 35
+    mosaicPosition: {x: 2302, y: 1922}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Background
+    spriteName: 
+    isGroup: 0
+    parentIndex: -1
+    spriteID: 3344825640d6e87408f531290adc343c
+    layerID: 1
+    mosaicPosition: {x: 0, y: 0}
+    flatten: 0
+    isImported: 0
+    isVisible: 0
+  mosaicPSDLayers: []
+  rigPSDLayers: []
+  sharedRigPSDLayers: []
+  importFileNodeState: 1
+  platformSettingsDirtyTick: 639167201981152362
+  spriteSizeExpandChanged: 0
+  generateGOHierarchy: 0
+  textureAssetName: 
+  prefabAssetName: 
+  spriteLibAssetName: 
+  skeletonAssetName: 
+  secondarySpriteTextures: []

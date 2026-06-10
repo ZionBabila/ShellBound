@@ -34,15 +34,15 @@ public class Movable : MonoBehaviour
         // FixedUpdate runs in sync with physics engine (usually 50 FPS), perfect for physics math
         if (rb == null || player == null) return; // Safety check for missing components
 
-        // Check: Is the object too heavy for the player's current push capacity?
-        if (rb.mass > player.currentMaxPushMass) 
+        bool isHeavy = rb.mass >= player.heavyObjectMassThreshold;
+
+        if (isHeavy && !player.canPushHeavyObjects) 
         {
             // Lock all axes so the player can't move the box, and it won't bounce
             rb.constraints = baseConstraints | RigidbodyConstraints2D.FreezeAll; 
         }
         else
         {
-            // Player is strong enough (e.g. wearing armor) - restore original constraints
             rb.constraints = baseConstraints; 
         }
     }

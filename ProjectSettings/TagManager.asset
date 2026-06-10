@@ -47,22 +47,22 @@ TagManager:
   - name: BG SKY
     uniqueID: 273567399
     locked: 0
-  - name: haze
-    uniqueID: 3863382275
-    locked: 0
   - name: Far
     uniqueID: 2938178787
     locked: 0
   - name: City
     uniqueID: 558388277
     locked: 0
-  - name: MID
+  - name: haze
+    uniqueID: 3863382275
+    locked: 0
+  - name: SandsHIlls
     uniqueID: 410136985
     locked: 0
-  - name: MID1
+  - name: ElectricElements
     uniqueID: 2937026913
     locked: 0
-  - name: MID2
+  - name: Grass
     uniqueID: 1079440875
     locked: 0
   - name: Platforms

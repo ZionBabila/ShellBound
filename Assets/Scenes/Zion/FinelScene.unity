@@ -8884,7 +8884,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2661347701702352924, guid: 024cdf0e25c7b904fb0bf77638d1beb1, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 587.65
+      value: 548.1
       objectReference: {fileID: 0}
     - target: {fileID: 2661347701702352924, guid: 024cdf0e25c7b904fb0bf77638d1beb1, type: 3}
       propertyPath: m_LocalPosition.y
@@ -11220,9 +11220,9 @@ EdgeCollider2D:
   - {x: -5.1077566, y: -0.5985464}
   - {x: -5.026911, y: -0.6086494}
   - {x: -4.971631, y: -0.59834063}
-  - {x: -4.9419065, y: -0.5596109}
-  - {x: -4.913905, y: -0.5226348}
-  - {x: -4.861815, y: -0.5154933}
+  - {x: -4.938638, y: -0.5650566}
+  - {x: -4.899747, y: -0.53134793}
+  - {x: -4.853101, y: -0.52529556}
   - {x: -4.81747, y: -0.9066584}
   - {x: -4.662096, y: -0.90624785}
   - {x: -4.6430387, y: -0.5102812}
@@ -11233,9 +11233,9 @@ EdgeCollider2D:
   - {x: -3.8399656, y: -0.924857}
   - {x: -3.4224086, y: -0.97534525}
   - {x: -2.80835, y: -0.92385995}
-  - {x: -2.6572926, y: -0.8310077}
-  - {x: -2.588426, y: -1.1742704}
-  - {x: -2.3478713, y: -1.1846052}
+  - {x: -2.6279957, y: -0.8603049}
+  - {x: -2.5371566, y: -1.2585}
+  - {x: -2.3112502, y: -1.2578481}
   - {x: -2.3679276, y: -0.89844775}
   - {x: -1.2218231, y: -0.94794405}
   - {x: -1.0100659, y: -0.9374546}
@@ -11339,10 +11339,12 @@ EdgeCollider2D:
   m_Offset: {x: 0, y: 0}
   m_EdgeRadius: 0
   m_Points:
-  - {x: -3.5861208, y: -0.8063951}
+  - {x: -3.6389377, y: -0.8578207}
+  - {x: -3.614176, y: -0.83263093}
+  - {x: -3.3870795, y: -0.6016282}
   - {x: -3.2623699, y: -0.4733315}
   - {x: -2.9131474, y: -0.8434984}
-  - {x: -3.594195, y: -0.85664177}
+  - {x: -3.6386712, y: -0.8580316}
   m_AdjacentStartPoint: {x: 0, y: 0}
   m_AdjacentEndPoint: {x: 0, y: 0}
   m_UseAdjacentStartPoint: 0
@@ -11863,7 +11865,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 828274506237039406, guid: e992cd07b1d941a429589a1963629509, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 549.51
+      value: 557.5
       objectReference: {fileID: 0}
     - target: {fileID: 828274506237039406, guid: e992cd07b1d941a429589a1963629509, type: 3}
       propertyPath: m_LocalPosition.y
