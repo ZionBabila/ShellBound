@@ -1500,7 +1500,7 @@ GameObject:
   m_Component:
   - component: {fileID: 267470228}
   - component: {fileID: 267470229}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: PlatformCollider (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5108,7 +5108,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1435690126}
   - component: {fileID: 1435690127}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: PlatformCollider (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7975,7 +7975,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2126979986}
   - component: {fileID: 2126979987}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: PlatformCollider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
