@@ -5,10 +5,8 @@ public class HeavyArmorShell : BaseShell
     [Header("Push & Crush Settings")]
     [Tooltip("Layer mask for breakable objects.")]
     public LayerMask crushLayer;
-    
-    [Tooltip("The mass the player can push while wearing the armor.")]
-    public float armorPushMass = Mathf.Infinity;
-    
+
+    [Range(0.1f, 1f)]
     [Tooltip("How much the armor slows the player down.")]
     public float armorSpeedMultiplier = 0.5f;
 
@@ -28,15 +26,24 @@ public class HeavyArmorShell : BaseShell
         if (hidingVisuals != null) hidingVisuals.SetActive(false);
 
         // Apply Heavy Armor stats
-        playerSystem.Player.currentMaxPushMass = armorPushMass;
         playerSystem.Player.currentSpeedMultiplier = armorSpeedMultiplier;
+        playerSystem.Player.CanPushHeavyObjects = true;
+    }
+
+    private void Update()
+    {
+        // Sync the stats continuously so the slider works in real-time while playing in the Editor!
+        if (playerSystem != null && CurrentState == ShellState.OnBack)
+        {
+            playerSystem.Player.currentSpeedMultiplier = armorSpeedMultiplier;
+        }
     }
 
     public override void Throw()
     {
         // Remove Heavy Armor stats
-        playerSystem.Player.currentMaxPushMass = playerSystem.Player.baseMaxPushMass;
         playerSystem.Player.currentSpeedMultiplier = 1f;
+        playerSystem.Player.CanPushHeavyObjects = false;
         
         base.Throw();
     }
@@ -88,11 +95,19 @@ public class HeavyArmorShell : BaseShell
         if (((1 << collision.gameObject.layer) & crushLayer) != 0)
         {
             ContactPoint2D contact = collision.contacts[0];
-            // Break logic fixed according to Code Review 2.1 (Needs to be a hard fall)
-            if (contact.normal.y > 0.5f && collision.relativeVelocity.y < -3f)
+            // Fix: Use magnitude because Unity's relativeVelocity is often positive when hitting static objects
+            if (contact.normal.y > 0.5f && collision.relativeVelocity.magnitude >= 2f)
             {
-                // Trigger the generic Break method on the Breakable.cs
-                collision.gameObject.SendMessage("Break", SendMessageOptions.DontRequireReceiver);
+                // Support the Breakable script exactly like the old ArmorShell did
+                Breakable breakableObj = collision.gameObject.GetComponent<Breakable>();
+                if (breakableObj != null)
+                {
+                    breakableObj.Smash();
+                }
+                else
+                {
+                    Destroy(collision.gameObject); // Fallback: regular destroy
+                }
             }
         }
     }
