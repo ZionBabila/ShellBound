@@ -19,31 +19,56 @@ public class Movable : MonoBehaviour
 
     private Rigidbody2D rb; // Reference to the object's Rigidbody component
     private RigidbodyConstraints2D baseConstraints; // Stores original physics constraints (e.g. if object shouldn't rotate)
-    private PlayerController player; // Reference pointing to our player to read state data
-
+    private PlayerController oldPlayer; // Reference pointing to the old player script
+    private SimplePlayer simplePlayer; // Reference pointing to our new player script
+    
     private void Awake()
     {
         // Awake is called automatically when the game starts, used for initialization
         rb = GetComponent<Rigidbody2D>(); // Gets the physics component from current object and stores it
         baseConstraints = rb.constraints; // Stores constraints already defined in the inspector
-        player = FindAnyObjectByType<PlayerController>(); // Scans the scene, finds player and stores reference
+        oldPlayer = FindFirstObjectByType<PlayerController>(); // Scans the scene, finds old player
+        simplePlayer = FindFirstObjectByType<SimplePlayer>(); // Scans the scene, finds new player
     }
 
     private void FixedUpdate()
     {
         // FixedUpdate runs in sync with physics engine (usually 50 FPS), perfect for physics math
-        if (rb == null || player == null) return; // Safety check for missing components
+        if (rb == null) return; // Safety check for missing components
+        
+        bool isHeavy = false;
+        bool canPush = false;
+        bool playerFound = false;
 
-        bool isHeavy = rb.mass >= player.heavyObjectMassThreshold;
-
-        if (isHeavy && !player.canPushHeavyObjects) 
+        if (simplePlayer != null)
         {
-            // Lock all axes so the player can't move the box, and it won't bounce
-            rb.constraints = baseConstraints | RigidbodyConstraints2D.FreezeAll; 
+            isHeavy = rb.mass > simplePlayer.heavyMassThreshold;
+            canPush = simplePlayer.CanPushHeavyObjects;
+            playerFound = true;
+        }
+        else if (oldPlayer != null)
+        {
+            isHeavy = rb.mass >= oldPlayer.heavyObjectMassThreshold;
+            canPush = oldPlayer.canPushHeavyObjects;
+            playerFound = true;
+        }
+
+        if (!playerFound) return;
+
+        if (isHeavy && !canPush) 
+        {
+            // Lock X axis so the player can't move the box, but keep Y free for gravity
+            rb.constraints = baseConstraints | RigidbodyConstraints2D.FreezePositionX; 
         }
         else
         {
             rb.constraints = baseConstraints; 
+        }
+
+        // Handle dragging sound if the object is actually moving horizontally
+        if (Mathf.Abs(rb.linearVelocity.x) > 0.1f)
+        {
+            AudioManager.moveSound = true;
         }
     }
 

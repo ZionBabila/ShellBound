@@ -16,6 +16,10 @@ public class RollingShell : BaseShell
         // Set default visual state when equipped
         if (onBackVisuals != null) onBackVisuals.SetActive(true);
         if (rollingVisuals != null) rollingVisuals.SetActive(false);
+
+        // Defensive reset: Ensure this shell does not inherit a slowdown from a previously equipped shell.
+        // Each shell should be responsible for defining the player's speed.
+        playerSystem.Player.currentSpeedMultiplier = 1f;
     }
 
     public override void ActivateAbility()

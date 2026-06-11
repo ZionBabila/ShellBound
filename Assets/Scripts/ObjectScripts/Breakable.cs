@@ -30,7 +30,7 @@ public class Breakable : MonoBehaviour
         isBroken = true;
 
         // Trigger the global break sound via our AudioManager property
-        AudioManager.PlayBreakPlatform();
+        AudioManager.breakSound = true;
 
         // Swap the sprite to the broken version
         if (spriteRenderer != null && brokenSprite != null)
@@ -45,5 +45,11 @@ public class Breakable : MonoBehaviour
         }
 
         // We don't call Destroy(gameObject) so the broken sprite remains in the scene
+    }
+
+    // Added support for any new script that tries to call "Break" instead of "Smash"
+    public void Break()
+    {
+        Smash();
     }
 }

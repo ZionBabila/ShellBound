@@ -30,8 +30,13 @@ public class SimplePlayer : MonoBehaviour
     [Tooltip("Radius of the grab probe used to find a Movable in front of the crab.")]
     public float grabCheckRadius = 0.4f;
 
-    [Tooltip("The maximum mass of an object the player can push/pull normally.")]
-    public float baseMaxPushMass = 3.0f;
+    [Tooltip("Objects with mass greater than this are considered 'heavy' and require a special shell.")]
+    public float heavyMassThreshold = 3.0f;
+
+    [Tooltip("How much grabbing an object slows down the player's maximum speed (1 = no slowdown).")]
+    [Range(0.1f, 1f)]
+    public float grabSpeedMultiplier = 0.6f;
+
 
     [Header("Components")]
     [Tooltip("The regular collider used for walking without a shell.")]
@@ -42,6 +47,10 @@ public class SimplePlayer : MonoBehaviour
 
     [Tooltip("The round collider used for rolling. MUST be on this main GameObject.")]
     public Collider2D rollingCollider;
+
+    [Header("Debug")]
+    [Tooltip("Print movement forces and speeds to the console.")]
+    public bool showSpeedDebug = false;
 
     [Header("Ground Detection")]
     [Tooltip("Offset from the player's center to start the ground check raycast.")]
@@ -60,7 +69,6 @@ public class SimplePlayer : MonoBehaviour
 
     private FixedJoint2D grabJoint;
 
-    [HideInInspector] public float currentMaxPushMass;
     [HideInInspector] public float currentSpeedMultiplier = 1f;
 
     [SerializeField, HideInInspector] 
@@ -80,6 +88,9 @@ public class SimplePlayer : MonoBehaviour
     // Ignoring micro-movements so the animator gets a "clean" 0 when the player barely moves
     public float CurrentSpeed => Mathf.Abs(rb.linearVelocity.x) < 0.15f ? 0f : Mathf.Abs(rb.linearVelocity.x);
     public bool IsGrounded { get; private set; }
+    
+    // Property to be controlled by shells
+    public bool CanPushHeavyObjects { get; set; } = false;
     public Rigidbody2D Rb => rb;
 
     private void Awake()
@@ -87,8 +98,6 @@ public class SimplePlayer : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         inputHandler = GetComponent<PlayerInputHandler>();
         
-        currentMaxPushMass = baseMaxPushMass;
-
         if (inputHandler != null)
         {
             inputHandler.OnGrabStart += TryStartGrab;
@@ -134,8 +143,22 @@ public class SimplePlayer : MonoBehaviour
 
     private void HandleMovement()
     {
-        float actualSpeed = speed * currentSpeedMultiplier;
+        // Only affect max speed with the multiplier, keep raw speed (force) high for pushing/slopes
         float actualMaxSpeed = maxSpeed * currentSpeedMultiplier;
+
+        // Apply speed penalty when grabbing objects to give a sense of weight
+        if (grabJoint != null)
+        {
+            actualMaxSpeed *= grabSpeedMultiplier;
+        }
+
+        // Start with a baseline of 1 so normal walking force remains exactly 'speed'
+        float forceMassMultiplier = 1f;
+        if (grabJoint != null && grabJoint.connectedBody != null)
+        {
+            // Add the heavy object's mass to generate enough force to pull/push it
+            forceMassMultiplier += grabJoint.connectedBody.mass;
+        }
 
         // Apply basic movement force
         if (Mathf.Abs(moveInputX) > 0.01f)
@@ -144,7 +167,13 @@ public class SimplePlayer : MonoBehaviour
             // This prevents "getting stuck" into the slope and creates smoother, more organic movement
             Vector2 moveDirection = new Vector2(surfaceNormal.y, -surfaceNormal.x).normalized;
             
-            rb.AddForce(moveDirection * (moveInputX * actualSpeed), ForceMode2D.Force);
+            float appliedForce = moveInputX * speed * forceMassMultiplier;
+            rb.AddForce(moveDirection * appliedForce, ForceMode2D.Force);
+            
+            if (showSpeedDebug)
+            {
+                Debug.Log($"<color=cyan>Force Applied:</color> {appliedForce:F1} | <color=green>Current Vel X:</color> {rb.linearVelocity.x:F2} | <color=yellow>Max Speed Limit:</color> {actualMaxSpeed:F1} | <color=orange>Mass Multiplier:</color> {forceMassMultiplier}");
+            }
         }
         else
         {
@@ -233,16 +262,26 @@ public class SimplePlayer : MonoBehaviour
         Vector2 origin = (Vector2)transform.position + new Vector2(0, grabCheckOffset.y);
         Vector2 direction = Vector2.right * facingMul;
 
-        RaycastHit2D hit = Physics2D.CircleCast(origin, grabCheckRadius, direction, grabCheckOffset.x, movableLayer);
+        // Dynamically increase reach if the player is wearing a shell (which has a wider collider)
+        float castDistance = grabCheckOffset.x;
+        if (withShellCollider != null && withShellCollider.enabled)
+        {
+            castDistance += 0.5f;
+        }
+
+        RaycastHit2D hit = Physics2D.CircleCast(origin, grabCheckRadius, direction, castDistance, movableLayer);
         if (hit.collider == null) return;
 
         Rigidbody2D targetRb = hit.collider.attachedRigidbody;
         if (targetRb == null || targetRb.bodyType == RigidbodyType2D.Static) return;
 
-        if (targetRb.mass > currentMaxPushMass)
+        if (targetRb.mass > heavyMassThreshold)
         {
-            Debug.Log($"<color=orange>TOO HEAVY:</color> Object mass ({targetRb.mass}) exceeds player's push limit ({currentMaxPushMass}).");
-            return;
+            if (!CanPushHeavyObjects)
+            {
+                Debug.Log($"<color=orange>TOO HEAVY:</color> Object mass ({targetRb.mass}) is too high. Requires an armor shell.");
+                return;
+            }
         }
 
         grabJoint = gameObject.AddComponent<FixedJoint2D>();

@@ -39,10 +39,33 @@ public class PipeTeleporter : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        if (!canWarp) return;
+
+        GameObject playerObj = null;
+
         // Check if it's the player and the pipe is ready to warp
-        if (canWarp && collision.CompareTag("Player"))
+        if (collision.CompareTag("Player"))
         {
-            StartCoroutine(WarpRoutine(collision.gameObject));
+            playerObj = collision.gameObject;
+        }
+        else
+        {
+            // Backward compatibility: Old TunaCan separated from the player hierarchy
+            TunaCan oldCan = collision.GetComponent<TunaCan>();
+            if (oldCan != null && oldCan.CurrentState == ShellState.InUse)
+            {
+                oldCan.OnDeactivate();
+                if (oldCan.transform.parent != null)
+                {
+                    PlayerController oldPlayer = oldCan.GetComponentInParent<PlayerController>();
+                    if (oldPlayer != null) playerObj = oldPlayer.gameObject;
+                }
+            }
+        }
+
+        if (playerObj != null)
+        {
+            StartCoroutine(WarpRoutine(playerObj));
         }
     }
 
@@ -52,16 +75,38 @@ public class PipeTeleporter : MonoBehaviour
         canWarp = false;
         if (destinationPipe != null) destinationPipe.canWarp = false;
 
+        // --- BUG FIX 1.1: Force exit active shells so player doesn't warp as a ball ---
+        PlayerShellSystem newShellSystem = player.GetComponent<PlayerShellSystem>();
+        if (newShellSystem != null && newShellSystem.CurrentShell != null && newShellSystem.CurrentShell.CurrentState == ShellState.InUse)
+        {
+            newShellSystem.CurrentShell.DeactivateAbility();
+        }
+
+        PlayerController oldPlayerController = player.GetComponent<PlayerController>();
+        if (oldPlayerController != null && oldPlayerController.currentShell != null && oldPlayerController.currentShell.CurrentState == ShellState.InUse)
+        {
+            oldPlayerController.currentShell.OnDeactivate();
+        }
+
         // 2. Get player components and store original scale
         Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
-        SpriteRenderer sprite = player.GetComponentInChildren<SpriteRenderer>();
+        
+        // Find the visual root to hide it completely during the pipe travel (supports 2D Bone Rigs)
+        Transform visualsRoot = null;
+        if (newShellSystem != null && newShellSystem.VisualsRoot != null) visualsRoot = newShellSystem.VisualsRoot;
+        else if (oldPlayerController != null && oldPlayerController.visualsRoot != null) visualsRoot = oldPlayerController.visualsRoot;
 
         Vector3 originalScale = player.transform.localScale;
 
-        PlayerController playerController = player.GetComponent<PlayerController>();
-        if (playerController != null)
+        // --- BUG FIX 1.2: Disable controls AND release grabs ---
+        SimplePlayer simplePlayer = player.GetComponent<SimplePlayer>();
+        if (simplePlayer != null) 
         {
-            playerController.SetControlEnabled(false);
+            simplePlayer.isMovementDisabled = true; // This automatically drops grabbed objects!
+        }
+        else if (oldPlayerController != null)
+        {
+            oldPlayerController.SetControlEnabled(false);
         }
 
         if (rb != null)
@@ -90,7 +135,12 @@ public class PipeTeleporter : MonoBehaviour
         }
 
         // 4. Inside the pipe (Hidden)
-        if (sprite != null) sprite.enabled = false;
+        if (visualsRoot != null) visualsRoot.gameObject.SetActive(false);
+        else
+        {
+            SpriteRenderer sprite = player.GetComponentInChildren<SpriteRenderer>();
+            if (sprite != null) sprite.enabled = false;
+        }
 
         if (destinationPipe != null)
         {
@@ -101,7 +151,12 @@ public class PipeTeleporter : MonoBehaviour
         yield return new WaitForSeconds(undergroundDuration);
 
         // 5. Spit out animation (Move to exit point)
-        if (sprite != null) sprite.enabled = true;
+        if (visualsRoot != null) visualsRoot.gameObject.SetActive(true);
+        else
+        {
+            SpriteRenderer sprite = player.GetComponentInChildren<SpriteRenderer>();
+            if (sprite != null) sprite.enabled = true;
+        }
         elapsedTime = 0f;
 
         Vector3 spitStartPos = player.transform.position;
@@ -128,10 +183,8 @@ public class PipeTeleporter : MonoBehaviour
         // Ensure scale is exactly as it was (preserves left/right flipping)
         player.transform.localScale = originalScale;
 
-        if (playerController != null)
-        {
-            playerController.SetControlEnabled(true);
-        }
+        if (simplePlayer != null) simplePlayer.isMovementDisabled = false;
+        else if (oldPlayerController != null) oldPlayerController.SetControlEnabled(true);
 
         // 7. Unlock pipes
         yield return new WaitForSeconds(0.2f);
