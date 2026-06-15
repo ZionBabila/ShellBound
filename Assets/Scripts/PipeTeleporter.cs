@@ -150,6 +150,14 @@ public class PipeTeleporter : MonoBehaviour
 
         yield return new WaitForSeconds(undergroundDuration);
 
+        // Safety check: Make sure the player wasn't destroyed while underground
+        if (player == null)
+        {
+            canWarp = true;
+            if (destinationPipe != null) destinationPipe.canWarp = true;
+            yield break;
+        }
+
         // 5. Spit out animation (Move to exit point)
         if (visualsRoot != null) visualsRoot.gameObject.SetActive(true);
         else
@@ -160,8 +168,12 @@ public class PipeTeleporter : MonoBehaviour
         elapsedTime = 0f;
 
         Vector3 spitStartPos = player.transform.position;
-        // Default to moving slightly up if no exit point is assigned
-        Vector3 spitEndPos = destinationPipe.exitPoint != null ? destinationPipe.exitPoint.position : destinationPipe.transform.position + Vector3.up;
+        
+        // Default to current pipe if destination is missing, otherwise use destination
+        Vector3 spitEndPos = transform.position + Vector3.up; 
+        if (destinationPipe != null) {
+            spitEndPos = destinationPipe.exitPoint != null ? destinationPipe.exitPoint.position : destinationPipe.transform.position + Vector3.up;
+        }
 
         while (elapsedTime < spitDuration)
         {
