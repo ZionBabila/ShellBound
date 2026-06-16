@@ -33,9 +33,17 @@ public class SimplePlayer : MonoBehaviour
     [Tooltip("Objects with mass greater than this are considered 'heavy' and require a special shell.")]
     public float heavyMassThreshold = 3.0f;
 
-    [Tooltip("How much grabbing an object slows down the player's maximum speed (1 = no slowdown).")]
-    [Range(0.1f, 1f)]
-    public float grabSpeedMultiplier = 0.6f;
+    [Header("Push / Pull Weight Mapping")]
+    [Tooltip("The maximum mass an object can have for the weight calculation (e.g., 10).")]
+    public float maxPushMass = 10f;
+
+    [Tooltip("Curve defining speed slowdown. X axis: Mass ratio (0 to 1). Y axis: Speed multiplier (0 to 1). Default gives gentle slowdown for mass 1-3, heavy slowdown at 10.")]
+    public AnimationCurve pushSpeedCurve = new AnimationCurve(
+        new Keyframe(0f, 1f),     // Mass 0: 100% speed
+        new Keyframe(0.3f, 0.85f), // Mass 3: 85% speed (Gentle slowdown)
+        new Keyframe(0.7f, 0.4f),  // Mass 7: 40% speed (Starts getting very heavy)
+        new Keyframe(1f, 0.1f)     // Mass 10: 10% speed (Barely moves)
+    );
 
 
     [Header("Components")]
@@ -143,55 +151,50 @@ public class SimplePlayer : MonoBehaviour
 
     private void HandleMovement()
     {
-        // Only affect max speed with the multiplier, keep raw speed (force) high for pushing/slopes
+        // 1. Calculate the base maximum speed considering the equipped shell (e.g. Heavy Armor slows us down)
         float actualMaxSpeed = maxSpeed * currentSpeedMultiplier;
 
-        // Apply speed penalty when grabbing objects to give a sense of weight
-        if (grabJoint != null)
-        {
-            actualMaxSpeed *= grabSpeedMultiplier;
-        }
-
-        // Start with a baseline of 1 so normal walking force remains exactly 'speed'
-        float forceMassMultiplier = 1f;
+        // 2. Check the mass of the grabbed object and reduce speed accordingly
         if (grabJoint != null && grabJoint.connectedBody != null)
         {
-            // Add the heavy object's mass to generate enough force to pull/push it
-            forceMassMultiplier += grabJoint.connectedBody.mass;
+            float massRatio = Mathf.Clamp01(grabJoint.connectedBody.mass / maxPushMass);
+            float dynamicGrabMultiplier = pushSpeedCurve.Evaluate(massRatio);
+            actualMaxSpeed *= dynamicGrabMultiplier;
         }
 
-        // Apply basic movement force
+        // 3. Handle Movement strictly through linearVelocity
+        Vector2 vel = rb.linearVelocity;
+
         if (Mathf.Abs(moveInputX) > 0.01f)
         {
-            // Calculate Tangent to the slope angle to move the player parallel to the ground
-            // This prevents "getting stuck" into the slope and creates smoother, more organic movement
-            Vector2 moveDirection = new Vector2(surfaceNormal.y, -surfaceNormal.x).normalized;
-            
-            float appliedForce = moveInputX * speed * forceMassMultiplier;
-            rb.AddForce(moveDirection * appliedForce, ForceMode2D.Force);
-            
+            // Accelerate towards target speed using 'speed' as the acceleration rate
+            float targetSpeedX = moveInputX * actualMaxSpeed;
+            float currentSpeedX = Mathf.MoveTowards(vel.x, targetSpeedX, speed * Time.fixedDeltaTime);
+
+            // Adjust velocity along slopes if grounded to prevent bouncing
+            if (IsGrounded && surfaceNormal != Vector2.up)
+            {
+                Vector2 moveDirection = new Vector2(surfaceNormal.y, -surfaceNormal.x).normalized;
+                vel = moveDirection * currentSpeedX;
+            }
+            else
+            {
+                vel.x = currentSpeedX;
+            }
+
             if (showSpeedDebug)
             {
-                Debug.Log($"<color=cyan>Force Applied:</color> {appliedForce:F1} | <color=green>Current Vel X:</color> {rb.linearVelocity.x:F2} | <color=yellow>Max Speed Limit:</color> {actualMaxSpeed:F1} | <color=orange>Mass Multiplier:</color> {forceMassMultiplier}");
+                Debug.Log($"<color=green>Current Vel X:</color> {vel.x:F2} | <color=yellow>Target Max Speed:</color> {actualMaxSpeed:F2}");
             }
         }
         else
         {
-            // Smooth stop when there is no player input
-            Vector2 vel = rb.linearVelocity;
             vel.x = Mathf.Lerp(vel.x, 0, Time.fixedDeltaTime * deceleration);
             
-            // Snap to 0 to prevent infinite Lerp trails and small slides on slopes
             if (Mathf.Abs(vel.x) < 0.05f) vel.x = 0f;
-            
-            rb.linearVelocity = vel;
         }
 
-        // Limit movement speed so the player doesn't accelerate infinitely
-        if (Mathf.Abs(rb.linearVelocity.x) > actualMaxSpeed)
-        {
-            rb.linearVelocity = new Vector2(Mathf.Sign(rb.linearVelocity.x) * actualMaxSpeed, rb.linearVelocity.y);
-        }
+        rb.linearVelocity = vel;
     }
 
     private void HandleGroundDetection()
@@ -274,15 +277,6 @@ public class SimplePlayer : MonoBehaviour
 
         Rigidbody2D targetRb = hit.collider.attachedRigidbody;
         if (targetRb == null || targetRb.bodyType == RigidbodyType2D.Static) return;
-
-        if (targetRb.mass > heavyMassThreshold)
-        {
-            if (!CanPushHeavyObjects)
-            {
-                Debug.Log($"<color=orange>TOO HEAVY:</color> Object mass ({targetRb.mass}) is too high. Requires an armor shell.");
-                return;
-            }
-        }
 
         grabJoint = gameObject.AddComponent<FixedJoint2D>();
         grabJoint.connectedBody = targetRb;
