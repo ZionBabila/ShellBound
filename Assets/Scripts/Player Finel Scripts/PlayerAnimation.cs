@@ -10,6 +10,9 @@ public class PlayerAnimation : MonoBehaviour
     [Tooltip("Reference to the player's core script.")]
     public SimplePlayer simplePlayer;
 
+    [Tooltip("Multiplier for the 'Speed' parameter sent to the Animator. Tweaks the walk animation pace.")]
+    public float animationSpeedMultiplier = 1.0f;
+
     private void Awake()
     {
         if (animator == null) animator = GetComponent<Animator>();
@@ -27,7 +30,7 @@ public class PlayerAnimation : MonoBehaviour
         bool isGrounded = simplePlayer.IsGrounded;
 
         // 2. Pass data to Animator
-        animator.SetFloat("Speed", currentSpeed);
+        animator.SetFloat("Speed", currentSpeed * animationSpeedMultiplier);
         animator.SetBool("IsGrounded", isGrounded);
         
         // In the future, we will also add reading data from the shell system (PlayerShellSystem)

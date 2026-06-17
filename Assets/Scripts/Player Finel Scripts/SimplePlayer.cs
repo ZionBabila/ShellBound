@@ -33,18 +33,6 @@ public class SimplePlayer : MonoBehaviour
     [Tooltip("Objects with mass greater than this are considered 'heavy' and require a special shell.")]
     public float heavyMassThreshold = 3.0f;
 
-    [Header("Push / Pull Weight Mapping")]
-    [Tooltip("The maximum mass an object can have for the weight calculation (e.g., 10).")]
-    public float maxPushMass = 10f;
-
-    [Tooltip("Curve defining speed slowdown. X axis: Mass ratio (0 to 1). Y axis: Speed multiplier (0 to 1). Default gives gentle slowdown for mass 1-3, heavy slowdown at 10.")]
-    public AnimationCurve pushSpeedCurve = new AnimationCurve(
-        new Keyframe(0f, 1f),     // Mass 0: 100% speed
-        new Keyframe(0.3f, 0.85f), // Mass 3: 85% speed (Gentle slowdown)
-        new Keyframe(0.7f, 0.4f),  // Mass 7: 40% speed (Starts getting very heavy)
-        new Keyframe(1f, 0.1f)     // Mass 10: 10% speed (Barely moves)
-    );
-
 
     [Header("Components")]
     [Tooltip("The regular collider used for walking without a shell.")]
@@ -151,50 +139,50 @@ public class SimplePlayer : MonoBehaviour
 
     private void HandleMovement()
     {
-        // 1. Calculate the base maximum speed considering the equipped shell (e.g. Heavy Armor slows us down)
+        // 1. Calculate the base maximum speed considering the equipped shell (Heavy Armor limits top speed)
         float actualMaxSpeed = maxSpeed * currentSpeedMultiplier;
-
-        // 2. Check the mass of the grabbed object and reduce speed accordingly
-        if (grabJoint != null && grabJoint.connectedBody != null)
-        {
-            float massRatio = Mathf.Clamp01(grabJoint.connectedBody.mass / maxPushMass);
-            float dynamicGrabMultiplier = pushSpeedCurve.Evaluate(massRatio);
-            actualMaxSpeed *= dynamicGrabMultiplier;
-        }
-
-        // 3. Handle Movement strictly through linearVelocity
-        Vector2 vel = rb.linearVelocity;
 
         if (Mathf.Abs(moveInputX) > 0.01f)
         {
-            // Accelerate towards target speed using 'speed' as the acceleration rate
-            float targetSpeedX = moveInputX * actualMaxSpeed;
-            float currentSpeedX = Mathf.MoveTowards(vel.x, targetSpeedX, speed * Time.fixedDeltaTime);
-
-            // Adjust velocity along slopes if grounded to prevent bouncing
+            // 2. Calculate movement direction (parallel to slope if grounded)
+            Vector2 moveDirection = Vector2.right * Mathf.Sign(moveInputX);
+            
             if (IsGrounded && surfaceNormal != Vector2.up)
             {
-                Vector2 moveDirection = new Vector2(surfaceNormal.y, -surfaceNormal.x).normalized;
-                vel = moveDirection * currentSpeedX;
+                // Calculate the tangent to the slope to push along the surface
+                moveDirection = new Vector2(surfaceNormal.y, -surfaceNormal.x).normalized * Mathf.Sign(moveInputX);
+                
+                // Ensure the vector points in the intended horizontal direction
+                if (moveInputX < 0 && moveDirection.x > 0) moveDirection *= -1;
+                if (moveInputX > 0 && moveDirection.x < 0) moveDirection *= -1;
             }
-            else
+
+            // 3. Apply physics force - this automatically handles the weight of pushed objects natively!
+            rb.AddForce(moveDirection * speed, ForceMode2D.Force);
+
+            // 4. Cap the maximum horizontal speed so the player doesn't accelerate infinitely
+            Vector2 vel = rb.linearVelocity;
+            if (Mathf.Abs(vel.x) > actualMaxSpeed)
             {
-                vel.x = currentSpeedX;
+                vel.x = Mathf.Sign(vel.x) * actualMaxSpeed;
+                rb.linearVelocity = vel;
             }
 
             if (showSpeedDebug)
             {
-                Debug.Log($"<color=green>Current Vel X:</color> {vel.x:F2} | <color=yellow>Target Max Speed:</color> {actualMaxSpeed:F2}");
+                Debug.Log($"<color=green>Velocity X:</color> {rb.linearVelocity.x:F2} / <color=yellow>Max:</color> {actualMaxSpeed:F2} | <color=cyan>Force Applied:</color> {speed} | <color=orange>Shell Multiplier:</color> {currentSpeedMultiplier:F2}");
             }
         }
         else
         {
+            // 5. Decelerate smoothly when there is no input
+            Vector2 vel = rb.linearVelocity;
             vel.x = Mathf.Lerp(vel.x, 0, Time.fixedDeltaTime * deceleration);
             
             if (Mathf.Abs(vel.x) < 0.05f) vel.x = 0f;
+            
+            rb.linearVelocity = vel;
         }
-
-        rb.linearVelocity = vel;
     }
 
     private void HandleGroundDetection()
