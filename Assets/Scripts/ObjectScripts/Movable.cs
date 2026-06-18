@@ -26,6 +26,10 @@ public class Movable : MonoBehaviour
     {
         // Awake is called automatically when the game starts, used for initialization
         rb = GetComponent<Rigidbody2D>(); // Gets the physics component from current object and stores it
+        
+        // Z rotation released for testing (explicitly removing FreezeRotation)
+        rb.constraints &= ~RigidbodyConstraints2D.FreezeRotation;
+        
         baseConstraints = rb.constraints; // Stores constraints already defined in the inspector
         oldPlayer = FindFirstObjectByType<PlayerController>(); // Scans the scene, finds old player
         simplePlayer = FindFirstObjectByType<SimplePlayer>(); // Scans the scene, finds new player
@@ -39,29 +43,40 @@ public class Movable : MonoBehaviour
         bool isHeavy = false;
         bool canPush = false;
         bool playerFound = false;
+        bool isGrabbed = false;
 
         if (simplePlayer != null)
         {
             isHeavy = rb.mass > simplePlayer.heavyMassThreshold;
             canPush = simplePlayer.CanPushHeavyObjects;
             playerFound = true;
+            
+            // Check if SimplePlayer is currently grabbing THIS specific object
+            FixedJoint2D joint = simplePlayer.GetComponent<FixedJoint2D>();
+            if (joint != null && joint.connectedBody == rb) isGrabbed = true;
         }
         else if (oldPlayer != null)
         {
             isHeavy = rb.mass >= oldPlayer.heavyObjectMassThreshold;
             canPush = oldPlayer.canPushHeavyObjects;
             playerFound = true;
+            
+            // Check if old PlayerController is currently grabbing THIS specific object
+            FixedJoint2D joint = oldPlayer.GetComponent<FixedJoint2D>();
+            if (joint != null && joint.connectedBody == rb) isGrabbed = true;
         }
 
         if (!playerFound) return;
 
-        if (isHeavy && !canPush) 
+        // Freeze position if the player isn't grabbing it with Ctrl, OR if it's too heavy
+        if (!isGrabbed || (isHeavy && !canPush)) 
         {
-            // Lock X axis so the player can't move the box, but keep Y free for gravity
+            // Lock ONLY the X axis. Y remains open for gravity. Z rotation is free for testing.
             rb.constraints = baseConstraints | RigidbodyConstraints2D.FreezePositionX; 
         }
         else
         {
+            // Unlock X when actively grabbed, Z remains free, Y is always free
             rb.constraints = baseConstraints; 
         }
 
