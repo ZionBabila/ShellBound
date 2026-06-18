@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 using System.Collections.Generic;
+using UnityEngine.Rendering.Universal;
 
 [RequireComponent(typeof(Collider2D))]
 public class PressureButton : MonoBehaviour
@@ -17,6 +18,14 @@ public class PressureButton : MonoBehaviour
     
     [Tooltip("How fast the plunger moves down/up.")]
     public float animationSpeed = 10f;
+
+    [Header("Lighting")]
+    [Tooltip("Reference to the light object (Spot Light).")]
+    public Light2D buttonLight;
+    [Tooltip("Color when the button is NOT pressed.")]
+    public Color releasedColor = Color.red;
+    [Tooltip("Color when the button IS pressed.")]
+    public Color pressedColor = Color.green;
 
     [Header("Detection Settings")]
     [Tooltip("Layers that are allowed to press this button (e.g., Player, Movables).")]
@@ -46,6 +55,21 @@ public class PressureButton : MonoBehaviour
     private Dictionary<Collider2D, float> objectsOnButton = new Dictionary<Collider2D, float>();
     private bool isPressed = false;
 
+    private void Start()
+    {
+        // Find the light in children or parent if not assigned manually
+        if (buttonLight == null)
+        {
+            buttonLight = GetComponentInChildren<Light2D>();
+            if (buttonLight == null && transform.parent != null)
+            {
+                buttonLight = transform.parent.GetComponentInChildren<Light2D>();
+            }
+        }
+
+        if (buttonLight != null) buttonLight.color = releasedColor;
+    }
+
     private void Update()
     {
         List<Collider2D> keysToRemove = new List<Collider2D>();
@@ -72,12 +96,17 @@ public class PressureButton : MonoBehaviour
         {
             if (showDebugLogs) Debug.Log($"<color=green>[PressureButton]</color> Pressed! Current Mass: {currentMass} >= Required: {requiredMass}");
             isPressed = true;
+            if (buttonLight != null) buttonLight.color = pressedColor;
+            AudioManager.buttonPressSound = true;
+            
             OnPressed?.Invoke();
         }
         else if (!shouldBePressed && isPressed)
         {
             if (showDebugLogs) Debug.Log($"<color=orange>[PressureButton]</color> Released! Current Mass: {currentMass} < Required: {requiredMass}");
             isPressed = false;
+            if (buttonLight != null) buttonLight.color = releasedColor;
+            AudioManager.buttonReleaseSound = true;
             OnReleased?.Invoke();
         }
 

@@ -13,6 +13,8 @@ public class AudioManager : MonoBehaviour
     public AudioClip uiClick;
     public AudioClip winLevel;
     public AudioClip loseLevel;
+    public AudioClip buttonPressSoundSorce;
+    public AudioClip buttonReleaseSoundSource;
 
     public static bool breakSound = false;
     public static bool moveSound = false;
@@ -22,6 +24,9 @@ public class AudioManager : MonoBehaviour
     public static bool uiClickSound = false;
     public static bool winLevelSound = false;
     public static bool loseLevelSound = false;
+    public static bool buttonPressSound = false;
+    public static bool buttonReleaseSound = false;
+
 
 
 
@@ -43,6 +48,8 @@ public class AudioManager : MonoBehaviour
         uiClickSound = false;
         winLevelSound = false;
         loseLevelSound = false;
+        buttonPressSound = false;
+        buttonReleaseSound = false;
 
     }
 
@@ -56,8 +63,25 @@ public class AudioManager : MonoBehaviour
         UiClick();
         WinLevel();
         LoseLevel();
+        ButtonPress();
+        ButtonRelease();
     }
-
+public  void ButtonRelease()
+    {
+        if (buttonReleaseSound == true)
+        {
+            source.PlayOneShot(buttonReleaseSoundSource);
+            buttonReleaseSound = false;
+        }
+    }
+    public  void ButtonPress()
+    {
+        if (buttonPressSound == true)
+        {
+            source.PlayOneShot(buttonPressSoundSorce);
+            buttonPressSound = false;
+        }
+    }
     private void BreakObj()
     {
         if (breakSound == true)
