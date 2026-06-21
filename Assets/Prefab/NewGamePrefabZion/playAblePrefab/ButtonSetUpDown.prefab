@@ -130,6 +130,9 @@ MonoBehaviour:
   unpressedY: 1.33
   pressedY: 1.07
   animationSpeed: 10
+  buttonLight: {fileID: 0}
+  releasedColor: {r: 1, g: 0, b: 0, a: 1}
+  pressedColor: {r: 0, g: 1, b: 0, a: 1}
   acceptedLayers:
     serializedVersion: 2
     m_Bits: 3072
@@ -340,7 +343,7 @@ Transform:
   m_GameObject: {fileID: 5844575853197772654}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 23.07, y: -0.4, z: 0}
+  m_LocalPosition: {x: 12.45, y: -0.94, z: 0}
   m_LocalScale: {x: 1, y: 3.97, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
