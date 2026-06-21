@@ -20,6 +20,16 @@ public class SimplePlayer : MonoBehaviour
     [Tooltip("How fast the visuals rotate to align with the slope.")]
     public float rotationSpeed = 10f;
 
+    [Header("Slope Handling")]
+    [Tooltip("Slopes steeper than this angle (degrees) make the player slide down instead of gripping.")]
+    public float maxSlopeAngle = 45f;
+
+    [Tooltip("Downhill force applied while sliding on a steep slope.")]
+    public float slideForce = 30f;
+
+    [Tooltip("Maximum speed reached while sliding down a steep slope.")]
+    public float maxSlideSpeed = 12f;
+
     [Header("Push / Pull (Movable)")]
     [Tooltip("Items on this layer can be grabbed with Ctrl for push/pull.")]
     public LayerMask movableLayer;
@@ -63,6 +73,9 @@ public class SimplePlayer : MonoBehaviour
     private float moveInputX;
     private Vector2 surfaceNormal = Vector2.up;
 
+    // Cached gravity so the grip logic can toggle it to 0 and restore it safely.
+    private float defaultGravityScale = 1f;
+
     private FixedJoint2D grabJoint;
 
     [HideInInspector] public float currentSpeedMultiplier = 1f;
@@ -92,6 +105,7 @@ public class SimplePlayer : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        defaultGravityScale = rb.gravityScale;
         inputHandler = GetComponent<PlayerInputHandler>();
         
         if (inputHandler != null)
@@ -120,6 +134,11 @@ public class SimplePlayer : MonoBehaviour
         {
             HandleMovement();
         }
+        else
+        {
+            // While physics-controlled (rolling/hiding), never leave gravity zeroed by the grip logic.
+            rb.gravityScale = defaultGravityScale;
+        }
         HandleGroundDetection();
     }
 
@@ -139,28 +158,59 @@ public class SimplePlayer : MonoBehaviour
 
     private void HandleMovement()
     {
-        // 1. Calculate the base maximum speed considering the equipped shell (Heavy Armor limits top speed)
+        // Measure how steep the current ground is (0 = flat, 90 = vertical wall)
+        float slopeAngle = Vector2.Angle(surfaceNormal, Vector2.up);
+        bool onSteepSlope = IsGrounded && slopeAngle > maxSlopeAngle;
+
+        // CASE A: Steep slope -> lose grip and slide downhill, ignoring player input
+        if (onSteepSlope)
+        {
+            rb.gravityScale = defaultGravityScale;
+
+            // Tangent of the slope, forced to point downhill (negative Y)
+            Vector2 downSlope = new Vector2(surfaceNormal.y, -surfaceNormal.x).normalized;
+            if (downSlope.y > 0) downSlope = -downSlope;
+
+            rb.AddForce(downSlope * slideForce, ForceMode2D.Force);
+
+            // Cap the slide so it doesn't accelerate forever
+            if (rb.linearVelocity.magnitude > maxSlideSpeed)
+            {
+                rb.linearVelocity = rb.linearVelocity.normalized * maxSlideSpeed;
+            }
+
+            if (showSpeedDebug)
+            {
+                Debug.Log($"<color=red>SLIDING</color> | Angle: {slopeAngle:F1} > Max: {maxSlopeAngle} | Speed: {rb.linearVelocity.magnitude:F2}");
+            }
+            return;
+        }
+
         float actualMaxSpeed = maxSpeed * currentSpeedMultiplier;
 
+        // CASE B: Player is actively moving on walkable ground
         if (Mathf.Abs(moveInputX) > 0.01f)
         {
-            // 2. Calculate movement direction (parallel to slope if grounded)
+            // Normal gravity while moving so walking off ledges feels natural
+            rb.gravityScale = defaultGravityScale;
+
+            // Calculate movement direction (parallel to slope if grounded)
             Vector2 moveDirection = Vector2.right * Mathf.Sign(moveInputX);
-            
+
             if (IsGrounded && surfaceNormal != Vector2.up)
             {
                 // Calculate the tangent to the slope to push along the surface
                 moveDirection = new Vector2(surfaceNormal.y, -surfaceNormal.x).normalized * Mathf.Sign(moveInputX);
-                
+
                 // Ensure the vector points in the intended horizontal direction
                 if (moveInputX < 0 && moveDirection.x > 0) moveDirection *= -1;
                 if (moveInputX > 0 && moveDirection.x < 0) moveDirection *= -1;
             }
 
-            // 3. Apply physics force - this automatically handles the weight of pushed objects natively!
+            // Apply physics force - this automatically handles the weight of pushed objects natively!
             rb.AddForce(moveDirection * speed, ForceMode2D.Force);
 
-            // 4. Cap the maximum horizontal speed so the player doesn't accelerate infinitely
+            // Cap the maximum horizontal speed so the player doesn't accelerate infinitely
             Vector2 vel = rb.linearVelocity;
             if (Mathf.Abs(vel.x) > actualMaxSpeed)
             {
@@ -173,14 +223,25 @@ public class SimplePlayer : MonoBehaviour
                 Debug.Log($"<color=green>Velocity X:</color> {rb.linearVelocity.x:F2} / <color=yellow>Max:</color> {actualMaxSpeed:F2} | <color=cyan>Force Applied:</color> {speed} | <color=orange>Shell Multiplier:</color> {currentSpeedMultiplier:F2}");
             }
         }
+        // CASE C: No input while grounded on a walkable slope -> GRIP (no drift)
+        else if (IsGrounded)
+        {
+            // Zero gravity removes the force that causes downhill sliding entirely
+            rb.gravityScale = 0f;
+
+            // Smoothly bleed off any leftover momentum so stopping still feels natural
+            Vector2 vel = Vector2.Lerp(rb.linearVelocity, Vector2.zero, Time.fixedDeltaTime * deceleration);
+            if (vel.magnitude < 0.05f) vel = Vector2.zero;
+            rb.linearVelocity = vel;
+        }
+        // CASE D: No input in the air -> normal gravity, just damp horizontal drift
         else
         {
-            // 5. Decelerate smoothly when there is no input
+            rb.gravityScale = defaultGravityScale;
+
             Vector2 vel = rb.linearVelocity;
             vel.x = Mathf.Lerp(vel.x, 0, Time.fixedDeltaTime * deceleration);
-            
             if (Mathf.Abs(vel.x) < 0.05f) vel.x = 0f;
-            
             rb.linearVelocity = vel;
         }
     }
