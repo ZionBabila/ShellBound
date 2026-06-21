@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(SimplePlayer))]
@@ -26,6 +27,13 @@ public class PlayerShellSystem : MonoBehaviour
     public bool HasShell => CurrentShell != null;
 
     private PlayerInputHandler inputHandler;
+
+    // Remembered "while worn" tutorial line, read from the picked-up object (which gets destroyed)
+    private string currentWornHint = "";
+
+    // Worn hints the player has already used (pressed the ability once) — never shown again.
+    // Shared/static so it persists across throwing and re-picking shells. Resets on Play mode.
+    private static readonly HashSet<string> consumedWornHints = new HashSet<string>();
 
     private void Awake()
     {
@@ -63,7 +71,14 @@ public class PlayerShellSystem : MonoBehaviour
             {
                 CurrentShell = rigShell;
                 CurrentShell.Equip(this);
-                
+
+                // Read the "while worn" tutorial line from the picked-up object before it is destroyed
+                TutorialHint hint = pickup.GetComponentInChildren<TutorialHint>();
+                currentWornHint = hint != null ? hint.wornMessage : "";
+
+                // Show the "while worn" tutorial line (e.g. 'SPACE to roll')
+                ShowWornHint();
+
                 // Swap to the larger 'with shell' collider
                 if (Player.standingCollider != null) Player.standingCollider.enabled = false;
                 if (Player.withShellCollider != null) Player.withShellCollider.enabled = true;
@@ -82,6 +97,10 @@ public class PlayerShellSystem : MonoBehaviour
     public void ThrowCurrentShell()
     {
         if (!HasShell) return;
+
+        // Hide the "while worn" tutorial line, the shell is leaving the player
+        if (TutorialUI.Instance != null) TutorialUI.Instance.HideSecondary(this);
+        currentWornHint = "";
 
         // If the shell is currently active (e.g. player is hiding or rolling), deactivate it first
         if (CurrentShell.CurrentState == ShellState.InUse)
@@ -121,10 +140,27 @@ public class PlayerShellSystem : MonoBehaviour
         if (CurrentShell.CurrentState == ShellState.OnBack)
         {
             CurrentShell.ActivateAbility();
+
+            // Ability used once: hide the "SPACE to roll" hint and never show it again
+            if (TutorialUI.Instance != null) TutorialUI.Instance.HideSecondary(this);
+            if (!string.IsNullOrEmpty(currentWornHint)) consumedWornHints.Add(currentWornHint);
         }
         else if (CurrentShell.CurrentState == ShellState.InUse)
         {
             CurrentShell.DeactivateAbility();
+            // Show the hint again only if it has not been used yet
+            ShowWornHint();
+        }
+    }
+
+    // Shows the remembered "while worn" tutorial line, unless the player already used the ability
+    private void ShowWornHint()
+    {
+        if (consumedWornHints.Contains(currentWornHint)) return;
+
+        if (TutorialUI.Instance != null)
+        {
+            TutorialUI.Instance.ShowSecondary(currentWornHint, this);
         }
     }
 

@@ -103,7 +103,7 @@ MonoBehaviour:
   pressedColor: {r: 0, g: 1, b: 0, a: 1}
   acceptedLayers:
     serializedVersion: 2
-    m_Bits: 3072
+    m_Bits: 3080
   requiredMass: 0.77
   OnPressed:
     m_PersistentCalls:
