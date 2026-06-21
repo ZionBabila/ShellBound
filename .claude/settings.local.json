@@ -5,7 +5,11 @@
       "Bash(git -C \"c:\\\\Users\\\\babil\\\\Documents\\\\unityGames\\\\ShellBound\" log -1 --stat 8a0c087)",
       "Bash(git -C \"c:\\\\Users\\\\babil\\\\Documents\\\\unityGames\\\\ShellBound\" show 8a0c087 --stat)",
       "Bash(git -C \"c:\\\\Users\\\\babil\\\\Documents\\\\unityGames\\\\ShellBound\" show 963d024 --stat)",
-      "WebFetch(domain:discussions.unity.com)"
+      "WebFetch(domain:discussions.unity.com)",
+      "Read(//c/Users/babil/.claude/projects/c--Users-babil-Documents-My-Games-ShellBound/memory/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\babil\\.claude\\projects\\c--Users-babil-Documents-My-Games-ShellBound\\memory"
     ]
   }
 }
