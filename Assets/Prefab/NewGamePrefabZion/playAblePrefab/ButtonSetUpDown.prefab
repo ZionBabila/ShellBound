@@ -143,8 +143,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5083057735649647304}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.9, y: -2.76, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: 0.08942308, w: 0.9959938}
+  m_LocalPosition: {x: 4.11, y: -2.98, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -152,7 +152,7 @@ Transform:
   - {fileID: 8974484739609384046}
   - {fileID: 3395924824279177191}
   m_Father: {fileID: 6802902806307838203}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 10.261}
 --- !u!61 &2742547573904443119
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -428,8 +428,8 @@ Transform:
   m_GameObject: {fileID: 5844575853197772654}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 12.45, y: -0.94, z: 0}
-  m_LocalScale: {x: 1, y: 3.97, z: 1}
+  m_LocalPosition: {x: 14.25, y: 2.16, z: 0}
+  m_LocalScale: {x: 0.5625, y: 5.806125, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6802902806307838203}
@@ -507,7 +507,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DoorController
   mode: 0
   transitionSpeed: 5
-  slideOffset: {x: 0, y: 4.04, z: 0}
+  slideOffset: {x: 0, y: 8, z: 0}
   rotationOffset: {x: 0, y: 0, z: 90}
 --- !u!61 &8289246026275564280
 BoxCollider2D:
