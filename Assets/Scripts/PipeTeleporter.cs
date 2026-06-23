@@ -198,8 +198,9 @@ public class PipeTeleporter : MonoBehaviour
         if (simplePlayer != null) simplePlayer.isMovementDisabled = false;
         else if (oldPlayerController != null) oldPlayerController.SetControlEnabled(true);
 
-        // 7. Unlock pipes
-        yield return new WaitForSeconds(0.2f);
+        // 7. Unlock pipes after a delay to prevent instant re-entry
+        // This gives the player enough time to move away from the exit trigger.
+        yield return new WaitForSeconds(1.0f);
         canWarp = true;
         if (destinationPipe != null) destinationPipe.canWarp = true;
     }

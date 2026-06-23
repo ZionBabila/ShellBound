@@ -226,13 +226,13 @@ public class SimplePlayer : MonoBehaviour
         // CASE C: No input while grounded on a walkable slope -> GRIP (no drift)
         else if (IsGrounded)
         {
-            // Zero gravity removes the force that causes downhill sliding entirely
-            rb.gravityScale = 0f;
-
-            // Smoothly bleed off any leftover momentum so stopping still feels natural
-            Vector2 vel = Vector2.Lerp(rb.linearVelocity, Vector2.zero, Time.fixedDeltaTime * deceleration);
-            if (vel.magnitude < 0.05f) vel = Vector2.zero;
-            rb.linearVelocity = vel;
+            // If the player is ALMOST stationary, apply grip to prevent sliding on slopes.
+            // If they have momentum (e.g., from a roll), let friction handle it naturally.
+            if (rb.linearVelocity.magnitude < 0.5f)
+            {
+                rb.gravityScale = 0f; // Prevent sliding
+                rb.linearVelocity = Vector2.zero; // Full stop
+            }
         }
         // CASE D: No input in the air -> normal gravity, just damp horizontal drift
         else
