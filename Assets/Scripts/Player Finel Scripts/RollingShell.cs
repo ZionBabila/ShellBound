@@ -78,6 +78,9 @@ public class RollingShell : BaseShell
         playerSystem.Player.Rb.freezeRotation = true;
         playerSystem.Player.transform.rotation = Quaternion.identity;
 
+        // Request momentum preservation for 1 second to allow a natural slowdown
+        playerSystem.Player.PreserveMomentumFor(1f);
+
         Debug.Log("[RollingShell] Deactivated! Back to walking.");
     }
 }

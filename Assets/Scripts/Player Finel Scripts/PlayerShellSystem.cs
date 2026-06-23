@@ -126,6 +126,9 @@ public class PlayerShellSystem : MonoBehaviour
             if (rb != null) rb.linearVelocity = throwVelocity;
         }
 
+        // If the player was moving, let them slide a bit after the throw
+        if (Player.CurrentSpeed > 1f) Player.PreserveMomentumFor(0.5f);
+
         // 2. Turn off the Rig shell
         CurrentShell.Throw();
         CurrentShell = null;

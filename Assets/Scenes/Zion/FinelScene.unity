@@ -7894,6 +7894,14 @@ PrefabInstance:
       propertyPath: m_LocalRotation.z
       value: 0.6086412
       objectReference: {fileID: 0}
+    - target: {fileID: 5057147996694263949, guid: 241acb983c80dc948a2539c72e2cd0ac, type: 3}
+      propertyPath: showSpeedDebug
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5057147996694263949, guid: 241acb983c80dc948a2539c72e2cd0ac, type: 3}
+      propertyPath: groundLayer.m_Bits
+      value: 10304
+      objectReference: {fileID: 0}
     - target: {fileID: 5418884211453798995, guid: 241acb983c80dc948a2539c72e2cd0ac, type: 3}
       propertyPath: m_LocalRotation.w
       value: 0.51117474
@@ -8418,7 +8426,7 @@ GameObject:
   - component: {fileID: 4843647554106886094}
   - component: {fileID: 5720060173176859470}
   - component: {fileID: 2882494475938370818}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: BreakablePlatform (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -13,6 +13,10 @@ public class SimplePlayer : MonoBehaviour
     [Tooltip("How fast the player slows down when there is no input.")]
     public float deceleration = 10f;
 
+    [Tooltip("Extra braking force applied when turning around, to prevent 'ice skating'. Higher values give a snappier feel.")]
+    [Range(0f, 1f)]
+    public float turnAroundBrake = 0.5f;
+
     [Header("Visuals & Slopes")]
     [Tooltip("The main empty GameObject containing the rig. Used for slope rotation and flipping.")]
     public Transform visualsRoot;
@@ -75,6 +79,9 @@ public class SimplePlayer : MonoBehaviour
 
     // Cached gravity so the grip logic can toggle it to 0 and restore it safely.
     private float defaultGravityScale = 1f;
+
+    // Timer to temporarily disable aggressive braking for momentum preservation.
+    private float preserveMomentumUntil = 0f;
 
     private FixedJoint2D grabJoint;
 
@@ -207,8 +214,18 @@ public class SimplePlayer : MonoBehaviour
                 if (moveInputX > 0 && moveDirection.x < 0) moveDirection *= -1;
             }
 
+            // --- Counter-Movement Force (Anti-Skating) ---
+            // If the player is trying to move in the opposite direction of their current velocity,
+            // apply a braking force to make the turn feel snappier.
+            float currentVelocityX = rb.linearVelocity.x;
+            if (Mathf.Sign(moveInputX) != Mathf.Sign(currentVelocityX) && Mathf.Abs(currentVelocityX) > 0.1f)
+            {
+                rb.AddForce(Vector2.right * -currentVelocityX * (speed * turnAroundBrake), ForceMode2D.Force);
+            }
+
             // Apply physics force - this automatically handles the weight of pushed objects natively!
             rb.AddForce(moveDirection * speed, ForceMode2D.Force);
+
 
             // Cap the maximum horizontal speed so the player doesn't accelerate infinitely
             Vector2 vel = rb.linearVelocity;
@@ -226,13 +243,20 @@ public class SimplePlayer : MonoBehaviour
         // CASE C: No input while grounded on a walkable slope -> GRIP (no drift)
         else if (IsGrounded)
         {
-            // If the player is ALMOST stationary, apply grip to prevent sliding on slopes.
-            // If they have momentum (e.g., from a roll), let friction handle it naturally.
-            if (rb.linearVelocity.magnitude < 0.5f)
+            // If an external system requested to preserve momentum, skip the aggressive brake.
+            if (Time.time < preserveMomentumUntil)
             {
-                rb.gravityScale = 0f; // Prevent sliding
-                rb.linearVelocity = Vector2.zero; // Full stop
+                rb.gravityScale = defaultGravityScale; // Let natural friction and gravity take over
+                return;
             }
+
+            // Zero gravity removes the force that causes downhill sliding entirely
+            rb.gravityScale = 0f;
+
+            // Smoothly bleed off any leftover momentum so stopping still feels natural
+            Vector2 vel = Vector2.Lerp(rb.linearVelocity, Vector2.zero, Time.fixedDeltaTime * deceleration);
+            if (vel.magnitude < 0.05f) vel = Vector2.zero;
+            rb.linearVelocity = vel;
         }
         // CASE D: No input in the air -> normal gravity, just damp horizontal drift
         else
@@ -333,6 +357,15 @@ public class SimplePlayer : MonoBehaviour
         grabJoint.enableCollision = true;
         grabJoint.breakForce = Mathf.Infinity;
         grabJoint.breakTorque = Mathf.Infinity;
+    }
+
+    /// <summary>
+    /// Temporarily disables the aggressive deceleration, allowing the player to keep their momentum.
+    /// Called by shell abilities when they want a natural physics-based slowdown.
+    /// </summary>
+    public void PreserveMomentumFor(float duration)
+    {
+        preserveMomentumUntil = Time.time + duration;
     }
 
     public void ReleaseGrab()
