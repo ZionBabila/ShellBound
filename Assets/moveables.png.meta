@@ -1,0 +1,951 @@
+fileFormatVersion: 2
+guid: 37d39289713824642beafbc0d39b0544
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 8386274822897152569
+    second: moveables_0
+  - first:
+      213: 557133008032161927
+    second: moveables_1
+  - first:
+      213: -2951883002345779919
+    second: moveables_2
+  - first:
+      213: -3612929468947924283
+    second: moveables_3
+  - first:
+      213: -6120875719342778099
+    second: moveables_4
+  - first:
+      213: 614442850620143732
+    second: moveables_5
+  - first:
+      213: 6085748829011835654
+    second: moveables_6
+  - first:
+      213: -1952892508660357525
+    second: moveables_7
+  - first:
+      213: 5588207957892844700
+    second: moveables_8
+  - first:
+      213: 2368754350189899416
+    second: moveables_9
+  - first:
+      213: -1267189004328268617
+    second: moveables_10
+  - first:
+      213: 8623818050648608491
+    second: moveables_11
+  - first:
+      213: -5617096255916654549
+    second: moveables_12
+  - first:
+      213: 7485965524370525286
+    second: moveables_13
+  - first:
+      213: -1711671312268666866
+    second: moveables_14
+  - first:
+      213: -2494350410348764565
+    second: moveables_15
+  - first:
+      213: -4870729518226956863
+    second: moveables_16
+  - first:
+      213: -3854306452742699915
+    second: moveables_17
+  - first:
+      213: 9210570412287090195
+    second: moveables_18
+  - first:
+      213: -2774752024807508978
+    second: moveables_19
+  - first:
+      213: 49458133457607398
+    second: moveables_20
+  - first:
+      213: 5399805112306383530
+    second: moveables_21
+  - first:
+      213: -2594631169218887282
+    second: moveables_22
+  - first:
+      213: 6885429692403496784
+    second: moveables_23
+  - first:
+      213: 1066460266818427312
+    second: moveables_24
+  - first:
+      213: -5698990239294069028
+    second: moveables_25
+  - first:
+      213: 4857996622161628111
+    second: moveables_26
+  - first:
+      213: 4273817732998086251
+    second: moveables_27
+  - first:
+      213: 7540787685684020509
+    second: moveables_28
+  - first:
+      213: -4641375090378964582
+    second: moveables_29
+  - first:
+      213: -7194490334212476750
+    second: moveables_30
+  - first:
+      213: 1010655326863771929
+    second: moveables_31
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 16384
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 2
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: moveables_0
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 2089
+        width: 39
+        height: 10
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 932369fd488026470800000000000000
+      internalID: 8386274822897152569
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_1
+      rect:
+        serializedVersion: 2
+        x: 248
+        y: 2080
+        width: 8
+        height: 10
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 780e66cd4855bb700800000000000000
+      internalID: 557133008032161927
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_2
+      rect:
+        serializedVersion: 2
+        x: 254
+        y: 2081
+        width: 8
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13d8aa29c0ec807d0800000000000000
+      internalID: -2951883002345779919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_3
+      rect:
+        serializedVersion: 2
+        x: 250
+        y: 2069
+        width: 15
+        height: 11
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5ca71d44acb4cddc0800000000000000
+      internalID: -3612929468947924283
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_4
+      rect:
+        serializedVersion: 2
+        x: 250
+        y: 2054
+        width: 16
+        height: 14
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d09924a86f74e0ba0800000000000000
+      internalID: -6120875719342778099
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_5
+      rect:
+        serializedVersion: 2
+        x: 252
+        y: 2062
+        width: 5
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 478fdf56480f68800800000000000000
+      internalID: 614442850620143732
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_6
+      rect:
+        serializedVersion: 2
+        x: 253
+        y: 2033
+        width: 15
+        height: 20
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 60bff79f05ce47450800000000000000
+      internalID: 6085748829011835654
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_7
+      rect:
+        serializedVersion: 2
+        x: 264
+        y: 2046
+        width: 4
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6627c83c9ee5e4e0800000000000000
+      internalID: -1952892508660357525
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_8
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 1997
+        width: 37
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c9cc635b78d4d8d40800000000000000
+      internalID: 5588207957892844700
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_9
+      rect:
+        serializedVersion: 2
+        x: 666
+        y: 1655
+        width: 446
+        height: 390
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 89eea3308818fd020800000000000000
+      internalID: 2368754350189899416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_10
+      rect:
+        serializedVersion: 2
+        x: 259
+        y: 1985
+        width: 9
+        height: 11
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7bc8bbd705a0a6ee0800000000000000
+      internalID: -1267189004328268617
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_11
+      rect:
+        serializedVersion: 2
+        x: 266
+        y: 1987
+        width: 7
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bee038c73d4fda770800000000000000
+      internalID: 8623818050648608491
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_12
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 1798
+        width: 96
+        height: 186
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b2049e447b01c02b0800000000000000
+      internalID: -5617096255916654549
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_13
+      rect:
+        serializedVersion: 2
+        x: 1478
+        y: 1796
+        width: 50
+        height: 58
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 66c0de86bfd73e760800000000000000
+      internalID: 7485965524370525286
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_14
+      rect:
+        serializedVersion: 2
+        x: 1554
+        y: 1839
+        width: 34
+        height: 20
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e08dff3a20cee38e0800000000000000
+      internalID: -1711671312268666866
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_15
+      rect:
+        serializedVersion: 2
+        x: 1795
+        y: 1609
+        width: 297
+        height: 299
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b62efc57489426dd0800000000000000
+      internalID: -2494350410348764565
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_16
+      rect:
+        serializedVersion: 2
+        x: 2244
+        y: 1657
+        width: 282
+        height: 298
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1cd92153f41b76cb0800000000000000
+      internalID: -4870729518226956863
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_17
+      rect:
+        serializedVersion: 2
+        x: 2666
+        y: 1622
+        width: 284
+        height: 217
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57486c4c3b0c28ac0800000000000000
+      internalID: -3854306452742699915
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_18
+      rect:
+        serializedVersion: 2
+        x: 1471
+        y: 1784
+        width: 7
+        height: 12
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 31e58138df482df70800000000000000
+      internalID: 9210570412287090195
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_19
+      rect:
+        serializedVersion: 2
+        x: 3139
+        y: 1554
+        width: 281
+        height: 238
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e047d851cb91e79d0800000000000000
+      internalID: -2774752024807508978
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_20
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 1714
+        width: 17
+        height: 42
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ea9efb09e5bfa000800000000000000
+      internalID: 49458133457607398
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_21
+      rect:
+        serializedVersion: 2
+        x: 310
+        y: 1448
+        width: 305
+        height: 322
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aaa3c57e326ffea40800000000000000
+      internalID: 5399805112306383530
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_22
+      rect:
+        serializedVersion: 2
+        x: 1574
+        y: 1639
+        width: 86
+        height: 102
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e814d83d2b40efbd0800000000000000
+      internalID: -2594631169218887282
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_23
+      rect:
+        serializedVersion: 2
+        x: 1994
+        y: 1452
+        width: 61
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05733ad13d5fd8f50800000000000000
+      internalID: 6885429692403496784
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_24
+      rect:
+        serializedVersion: 2
+        x: 2233
+        y: 1335
+        width: 281
+        height: 183
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b9d7ca56f3dcce00800000000000000
+      internalID: 1066460266818427312
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_25
+      rect:
+        serializedVersion: 2
+        x: 2734
+        y: 1344
+        width: 218
+        height: 178
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd66578629e19e0b0800000000000000
+      internalID: -5698990239294069028
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_26
+      rect:
+        serializedVersion: 2
+        x: 3162
+        y: 1260
+        width: 235
+        height: 223
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fcbcdf760321b6340800000000000000
+      internalID: 4857996622161628111
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_27
+      rect:
+        serializedVersion: 2
+        x: 498
+        y: 1132
+        width: 659
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6ebd12a596af4b30800000000000000
+      internalID: 4273817732998086251
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_28
+      rect:
+        serializedVersion: 2
+        x: 1263
+        y: 1184
+        width: 476
+        height: 260
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1506d3827246a860800000000000000
+      internalID: 7540787685684020509
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_29
+      rect:
+        serializedVersion: 2
+        x: 2287
+        y: 1310
+        width: 11
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a918d9442f5869fb0800000000000000
+      internalID: -4641375090378964582
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_30
+      rect:
+        serializedVersion: 2
+        x: 2406
+        y: 1309
+        width: 9
+        height: 6
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b0b849b829082c90800000000000000
+      internalID: -7194490334212476750
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: moveables_31
+      rect:
+        serializedVersion: 2
+        x: 2410
+        y: 1316
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 91942144aa1960e00800000000000000
+      internalID: 1010655326863771929
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 667b32406cc3fff46833c153f6ac2384
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      moveables_0: 8386274822897152569
+      moveables_1: 557133008032161927
+      moveables_10: -1267189004328268617
+      moveables_11: 8623818050648608491
+      moveables_12: -5617096255916654549
+      moveables_13: 7485965524370525286
+      moveables_14: -1711671312268666866
+      moveables_15: -2494350410348764565
+      moveables_16: -4870729518226956863
+      moveables_17: -3854306452742699915
+      moveables_18: 9210570412287090195
+      moveables_19: -2774752024807508978
+      moveables_2: -2951883002345779919
+      moveables_20: 49458133457607398
+      moveables_21: 5399805112306383530
+      moveables_22: -2594631169218887282
+      moveables_23: 6885429692403496784
+      moveables_24: 1066460266818427312
+      moveables_25: -5698990239294069028
+      moveables_26: 4857996622161628111
+      moveables_27: 4273817732998086251
+      moveables_28: 7540787685684020509
+      moveables_29: -4641375090378964582
+      moveables_3: -3612929468947924283
+      moveables_30: -7194490334212476750
+      moveables_31: 1010655326863771929
+      moveables_4: -6120875719342778099
+      moveables_5: 614442850620143732
+      moveables_6: 6085748829011835654
+      moveables_7: -1952892508660357525
+      moveables_8: 5588207957892844700
+      moveables_9: 2368754350189899416
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
