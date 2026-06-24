@@ -10,6 +10,9 @@ public class AcidDrop : MonoBehaviour
     [Tooltip("How many seconds before the drop destroys itself to prevent memory leaks.")]
     public float lifeTime = 5.0f;
 
+    // The ID of the barrel that spawned this drop. Set by AcidBarrel.cs
+    public string sourceBarrelID { get; set; }
+
     private void Start()
     {
         // Auto-destroy the drop after a few seconds if it falls endlessly into the void
@@ -29,15 +32,18 @@ public class AcidDrop : MonoBehaviour
 
     private void HandleCollision(GameObject hitObject)
     {
-        if (hitObject.CompareTag("Player"))
+        // Use a more robust check for the player
+        SimplePlayer player = hitObject.GetComponentInParent<SimplePlayer>();
+        if (player != null)
         {
+            // Pass the collision to the GameManager. It will handle all logic,
+            // including checking for shells and finding the right respawn point.
             if (GameManager.Instance != null)
             {
-                GameManager.Instance.HandlePlayerCollision(hazardTag, hitObject);
-                
-                // NOTE FOR THE FUTURE: 
-                // If a Health System is added later, you can replace the above line with something like:
-                // hitObject.GetComponent<PlayerHealth>().TakeDamage(1);
+                if (!string.IsNullOrEmpty(sourceBarrelID))
+                    GameManager.Instance.HandleHazardCollision(sourceBarrelID, player.gameObject, true); // AcidDrop respects shell protection
+                else
+                    GameManager.Instance.HandleHazardCollision(hazardTag, player.gameObject, true); // AcidDrop respects shell protection
             }
             Destroy(gameObject);
         }

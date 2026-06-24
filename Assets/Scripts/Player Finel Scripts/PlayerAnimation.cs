@@ -13,6 +13,13 @@ public class PlayerAnimation : MonoBehaviour
     [Tooltip("Multiplier for the 'Speed' parameter sent to the Animator. Tweaks the walk animation pace.")]
     public float animationSpeedMultiplier = 1.0f;
 
+    // Animator parameter hashes for performance
+    private static readonly int DeathTriggerHash = Animator.StringToHash("Die");
+
+    // Store respawn info temporarily while the animation is playing
+    private GameObject playerToRespawn;
+    private Transform respawnTarget;
+
     private void Awake()
     {
         if (animator == null) animator = GetComponent<Animator>();
@@ -35,5 +42,30 @@ public class PlayerAnimation : MonoBehaviour
         
         // In the future, we will also add reading data from the shell system (PlayerShellSystem)
         // For example: animator.SetBool("IsRolling", shellSystem.IsRolling);
+    }
+
+    /// <summary>
+    /// Triggers the death animation. The animation clip itself must have an
+    /// Animation Event at the end that calls 'OnDeathAnimationComplete'.
+    /// </summary>
+    public void PlayDeathAnimation(GameObject player, Transform respawnPoint)
+    {
+        if (animator == null) return;
+
+        // Store the data needed for when the animation finishes
+        playerToRespawn = player;
+        respawnTarget = respawnPoint;
+
+        // Fire the "Die" trigger in the Animator Controller
+        animator.SetTrigger(DeathTriggerHash);
+    }
+
+    // THIS FUNCTION IS CALLED BY AN ANIMATION EVENT AT THE END OF THE DEATH CLIP
+    public void OnDeathAnimationComplete()
+    {
+        if (GameManager.Instance != null && playerToRespawn != null && respawnTarget != null)
+        {
+            GameManager.Instance.FinishPlayerRespawn(playerToRespawn, respawnTarget);
+        }
     }
 }

@@ -1,5 +1,10 @@
 using UnityEngine;
 
+[System.Serializable]
+public class UniqueID : MonoBehaviour {
+    [Tooltip("A unique identifier for this object, used to link it to other systems like the GameManager.")]
+    public string id;
+}
 public class AcidBarrel : MonoBehaviour
 {
     [Header("Drop Settings")]
@@ -14,6 +19,10 @@ public class AcidBarrel : MonoBehaviour
     
     [Tooltip("Offset used for the drop position if no dropPoint Transform is assigned.")]
     public Vector2 dropOffset = new Vector2(0, -0.5f);
+
+    [Header("Identification")]
+    [Tooltip("A unique ID for this barrel. The GameManager will use this ID to find the correct respawn point.")]
+    public string barrelID;
 
     private float timer;
 
@@ -34,7 +43,14 @@ public class AcidBarrel : MonoBehaviour
         // Determine the spawn position: either the assigned transform or a calculated offset
         Vector3 spawnPos = dropPoint != null ? dropPoint.position : transform.position + (Vector3)dropOffset;
         
-        Instantiate(acidDropPrefab, spawnPos, Quaternion.identity);
+        GameObject dropObject = Instantiate(acidDropPrefab, spawnPos, Quaternion.identity);
+        
+        // Pass a reference of this barrel to the newly created drop
+        AcidDrop acidDropScript = dropObject.GetComponent<AcidDrop>();
+        if (acidDropScript != null)
+        {
+            acidDropScript.sourceBarrelID = barrelID;
+        }
     }
 
     private void OnDrawGizmos()

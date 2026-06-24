@@ -66,19 +66,18 @@ public class PlayerDetection : MonoBehaviour
     // Detect trigger area collisions (like fall zones or water)
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        // --- CRITICAL FIX ---
+        // If the colliding object has its own logic (like AcidDrop or HazardZone), let it handle itself.
+        // This prevents PlayerDetection from hijacking the collision and using the generic tag system.
+        if (collision.GetComponent<AcidDrop>() != null || 
+            collision.GetComponent<HazardZone>() != null)
+        {
+            return; // Do nothing, let AcidDrop handle its own collision.
+        }
         if (GameManager.Instance != null)
         {
             // Send the hit object's tag and the player itself to the GameManager
-            GameManager.Instance.HandlePlayerCollision(collision.gameObject.tag, gameObject);
-        }
-    }
-
-    // Detect physical collider collisions (like spikes)
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.HandlePlayerCollision(collision.gameObject.tag, gameObject);
+            GameManager.Instance.HandleHazardCollision(collision.gameObject.tag, gameObject, false);
         }
     }
 

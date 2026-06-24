@@ -80,6 +80,7 @@ public class PlayerShellSystem : MonoBehaviour
                 ShowWornHint();
 
                 // Swap to the larger 'with shell' collider
+                Debug.Log($"[PlayerShellSystem] Equipped {pickup.shellID}. CurrentShell set to {CurrentShell.name}. HasShell: {HasShell}");
                 if (Player.standingCollider != null) Player.standingCollider.enabled = false;
                 if (Player.withShellCollider != null) Player.withShellCollider.enabled = true;
 
@@ -103,6 +104,7 @@ public class PlayerShellSystem : MonoBehaviour
         currentWornHint = "";
 
         // If the shell is currently active (e.g. player is hiding or rolling), deactivate it first
+        Debug.Log($"[PlayerShellSystem] Throwing shell. CurrentShell was {CurrentShell?.name}. HasShell: {HasShell}");
         if (CurrentShell.CurrentState == ShellState.InUse)
         {
             CurrentShell.DeactivateAbility();
@@ -132,6 +134,7 @@ public class PlayerShellSystem : MonoBehaviour
         // 2. Turn off the Rig shell
         CurrentShell.Throw();
         CurrentShell = null;
+        Debug.Log($"[PlayerShellSystem] Shell thrown. CurrentShell is now null. HasShell: {HasShell}");
         
         Debug.Log("[PlayerShellSystem] Shell thrown.");
     }

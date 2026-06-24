@@ -95,72 +95,6 @@ ScriptedImporter:
     spritePosition: {x: 0, y: 0}
   multiSpriteImportData: []
   layeredSpriteImportData:
-  - name: Hill Acid
-    originalName: 
-    pivot: {x: 0.5, y: 0.5}
-    alignment: 0
-    border: {x: 0, y: 0, z: 0, w: 0}
-    customData: 
-    rect:
-      serializedVersion: 2
-      x: 1271
-      y: 686
-      width: 1920
-      height: 565
-    spriteID: 3aeed640c7ec96d499f80ea81db22086
-    spriteBone: []
-    spriteOutline: []
-    vertices: []
-    spritePhysicsOutline: []
-    indices: 
-    edges: []
-    tessellationDetail: 0
-    uvTransform: {x: 1271, y: 686}
-    spritePosition: {x: 0, y: 0}
-  - name: Shadow Hill Acid
-    originalName: 
-    pivot: {x: 0.5, y: 0.5}
-    alignment: 0
-    border: {x: 0, y: 0, z: 0, w: 0}
-    customData: 
-    rect:
-      serializedVersion: 2
-      x: 2897
-      y: 4
-      width: 1171
-      height: 521
-    spriteID: 8902f12c1ec16d645896b5c8238a45c4
-    spriteBone: []
-    spriteOutline: []
-    vertices: []
-    spritePhysicsOutline: []
-    indices: 
-    edges: []
-    tessellationDetail: 0
-    uvTransform: {x: 2897, y: 4}
-    spritePosition: {x: 23, y: 0}
-  - name: Hill Acid
-    originalName: 
-    pivot: {x: 0.5, y: 0.5}
-    alignment: 0
-    border: {x: 0, y: 0, z: 0, w: 0}
-    customData: 
-    rect:
-      serializedVersion: 2
-      x: 3600
-      y: 1770
-      width: 259
-      height: 121
-    spriteID: 018bebd4de8d0cd4eb4497de99b671fb
-    spriteBone: []
-    spriteOutline: []
-    vertices: []
-    spritePhysicsOutline: []
-    indices: 
-    edges: []
-    tessellationDetail: 0
-    uvTransform: {x: 3600, y: 1770}
-    spritePosition: {x: 884, y: 374}
   - name: Pit1
     originalName: 
     pivot: {x: 0.5, y: 0.5}
@@ -169,8 +103,8 @@ ScriptedImporter:
     customData: 
     rect:
       serializedVersion: 2
-      x: 3600
-      y: 1259
+      x: 2586
+      y: 1344
       width: 397
       height: 288
     spriteID: 5070d6dbc3660ac42a9b72bdd4508319
@@ -181,7 +115,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 3600, y: 1259}
+    uvTransform: {x: 2586, y: 1344}
     spritePosition: {x: 753, y: 40}
   - name: Shadow_Pit1
     originalName: 
@@ -191,8 +125,8 @@ ScriptedImporter:
     customData: 
     rect:
       serializedVersion: 2
-      x: 3600
-      y: 1555
+      x: 3242
+      y: 1092
       width: 423
       height: 207
     spriteID: e84758225666a1d4d8c916b3f9f794bd
@@ -203,7 +137,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 3600, y: 1555}
+    uvTransform: {x: 3242, y: 1092}
     spritePosition: {x: 737, y: 50}
   - name: Acid1
     originalName: 
@@ -213,8 +147,8 @@ ScriptedImporter:
     customData: 
     rect:
       serializedVersion: 2
-      x: 3759
-      y: 2426
+      x: 3634
+      y: 1344
       width: 310
       height: 141
     spriteID: 33e894e42d81a8e40ac8795abd8a28ca
@@ -225,7 +159,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 3759, y: 2426}
+    uvTransform: {x: 3634, y: 1344}
     spritePosition: {x: 809, y: 118}
   - name: Pit2
     originalName: 
@@ -235,8 +169,8 @@ ScriptedImporter:
     customData: 
     rect:
       serializedVersion: 2
-      x: 3542
-      y: 2426
+      x: 2674
+      y: 686
       width: 209
       height: 240
     spriteID: 51e4151bbf40b18448147f252e60e16f
@@ -247,7 +181,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 3542, y: 2426}
+    uvTransform: {x: 2674, y: 686}
     spritePosition: {x: 1512, y: 135}
   - name: Shadow pit 2
     originalName: 
@@ -257,8 +191,8 @@ ScriptedImporter:
     customData: 
     rect:
       serializedVersion: 2
-      x: 3705
-      y: 2097
+      x: 2991
+      y: 1344
       width: 292
       height: 196
     spriteID: 6ada726ca8df9754bac10abc87a2de7b
@@ -269,7 +203,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 3705, y: 2097}
+    uvTransform: {x: 2991, y: 1344}
     spritePosition: {x: 1455, y: 103}
   - name: Acid2
     originalName: 
@@ -279,8 +213,8 @@ ScriptedImporter:
     customData: 
     rect:
       serializedVersion: 2
-      x: 3705
-      y: 2301
+      x: 3952
+      y: 1344
       width: 135
       height: 106
     spriteID: 5c77d0a3c8133964495b0d2040c93ef8
@@ -291,7 +225,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 3705, y: 2301}
+    uvTransform: {x: 3952, y: 1344}
     spritePosition: {x: 1540, y: 181}
   - name: Big Tunnel
     originalName: 
@@ -345,8 +279,8 @@ ScriptedImporter:
     customData: 
     rect:
       serializedVersion: 2
-      x: 1271
-      y: 1922
+      x: 2897
+      y: 531
       width: 1023
       height: 496
     spriteID: 799d8f03a7a56ea499b88d2ce33b6748
@@ -357,7 +291,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 1271, y: 1922}
+    uvTransform: {x: 2897, y: 531}
     spritePosition: {x: 574, y: 481}
   - name: Shadow Tunnel Acid1
     originalName: 
@@ -367,8 +301,8 @@ ScriptedImporter:
     customData: 
     rect:
       serializedVersion: 2
-      x: 2581
-      y: 1259
+      x: 2897
+      y: 4
       width: 1011
       height: 519
     spriteID: d9b750f057365434cbaf5301233a3849
@@ -379,7 +313,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 2581, y: 1259}
+    uvTransform: {x: 2897, y: 4}
     spritePosition: {x: 0, y: 561}
   - name: Tunnel Acid1
     originalName: 
@@ -389,8 +323,8 @@ ScriptedImporter:
     customData: 
     rect:
       serializedVersion: 2
-      x: 3199
-      y: 2426
+      x: 3291
+      y: 1344
       width: 335
       height: 163
     spriteID: 6bb32de63ef502e4799e254e20dde7e3
@@ -401,7 +335,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 3199, y: 2426}
+    uvTransform: {x: 3291, y: 1344}
     spritePosition: {x: 158, y: 800}
   - name: Shadow Tunnel Acid 2
     originalName: 
@@ -411,8 +345,8 @@ ScriptedImporter:
     customData: 
     rect:
       serializedVersion: 2
-      x: 1271
-      y: 2678
+      x: 1314
+      y: 1344
       width: 1264
       height: 248
     spriteID: 0a9381555ff03534681c669236382d54
@@ -423,7 +357,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 1271, y: 2678}
+    uvTransform: {x: 1314, y: 1344}
     spritePosition: {x: 105, y: 741}
   - name: Tunnel Acid 2
     originalName: 
@@ -433,8 +367,8 @@ ScriptedImporter:
     customData: 
     rect:
       serializedVersion: 2
-      x: 3705
-      y: 1922
+      x: 3673
+      y: 1092
       width: 349
       height: 167
     spriteID: a91489759eb491e428b9558f5eea5e05
@@ -445,7 +379,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 3705, y: 1922}
+    uvTransform: {x: 3673, y: 1092}
     spritePosition: {x: 915, y: 778}
   - name: Big Hill
     originalName: 
@@ -455,8 +389,8 @@ ScriptedImporter:
     customData: 
     rect:
       serializedVersion: 2
-      x: 1271
-      y: 1259
+      x: 4
+      y: 1092
       width: 1302
       height: 655
     spriteID: df5006a219bd7eb48865e2a80bead7e6
@@ -467,7 +401,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 1271, y: 1259}
+    uvTransform: {x: 4, y: 1092}
     spritePosition: {x: 317, y: 143}
   - name: Moving Rock
     originalName: 
@@ -477,8 +411,8 @@ ScriptedImporter:
     customData: 
     rect:
       serializedVersion: 2
-      x: 3867
-      y: 1770
+      x: 2991
+      y: 1548
       width: 220
       height: 117
     spriteID: 82fc3c1d1e9443b4f917ef5e0d435e13
@@ -489,7 +423,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 3867, y: 1770}
+    uvTransform: {x: 2991, y: 1548}
     spritePosition: {x: 188, y: 182}
   - name: GRound
     originalName: 
@@ -499,8 +433,8 @@ ScriptedImporter:
     customData: 
     rect:
       serializedVersion: 2
-      x: 1271
-      y: 2426
+      x: 1314
+      y: 1092
       width: 1920
       height: 244
     spriteID: c4ec18b8fc7617c4787bd5d1d49cd7e3
@@ -511,7 +445,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 1271, y: 2426}
+    uvTransform: {x: 1314, y: 1092}
     spritePosition: {x: 0, y: 0}
   - name: Big Hill Shadow
     originalName: 
@@ -521,8 +455,8 @@ ScriptedImporter:
     customData: 
     rect:
       serializedVersion: 2
-      x: 2302
-      y: 1922
+      x: 1271
+      y: 686
       width: 1395
       height: 358
     spriteID: 58fb7019312867948ad6c5788e738b38
@@ -533,7 +467,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 2302, y: 1922}
+    uvTransform: {x: 1271, y: 686}
     spritePosition: {x: 164, y: 56}
   spriteImportData: []
   rigSpriteImportData: []
@@ -651,7 +585,7 @@ ScriptedImporter:
     mosaicPosition: {x: 0, y: 0}
     flatten: 0
     isImported: 0
-    isVisible: 1
+    isVisible: 0
   - name: Hill Acid
     spriteName: Hill Acid
     isGroup: 0
@@ -660,7 +594,7 @@ ScriptedImporter:
     layerID: 36
     mosaicPosition: {x: 1271, y: 686}
     flatten: 0
-    isImported: 1
+    isImported: 0
     isVisible: 1
   - name: Shadow Hill Acid
     spriteName: Shadow Hill Acid
@@ -670,7 +604,7 @@ ScriptedImporter:
     layerID: 38
     mosaicPosition: {x: 2897, y: 4}
     flatten: 0
-    isImported: 1
+    isImported: 0
     isVisible: 1
   - name: Hill Acid
     spriteName: Hill Acid
@@ -680,7 +614,7 @@ ScriptedImporter:
     layerID: 37
     mosaicPosition: {x: 3600, y: 1770}
     flatten: 0
-    isImported: 1
+    isImported: 0
     isVisible: 1
   - name: Acid Pit 1
     spriteName: 
@@ -698,7 +632,7 @@ ScriptedImporter:
     parentIndex: 4
     spriteID: 5070d6dbc3660ac42a9b72bdd4508319
     layerID: 24
-    mosaicPosition: {x: 3600, y: 1259}
+    mosaicPosition: {x: 2586, y: 1344}
     flatten: 0
     isImported: 1
     isVisible: 1
@@ -708,7 +642,7 @@ ScriptedImporter:
     parentIndex: 4
     spriteID: e84758225666a1d4d8c916b3f9f794bd
     layerID: 26
-    mosaicPosition: {x: 3600, y: 1555}
+    mosaicPosition: {x: 3242, y: 1092}
     flatten: 0
     isImported: 1
     isVisible: 1
@@ -718,7 +652,7 @@ ScriptedImporter:
     parentIndex: 4
     spriteID: 33e894e42d81a8e40ac8795abd8a28ca
     layerID: 25
-    mosaicPosition: {x: 3759, y: 2426}
+    mosaicPosition: {x: 3634, y: 1344}
     flatten: 0
     isImported: 1
     isVisible: 1
@@ -738,7 +672,7 @@ ScriptedImporter:
     parentIndex: 8
     spriteID: 51e4151bbf40b18448147f252e60e16f
     layerID: 21
-    mosaicPosition: {x: 3542, y: 2426}
+    mosaicPosition: {x: 2674, y: 686}
     flatten: 0
     isImported: 1
     isVisible: 1
@@ -748,7 +682,7 @@ ScriptedImporter:
     parentIndex: 8
     spriteID: 6ada726ca8df9754bac10abc87a2de7b
     layerID: 23
-    mosaicPosition: {x: 3705, y: 2097}
+    mosaicPosition: {x: 2991, y: 1344}
     flatten: 0
     isImported: 1
     isVisible: 1
@@ -758,7 +692,7 @@ ScriptedImporter:
     parentIndex: 8
     spriteID: 5c77d0a3c8133964495b0d2040c93ef8
     layerID: 22
-    mosaicPosition: {x: 3705, y: 2301}
+    mosaicPosition: {x: 3952, y: 1344}
     flatten: 0
     isImported: 1
     isVisible: 1
@@ -798,9 +732,29 @@ ScriptedImporter:
     parentIndex: 12
     spriteID: 799d8f03a7a56ea499b88d2ce33b6748
     layerID: 31
-    mosaicPosition: {x: 1271, y: 1922}
+    mosaicPosition: {x: 2897, y: 531}
     flatten: 0
     isImported: 1
+    isVisible: 1
+  - name: Portraits - Warmth
+    spriteName: 
+    isGroup: 1
+    parentIndex: 12
+    spriteID: ec3ec3b71c386a84b9cd705a62772ab3
+    layerID: 43
+    mosaicPosition: {x: 0, y: 0}
+    flatten: 0
+    isImported: 0
+    isVisible: 1
+  - name: Photo Filter 1
+    spriteName: 
+    isGroup: 0
+    parentIndex: 16
+    spriteID: b3c2e0a2b1846254d9197b8ee4d4bdc1
+    layerID: 45
+    mosaicPosition: {x: 0, y: 0}
+    flatten: 0
+    isImported: 0
     isVisible: 1
   - name: Shadow Tunnel Acid1
     spriteName: Shadow Tunnel Acid1
@@ -808,7 +762,7 @@ ScriptedImporter:
     parentIndex: 12
     spriteID: d9b750f057365434cbaf5301233a3849
     layerID: 20
-    mosaicPosition: {x: 2581, y: 1259}
+    mosaicPosition: {x: 2897, y: 4}
     flatten: 0
     isImported: 1
     isVisible: 1
@@ -818,7 +772,7 @@ ScriptedImporter:
     parentIndex: 12
     spriteID: 6bb32de63ef502e4799e254e20dde7e3
     layerID: 17
-    mosaicPosition: {x: 3199, y: 2426}
+    mosaicPosition: {x: 3291, y: 1344}
     flatten: 0
     isImported: 1
     isVisible: 1
@@ -828,7 +782,7 @@ ScriptedImporter:
     parentIndex: 12
     spriteID: 0a9381555ff03534681c669236382d54
     layerID: 18
-    mosaicPosition: {x: 1271, y: 2678}
+    mosaicPosition: {x: 1314, y: 1344}
     flatten: 0
     isImported: 1
     isVisible: 1
@@ -838,7 +792,7 @@ ScriptedImporter:
     parentIndex: 12
     spriteID: a91489759eb491e428b9558f5eea5e05
     layerID: 16
-    mosaicPosition: {x: 3705, y: 1922}
+    mosaicPosition: {x: 3673, y: 1092}
     flatten: 0
     isImported: 1
     isVisible: 1
@@ -855,40 +809,40 @@ ScriptedImporter:
   - name: Big Hill
     spriteName: Big Hill
     isGroup: 0
-    parentIndex: 20
+    parentIndex: 22
     spriteID: df5006a219bd7eb48865e2a80bead7e6
     layerID: 5
-    mosaicPosition: {x: 1271, y: 1259}
+    mosaicPosition: {x: 4, y: 1092}
     flatten: 0
     isImported: 1
     isVisible: 1
   - name: Moving Rock
     spriteName: Moving Rock
     isGroup: 0
-    parentIndex: 20
+    parentIndex: 22
     spriteID: 82fc3c1d1e9443b4f917ef5e0d435e13
     layerID: 4
-    mosaicPosition: {x: 3867, y: 1770}
+    mosaicPosition: {x: 2991, y: 1548}
     flatten: 0
     isImported: 1
     isVisible: 1
   - name: GRound
     spriteName: GRound
     isGroup: 0
-    parentIndex: 20
+    parentIndex: 22
     spriteID: c4ec18b8fc7617c4787bd5d1d49cd7e3
     layerID: 3
-    mosaicPosition: {x: 1271, y: 2426}
+    mosaicPosition: {x: 1314, y: 1092}
     flatten: 0
     isImported: 1
     isVisible: 1
   - name: Big Hill Shadow
     spriteName: Big Hill Shadow
     isGroup: 0
-    parentIndex: 20
+    parentIndex: 22
     spriteID: 58fb7019312867948ad6c5788e738b38
     layerID: 35
-    mosaicPosition: {x: 2302, y: 1922}
+    mosaicPosition: {x: 1271, y: 686}
     flatten: 0
     isImported: 1
     isVisible: 1
