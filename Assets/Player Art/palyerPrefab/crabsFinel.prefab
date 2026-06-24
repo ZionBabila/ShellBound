@@ -1935,9 +1935,10 @@ MonoBehaviour:
   speed: 45
   maxSpeed: 5.33
   deceleration: 8
+  turnAroundBrake: 0.5
   visualsRoot: {fileID: 99663166869790538}
   rotationSpeed: 15.4
-  maxSlopeAngle: 50
+  maxSlopeAngle: 60
   slideForce: 30
   maxSlideSpeed: 12
   movableLayer:
