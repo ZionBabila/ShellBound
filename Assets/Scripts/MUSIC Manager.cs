@@ -5,7 +5,8 @@ public class AudioManager : MonoBehaviour
 {
     public static AudioManager instance; // Singleton instance
 
-    private AudioSource source;
+    private AudioSource source;       // ישמש לאפקטים (SFX) כפי שהיה לך
+    private AudioSource musicSource;  // ערוץ חדש ונפרד למוזיקת רקע בלופ
 
     [Header("Sound Clips")]
     public AudioClip breakObject;
@@ -34,7 +35,6 @@ public class AudioManager : MonoBehaviour
     public static bool loseLevelSound = false;
     public static bool buttonPressSound = false;
     public static bool buttonReleaseSound = false;
-    
     private Camera mainCamera;
 
     void Start()
@@ -42,14 +42,19 @@ public class AudioManager : MonoBehaviour
         if (instance == null) instance = this;
         else { Destroy(gameObject); return; }
 
+        // הגדרת הערוץ לאפקטים
         source = GetComponent<AudioSource>();
         mainCamera = Camera.main;
-        
         if (source == null)
         {
             source = gameObject.AddComponent<AudioSource>();
         }
 
+        // הגדרת הערוץ החדש למוזיקה
+        musicSource = gameObject.AddComponent<AudioSource>();
+        musicSource.loop = true; // מוזיקת רקע תמיד בלופ
+
+        // איפוס משתנים כפי שהיה לך
         breakSound = false;
         moveSound = false;
         equipShellSound = false;
@@ -62,7 +67,6 @@ public class AudioManager : MonoBehaviour
         loseLevelSound = false;
         buttonPressSound = false;
         buttonReleaseSound = false;
-
     }
 
     void Update()
@@ -106,7 +110,32 @@ public class AudioManager : MonoBehaviour
         if (instance != null)
             instance.PlaySoundAtPosition(instance.acidDropDestroy, position);
     }
-    public  void ButtonRelease()
+
+    // פונקציה פשוטה חדשה: החלפת מוזיקה או עצירה
+    public void ChangeBackgroundMusic(AudioClip newMusic, bool stopMusic)
+    {
+        if (stopMusic)
+        {
+            musicSource.Stop();
+            return;
+        }
+
+        // אם זה כבר השיר שמנגן עכשיו, אל תעשה כלום
+        if (musicSource.clip == newMusic && musicSource.isPlaying)
+        {
+            return;
+        }
+
+        // החלפת השיר ונגינה
+        musicSource.clip = newMusic;
+        if (newMusic != null)
+        {
+            musicSource.Play();
+        }
+    }
+
+    // שאר הפונקציות המקוריות שלך ללא שינוי:
+    public void ButtonRelease()
     {
         if (buttonReleaseSound == true)
         {
