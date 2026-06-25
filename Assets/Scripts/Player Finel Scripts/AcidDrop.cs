@@ -23,15 +23,9 @@ public class AcidDrop : MonoBehaviour
     {
         // This is called right before the object is destroyed, for any reason.
         // It's a safe way to play a sound without worrying about race conditions.
-        // We call the new method that checks if the drop is on-screen.
-        if (AudioManager.instance != null) {
-            // Check if the drop is visible before playing the sound.
-            Vector3 screenPoint = Camera.main.WorldToViewportPoint(transform.position);
-            bool onScreen = screenPoint.z > 0 && screenPoint.x > 0 && screenPoint.x < 1 && screenPoint.y > 0 && screenPoint.y < 1;
-            if (onScreen) {
-                AudioManager.acidDropDestroySound = true;
-            }
-        }
+        // We also check if an AudioManager exists to prevent errors when quitting the game.
+        if (AudioManager.instance != null)
+            AudioManager.acidDropDestroySound = true;
     }
 
     // Support for both Trigger colliders and regular physical colliders
