@@ -19,6 +19,15 @@ public class AcidDrop : MonoBehaviour
         Destroy(gameObject, lifeTime);
     }
 
+    private void OnDestroy()
+    {
+        // This is called right before the object is destroyed, for any reason.
+        // It's a safe way to play a sound without worrying about race conditions.
+        // We call the new method that checks if the drop is on-screen.
+        if (AudioManager.instance != null)
+            AudioManager.PlayAcidDropDestroySound(transform.position);
+    }
+
     // Support for both Trigger colliders and regular physical colliders
     private void OnTriggerEnter2D(Collider2D collision)
     {

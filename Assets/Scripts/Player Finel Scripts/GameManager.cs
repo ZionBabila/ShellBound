@@ -98,7 +98,8 @@ public class GameManager : MonoBehaviour
             rb.isKinematic = true;
         }
 
-        // Play sound, etc.
+        // Play the hazard hit sound
+        AudioManager.playerHazardHitSound = true;
 
         PlayerAnimation playerAnimation = player.GetComponentInChildren<PlayerAnimation>();
         if (playerAnimation != null)

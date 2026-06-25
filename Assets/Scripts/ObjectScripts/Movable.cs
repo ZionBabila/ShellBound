@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 // =============================================================================
 // Movable
@@ -21,6 +22,9 @@ public class Movable : MonoBehaviour
     private RigidbodyConstraints2D baseConstraints; // Stores original physics constraints (e.g. if object shouldn't rotate)
     private PlayerController oldPlayer; // Reference pointing to the old player script
     private SimplePlayer simplePlayer; // Reference pointing to our new player script
+
+    // Coroutine for handling the lock delay
+    private Coroutine lockCoroutine;
     
     private void Awake()
     {
@@ -31,6 +35,7 @@ public class Movable : MonoBehaviour
         rb.constraints &= ~RigidbodyConstraints2D.FreezeRotation;
         
         baseConstraints = rb.constraints; // Stores constraints already defined in the inspector
+
         oldPlayer = FindFirstObjectByType<PlayerController>(); // Scans the scene, finds old player
         simplePlayer = FindFirstObjectByType<SimplePlayer>(); // Scans the scene, finds new player
     }
@@ -44,22 +49,25 @@ public class Movable : MonoBehaviour
         bool canPush = false;
         bool playerFound = false;
         bool isGrabbed = false;
+        bool isPlayerGrounded = false;
 
         if (simplePlayer != null)
         {
             isHeavy = rb.mass > simplePlayer.heavyMassThreshold;
             canPush = simplePlayer.CanPushHeavyObjects;
             playerFound = true;
+            isPlayerGrounded = simplePlayer.IsGrounded;
             
             // Check if SimplePlayer is currently grabbing THIS specific object
             FixedJoint2D joint = simplePlayer.GetComponent<FixedJoint2D>();
             if (joint != null && joint.connectedBody == rb) isGrabbed = true;
         }
-        else if (oldPlayer != null)
+        else if (oldPlayer != null) // Fallback for the old player controller
         {
             isHeavy = rb.mass >= oldPlayer.heavyObjectMassThreshold;
             canPush = oldPlayer.canPushHeavyObjects;
             playerFound = true;
+            isPlayerGrounded = oldPlayer.IsGrounded;
             
             // Check if old PlayerController is currently grabbing THIS specific object
             FixedJoint2D joint = oldPlayer.GetComponent<FixedJoint2D>();
@@ -68,16 +76,35 @@ public class Movable : MonoBehaviour
 
         if (!playerFound) return;
 
-        // Freeze position if the player isn't grabbing it with Ctrl, OR if it's too heavy
-        if (!isGrabbed || (isHeavy && !canPush)) 
+        // --- 1. הדפסה לקונסול ---
+        Debug.Log($"[Movable] Player Grounded: {isPlayerGrounded}");
+
+        // Freeze position if:
+        // 1. The player isn't grabbing it.
+        // 2. The object is too heavy for the player.
+        // 3. The player is grabbing it but is in the air.
+        bool shouldLock = !isGrabbed || (isHeavy && !canPush) || !isPlayerGrounded;
+
+        if (shouldLock)
         {
-            // Lock ONLY the X axis. Y remains open for gravity. Z rotation is free for testing.
-            rb.constraints = baseConstraints | RigidbodyConstraints2D.FreezePositionX; 
+            // If we need to lock and no locking coroutine is running, start one.
+            // This check prevents starting multiple coroutines.
+            if (lockCoroutine == null)
+            {
+                lockCoroutine = StartCoroutine(LockAfterDelay(0.5f)); // 0.5 second delay
+            }
         }
         else
         {
+            // If a locking coroutine was in progress, stop it because the player grabbed the object again.
+            if (lockCoroutine != null)
+            {
+                StopCoroutine(lockCoroutine);
+                lockCoroutine = null;
+            }
+
             // Unlock X when actively grabbed, Z remains free, Y is always free
-            rb.constraints = baseConstraints; 
+            rb.constraints = baseConstraints;
         }
 
         // Handle dragging sound if the object is actually moving horizontally
@@ -85,6 +112,17 @@ public class Movable : MonoBehaviour
         {
             AudioManager.moveSound = true;
         }
+    }
+
+    // --- 2. קורוטינה להשהיית הנעילה ---
+    private IEnumerator LockAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        // After the delay, apply the locked constraints
+        rb.constraints = baseConstraints | RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezeRotation;
+        
+        lockCoroutine = null; // Signal that the coroutine has finished
     }
 
     private void Reset()
