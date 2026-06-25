@@ -78,8 +78,35 @@ public class AudioManager : MonoBehaviour
         LoseLevel();
         ButtonPress();
         ButtonRelease();
+        AcidDropDestroy(); // Added the missing call
     }
-public  void ButtonRelease()
+
+    /// <summary>
+    /// Plays a sound only if the given position is visible to the main camera.
+    /// </summary>
+    /// <param name="clip">The AudioClip to play.</param>
+    /// <param name="position">The world position of the sound event.</param>
+    public void PlaySoundAtPosition(AudioClip clip, Vector3 position)
+    {
+        if (clip == null || mainCamera == null) return;
+
+        // Check if the sound's origin is within the camera's view
+        Vector3 viewportPoint = mainCamera.WorldToViewportPoint(position);
+        bool isVisible = viewportPoint.x >= 0 && viewportPoint.x <= 1 && viewportPoint.y >= 0 && viewportPoint.y <= 1 && viewportPoint.z > 0;
+
+        if (isVisible)
+        {
+            source.PlayOneShot(clip);
+        }
+    }
+
+    // New public static method for acid drops to call
+    public static void PlayAcidDropDestroySound(Vector3 position)
+    {
+        if (instance != null)
+            instance.PlaySoundAtPosition(instance.acidDropDestroy, position);
+    }
+    public  void ButtonRelease()
     {
         if (buttonReleaseSound == true)
         {
@@ -142,6 +169,15 @@ public  void ButtonRelease()
         {
             source.PlayOneShot(playerHazardHit);
             playerHazardHitSound = false;
+        }
+    }
+
+    private void AcidDropDestroy()
+    {
+        if (acidDropDestroySound)
+        {
+            source.PlayOneShot(acidDropDestroy);
+            acidDropDestroySound = false;
         }
     }
 
