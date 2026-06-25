@@ -100,7 +100,7 @@ MonoBehaviour:
   mode: 1
   isFlickering: 1
   minIntensity: 0.8
-  maxIntensity: 1.2
+  maxIntensity: 3.61
   minRadius: 3
   maxRadius: 3.5
   flickerSpeed: 5
@@ -205,7 +205,7 @@ MonoBehaviour:
   mode: 1
   isFlickering: 1
   minIntensity: 0.8
-  maxIntensity: 1.2
+  maxIntensity: 3.61
   minRadius: 3
   maxRadius: 3.5
   flickerSpeed: 5

@@ -2559,6 +2559,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1676258065}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &699876220 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 99663166869790538, guid: 241acb983c80dc948a2539c72e2cd0ac, type: 3}
+  m_PrefabInstance: {fileID: 4362154940252027589}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &706530085
 GameObject:
   m_ObjectHideFlags: 0
@@ -4801,7 +4806,7 @@ Transform:
   m_GameObject: {fileID: 1534916262}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 40.44812, y: -50.76417, z: -15}
+  m_LocalPosition: {x: 563.2889, y: -7.648001, z: -15}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5620,6 +5625,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2377513484515339935, guid: 92f4371c7ed0a3641b0fa9f4b26a30d9, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -8.67041
+      objectReference: {fileID: 0}
+    - target: {fileID: 2377513484515339935, guid: 92f4371c7ed0a3641b0fa9f4b26a30d9, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 11.8746395
+      objectReference: {fileID: 0}
     - target: {fileID: 2953900199960093320, guid: 92f4371c7ed0a3641b0fa9f4b26a30d9, type: 3}
       propertyPath: m_LocalPosition.x
       value: 571.9593
@@ -5660,6 +5673,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7642286592799772784, guid: 92f4371c7ed0a3641b0fa9f4b26a30d9, type: 3}
+      propertyPath: Target.TrackingTarget
+      value: 
+      objectReference: {fileID: 699876220}
     - target: {fileID: 8843949888970816853, guid: 92f4371c7ed0a3641b0fa9f4b26a30d9, type: 3}
       propertyPath: m_Name
       value: CameraPosition
@@ -7236,6 +7253,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5154533269893361131, guid: 1c306a33a1282ea4ba1a66d8ad6a61bb, type: 3}
+      propertyPath: cam
+      value: 
+      objectReference: {fileID: 1534916265}
     - target: {fileID: 8842530619884707165, guid: 1c306a33a1282ea4ba1a66d8ad6a61bb, type: 3}
       propertyPath: m_Name
       value: 'CityWithParallax '

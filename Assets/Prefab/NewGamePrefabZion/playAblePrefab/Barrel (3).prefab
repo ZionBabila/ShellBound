@@ -26,7 +26,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1517917359173228187}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0.3369698, w: 0.94151545}
+  m_LocalRotation: {x: 0, y: 0, z: -0.336972, w: 0.9415147}
   m_LocalPosition: {x: -439.44, y: 51.000004, z: 0}
   m_LocalScale: {x: 3.9875, y: 3.9875, z: 3.9875}
   m_ConstrainProportionsScale: 1
@@ -34,6 +34,7 @@ Transform:
   - {fileID: 6889693557730523326}
   - {fileID: 5116769948283084119}
   - {fileID: 7558099420772203823}
+  - {fileID: 1061664403120248435}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -39.385}
 --- !u!212 &71745212028039913
@@ -111,6 +112,38 @@ MonoBehaviour:
   dropRate: 2
   dropPoint: {fileID: 7558099420772203823}
   dropOffset: {x: 0, y: 0}
+  barrelID: FirstBerrel
+--- !u!1 &2435475309435719581
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1061664403120248435}
+  m_Layer: 0
+  m_Name: Teleport Zone
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1061664403120248435
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2435475309435719581}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -3.89, y: -4.59, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6477004194547027679}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2950959061255847373
 GameObject:
   m_ObjectHideFlags: 0
@@ -136,7 +169,7 @@ Transform:
   m_GameObject: {fileID: 2950959061255847373}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.95, y: 3.8, z: 0}
+  m_LocalPosition: {x: 2.22, y: 4.18, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -258,13 +291,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5895130322208514436}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0.9086175, w: 0.41762924}
-  m_LocalPosition: {x: 6.9, y: -1.86, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0.8725387, w: 0.4885451}
+  m_LocalPosition: {x: 5.12, y: 0.22, z: 0}
   m_LocalScale: {x: 2.56, y: 5.53, z: 2.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6477004194547027679}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 130.63}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 121.51}
 --- !u!331 &5801514731008984637
 SpriteMask:
   m_ObjectHideFlags: 0
