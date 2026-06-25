@@ -1,12 +1,11 @@
 using UnityEngine;
-using System.Collections.Generic;
 
 public class AudioManager : MonoBehaviour
 {
     public static AudioManager instance; // Singleton instance
 
-    private AudioSource source;       // ישמש לאפקטים (SFX) כפי שהיה לך
-    private AudioSource musicSource;  // ערוץ חדש ונפרד למוזיקת רקע בלופ
+    private AudioSource source;       // Plays one-shot sound effects
+    private AudioSource musicSource;  // Plays looping background music
 
     [Header("Sound Clips")]
     public AudioClip breakObject;
@@ -19,7 +18,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip uiClick;
     public AudioClip winLevel;
     public AudioClip loseLevel;
-    public AudioClip buttonPressSoundSorce;
+    public AudioClip buttonPressSoundSource;
     public AudioClip buttonReleaseSoundSource;
 
     [Header("Sound Flags (Legacy)")]
@@ -42,7 +41,7 @@ public class AudioManager : MonoBehaviour
         if (instance == null) instance = this;
         else { Destroy(gameObject); return; }
 
-        // הגדרת הערוץ לאפקטים
+        // Set up the source for sound effects
         source = GetComponent<AudioSource>();
         mainCamera = Camera.main;
         if (source == null)
@@ -50,11 +49,11 @@ public class AudioManager : MonoBehaviour
             source = gameObject.AddComponent<AudioSource>();
         }
 
-        // הגדרת הערוץ החדש למוזיקה
+        // Set up a dedicated source for background music
         musicSource = gameObject.AddComponent<AudioSource>();
-        musicSource.loop = true; // מוזיקת רקע תמיד בלופ
+        musicSource.loop = true; // Background music should loop
 
-        // איפוס משתנים כפי שהיה לך
+        // Reset all sound flags on start
         breakSound = false;
         moveSound = false;
         equipShellSound = false;
@@ -75,14 +74,14 @@ public class AudioManager : MonoBehaviour
         MoveObj();
         EquipShell();
         ThrowShell();
-        CrabHurt(); // This and below are still using flags
-        PlayerHazardHit(); 
+        CrabHurt();
+        PlayerHazardHit();
         UiClick();
         WinLevel();
         LoseLevel();
         ButtonPress();
         ButtonRelease();
-        AcidDropDestroy(); // Added the missing call
+        AcidDropDestroy();
     }
 
     /// <summary>
@@ -104,14 +103,14 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    // New public static method for acid drops to call
+    // Public static helper for acid drops to call
     public static void PlayAcidDropDestroySound(Vector3 position)
     {
         if (instance != null)
             instance.PlaySoundAtPosition(instance.acidDropDestroy, position);
     }
 
-    // פונקציה פשוטה חדשה: החלפת מוזיקה או עצירה
+    // Switches the looping background music, or stops it entirely
     public void ChangeBackgroundMusic(AudioClip newMusic, bool stopMusic)
     {
         if (stopMusic)
@@ -120,13 +119,12 @@ public class AudioManager : MonoBehaviour
             return;
         }
 
-        // אם זה כבר השיר שמנגן עכשיו, אל תעשה כלום
+        // If the requested track is already playing, do nothing
         if (musicSource.clip == newMusic && musicSource.isPlaying)
         {
             return;
         }
 
-        // החלפת השיר ונגינה
         musicSource.clip = newMusic;
         if (newMusic != null)
         {
@@ -134,7 +132,6 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    // שאר הפונקציות המקוריות שלך ללא שינוי:
     public void ButtonRelease()
     {
         if (buttonReleaseSound == true)
@@ -147,7 +144,7 @@ public class AudioManager : MonoBehaviour
     {
         if (buttonPressSound == true)
         {
-            source.PlayOneShot(buttonPressSoundSorce);
+            source.PlayOneShot(buttonPressSoundSource);
             buttonPressSound = false;
         }
     }
