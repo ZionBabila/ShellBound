@@ -5508,6 +5508,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: 'AudioManger '
       objectReference: {fileID: 0}
+    - target: {fileID: 8769971726451728837, guid: 105bafe0e9301d04490cb77ee56dc047, type: 3}
+      propertyPath: musicZones.Array.size
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
