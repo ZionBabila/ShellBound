@@ -15,6 +15,7 @@ public class PlayerAnimation : MonoBehaviour
 
     // Animator parameter hashes for performance
     private static readonly int DeathTriggerHash = Animator.StringToHash("Die");
+    private static readonly int HeavyAbilityTriggerHash = Animator.StringToHash("HeavyAbility");
 
     // Store respawn info temporarily while the animation is playing
     private GameObject playerToRespawn;
@@ -42,6 +43,15 @@ public class PlayerAnimation : MonoBehaviour
         
         // In the future, we will also add reading data from the shell system (PlayerShellSystem)
         // For example: animator.SetBool("IsRolling", shellSystem.IsRolling);
+    }
+
+    /// <summary>
+    /// Called by HeavyArmorShell to trigger a specific one-shot animation.
+    /// </summary>
+    public void TriggerHeavyAbility()
+    {
+        if (animator == null) return;
+        animator.SetTrigger(HeavyAbilityTriggerHash);
     }
 
     /// <summary>

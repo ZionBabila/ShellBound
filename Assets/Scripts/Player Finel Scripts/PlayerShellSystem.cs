@@ -143,6 +143,8 @@ public class PlayerShellSystem : MonoBehaviour
     {
         if (!HasShell) return;
 
+        // Since we only have one event, we'll toggle the state.
+        // Activate if on back, deactivate if in use.
         if (CurrentShell.CurrentState == ShellState.OnBack)
         {
             CurrentShell.ActivateAbility();
@@ -154,8 +156,6 @@ public class PlayerShellSystem : MonoBehaviour
         else if (CurrentShell.CurrentState == ShellState.InUse)
         {
             CurrentShell.DeactivateAbility();
-            // Show the hint again only if it has not been used yet
-            ShowWornHint();
         }
     }
 
