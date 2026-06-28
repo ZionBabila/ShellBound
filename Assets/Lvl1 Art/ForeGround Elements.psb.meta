@@ -1,0 +1,518 @@
+fileFormatVersion: 2
+guid: bbc3e6a2213e39e4692d1072c76695b2
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: b2a9591990af98743ba3ff7cf1000886, type: 3}
+  textureImporterSettings:
+    alphaSource: 1
+    mipMapMode: 0
+    enableMipMap: 1
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+    convertToNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+    swizzle: 50462976
+    isReadable: 0
+    streamingMipmaps: 0
+    streamingMipmapsPriority: 0
+    vTOnly: 0
+    ignoreMipmapLimit: 0
+    nPOTScale: 1
+    sRGBTexture: 1
+    spriteMode: 2
+    spriteExtrude: 1
+    spriteMeshType: 1
+    alignment: 0
+    spritePivot: {x: 0.5, y: 0.5}
+    spritePixelsToUnits: 100
+    spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+    spriteGenerateFallbackPhysicsShape: 0
+    generateCubemap: 6
+    cubemapConvolution: 0
+    seamlessCubemap: 0
+    alphaIsTransparency: 1
+    spriteTessellationDetail: -1
+    textureType: 8
+    textureShape: 1
+    singleChannelComponent: 0
+    flipbookRows: 0
+    flipbookColumns: 0
+    ignorePngGamma: 0
+    cookieMode: 0
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 0
+    wrapV: 0
+    wrapW: 0
+    normalMap: 0
+    textureFormat: 0
+    maxTextureSize: 0
+    lightmap: 0
+    compressionQuality: 0
+    linearTexture: 0
+    grayScaleToAlpha: 0
+    rGBM: 0
+    cubemapConvolutionSteps: 0
+    cubemapConvolutionExponent: 0
+    maxTextureSizeSet: 0
+    compressionQualitySet: 0
+    textureFormatSet: 0
+    applyGammaDecoding: 0
+  singleSpriteImportData:
+  - name: 
+    originalName: 
+    pivot: {x: 0, y: 0}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 0
+      height: 0
+    spriteID: c8345ffb30a622b4caaf8533013db23c
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 0, y: 0}
+    spritePosition: {x: 0, y: 0}
+  multiSpriteImportData: []
+  layeredSpriteImportData:
+  - name: Wire1
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 4
+      y: 3095
+      width: 106
+      height: 839
+    spriteID: 41a9ab8507d5f2744947fceb1c3ac75d
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 4, y: 3095}
+    spritePosition: {x: 212, y: 241}
+  - name: Wire2
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 4
+      y: 2417
+      width: 569
+      height: 670
+    spriteID: f8139a75d866db044a0215c5f2ccf460
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 4, y: 2417}
+    spritePosition: {x: 1162, y: 410}
+  - name: Wire3
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 1577
+      y: 1129
+      width: 1685
+      height: 120
+    spriteID: b4f23ddbafbb36540914f37c84c8ab5a
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 1577, y: 1129}
+    spritePosition: {x: 234, y: 960}
+  - name: wire4
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 1577
+      y: 750
+      width: 1773
+      height: 371
+    spriteID: b61a45472afbdd84db07f258f2c39b52
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 1577, y: 750}
+    spritePosition: {x: 84, y: 709}
+  - name: wire5
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 1536
+      y: 1874
+      width: 1828
+      height: 270
+    spriteID: f63984aa80862db4e91c5384e181770b
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 1536, y: 1874}
+    spritePosition: {x: 89, y: 810}
+  - name: FAr BKG Power lines
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 4
+      y: 4
+      width: 1708
+      height: 738
+    spriteID: 3e9ef9842bcf2924f9acdf4bc941d0b4
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 4, y: 4}
+    spritePosition: {x: 1, y: 237}
+  - name: ForeGround Fence
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 1720
+      y: 4
+      width: 1882
+      height: 647
+    spriteID: 238d452cc2a9a3d4f972db3049a7c81e
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 1720, y: 4}
+    spritePosition: {x: 38, y: 0}
+  - name: ForeGround Truck
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 4
+      y: 750
+      width: 1565
+      height: 571
+    spriteID: c4e3e42eadc521644b5bdefdb3169162
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 4, y: 750}
+    spritePosition: {x: 142, y: 0}
+  - name: ForeGround Tire
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 1536
+      y: 1329
+      width: 1116
+      height: 537
+    spriteID: 316fd21ca3f332d49b51fcc11bee3892
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 1536, y: 1329}
+    spritePosition: {x: 448, y: 0}
+  - name: ForeGround Berall
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 620
+      y: 1329
+      width: 908
+      height: 666
+    spriteID: 9ad9b8059e29c904c95ffb6cae3e8b7b
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 620, y: 1329}
+    spritePosition: {x: 700, y: 0}
+  - name: Poll
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 4
+      y: 1329
+      width: 608
+      height: 1080
+    spriteID: c7aa7a205b2ab7848b5e5e9ae4dc1ffc
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 4, y: 1329}
+    spritePosition: {x: 483, y: 0}
+  spriteImportData: []
+  rigSpriteImportData: []
+  sharedRigSpriteImportData: []
+  mosaicSpriteImportData: []
+  sharedRigCharacterData:
+    bones: []
+    parts: []
+    dimension: {x: 0, y: 0}
+    characterGroups: []
+    pivot: {x: 0, y: 0}
+    boneReadOnly: 0
+  characterData:
+    bones: []
+    parts: []
+    dimension: {x: 0, y: 0}
+    characterGroups: []
+    pivot: {x: 0, y: 0}
+    boneReadOnly: 0
+  platformSettings: []
+  mosaicLayers: 1
+  characterMode: 1
+  documentPivot: {x: 0, y: 0}
+  documentAlignment: 7
+  importHiddenLayers: 0
+  layerMappingOption: 2
+  generatePhysicsShape: 0
+  paperDollMode: 0
+  keepDupilcateSpriteName: 1
+  generateTileAssets: 0
+  tilePaletteCellLayout: 0
+  tilePaletteHexagonLayout: 0
+  tilePaletteCellSize: {x: 1, y: 1, z: 0}
+  tilePaletteCellSizing: 0
+  transparencySortMode: 0
+  transparencySortAxis: {x: 0, y: 0, z: 1}
+  tileTemplate: {instanceID: 0}
+  padding: 4
+  spriteSizeExpand: 0
+  skeletonAssetReferenceID: 
+  pipeline: {instanceID: 0}
+  pipelineVersion: 
+  spriteCategoryList:
+    categories: []
+  spritePackingTag: 
+  resliceFromLayer: 0
+  pSDLayerImportSetting: []
+  psdLayers:
+  - name: Wire1
+    spriteName: Wire1
+    isGroup: 0
+    parentIndex: -1
+    spriteID: 41a9ab8507d5f2744947fceb1c3ac75d
+    layerID: 18
+    mosaicPosition: {x: 4, y: 3095}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Wire2
+    spriteName: Wire2
+    isGroup: 0
+    parentIndex: -1
+    spriteID: f8139a75d866db044a0215c5f2ccf460
+    layerID: 17
+    mosaicPosition: {x: 4, y: 2417}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Wire3
+    spriteName: Wire3
+    isGroup: 0
+    parentIndex: -1
+    spriteID: b4f23ddbafbb36540914f37c84c8ab5a
+    layerID: 16
+    mosaicPosition: {x: 1577, y: 1129}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: wire4
+    spriteName: wire4
+    isGroup: 0
+    parentIndex: -1
+    spriteID: b61a45472afbdd84db07f258f2c39b52
+    layerID: 15
+    mosaicPosition: {x: 1577, y: 750}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: wire5
+    spriteName: wire5
+    isGroup: 0
+    parentIndex: -1
+    spriteID: f63984aa80862db4e91c5384e181770b
+    layerID: 14
+    mosaicPosition: {x: 1536, y: 1874}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: FAr BKG Power lines
+    spriteName: FAr BKG Power lines
+    isGroup: 0
+    parentIndex: -1
+    spriteID: 3e9ef9842bcf2924f9acdf4bc941d0b4
+    layerID: 13
+    mosaicPosition: {x: 4, y: 4}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: ForeGround Fence
+    spriteName: ForeGround Fence
+    isGroup: 0
+    parentIndex: -1
+    spriteID: 238d452cc2a9a3d4f972db3049a7c81e
+    layerID: 10
+    mosaicPosition: {x: 1720, y: 4}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: ForeGround Truck
+    spriteName: ForeGround Truck
+    isGroup: 0
+    parentIndex: -1
+    spriteID: c4e3e42eadc521644b5bdefdb3169162
+    layerID: 7
+    mosaicPosition: {x: 4, y: 750}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: ForeGround Tire
+    spriteName: ForeGround Tire
+    isGroup: 0
+    parentIndex: -1
+    spriteID: 316fd21ca3f332d49b51fcc11bee3892
+    layerID: 4
+    mosaicPosition: {x: 1536, y: 1329}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: ForeGround Berall
+    spriteName: ForeGround Berall
+    isGroup: 0
+    parentIndex: -1
+    spriteID: 9ad9b8059e29c904c95ffb6cae3e8b7b
+    layerID: 3
+    mosaicPosition: {x: 620, y: 1329}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Poll
+    spriteName: Poll
+    isGroup: 0
+    parentIndex: -1
+    spriteID: c7aa7a205b2ab7848b5e5e9ae4dc1ffc
+    layerID: 2
+    mosaicPosition: {x: 4, y: 1329}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
+  - name: Background
+    spriteName: 
+    isGroup: 0
+    parentIndex: -1
+    spriteID: ceb6735286fd0504f857cb3c9ab4295c
+    layerID: 1
+    mosaicPosition: {x: 0, y: 0}
+    flatten: 0
+    isImported: 0
+    isVisible: 0
+  mosaicPSDLayers: []
+  rigPSDLayers: []
+  sharedRigPSDLayers: []
+  importFileNodeState: 1
+  platformSettingsDirtyTick: 0
+  spriteSizeExpandChanged: 0
+  generateGOHierarchy: 0
+  textureAssetName: 
+  prefabAssetName: 
+  spriteLibAssetName: 
+  skeletonAssetName: 
+  secondarySpriteTextures: []

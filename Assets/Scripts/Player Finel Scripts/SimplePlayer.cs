@@ -104,6 +104,7 @@ public class SimplePlayer : MonoBehaviour
     // Ignoring micro-movements so the animator gets a "clean" 0 when the player barely moves
     public float CurrentSpeed => Mathf.Abs(rb.linearVelocity.x) < 0.15f ? 0f : Mathf.Abs(rb.linearVelocity.x);
     public bool IsGrounded { get; private set; }
+    public bool IsGrabbing => grabJoint != null;
     
     // Property to be controlled by shells
     public bool CanPushHeavyObjects { get; set; } = false;
@@ -114,12 +115,6 @@ public class SimplePlayer : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         defaultGravityScale = rb.gravityScale;
         inputHandler = GetComponent<PlayerInputHandler>();
-        
-        if (inputHandler != null)
-        {
-            inputHandler.OnGrabStart += TryStartGrab;
-            inputHandler.OnGrabEnd += ReleaseGrab;
-        }
 
         // Lock physics rotation to prevent flipping bugs.
         // All rotation is handled purely visually via visualsRoot.
@@ -128,11 +123,7 @@ public class SimplePlayer : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (inputHandler != null)
-        {
-            inputHandler.OnGrabStart -= TryStartGrab;
-            inputHandler.OnGrabEnd -= ReleaseGrab;
-        }
+        // Input event subscriptions removed as grab is now handled by the shell.
     }
 
     private void FixedUpdate()
@@ -265,7 +256,7 @@ public class SimplePlayer : MonoBehaviour
 
             Vector2 vel = rb.linearVelocity;
             vel.x = Mathf.Lerp(vel.x, 0, Time.fixedDeltaTime * deceleration);
-            if (Mathf.Abs(vel.x) < 0.05f) vel.x = 0f;
+            if (Mathf.Abs(vel.x) < 0.05f) vel.x = 0;
             rb.linearVelocity = vel;
         }
     }
@@ -330,9 +321,42 @@ public class SimplePlayer : MonoBehaviour
         }
     }
 
-    private void TryStartGrab()
+    /// <summary>
+    /// Temporarily disables the aggressive deceleration, allowing the player to keep their momentum.
+    /// Called by shell abilities when they want a natural physics-based slowdown.
+    /// </summary>
+    public void PreserveMomentumFor(float duration)
+    {
+        preserveMomentumUntil = Time.time + duration;
+    }
+
+    /// <summary>
+    /// Toggles the grab state. If not grabbing, tries to grab. If grabbing, releases.
+    /// This is now the single entry point for the grab action, called by the HeavyArmorShell.
+    /// </summary>
+    public void ToggleGrab()
+    {
+        if (grabJoint != null)
+        {
+            ReleaseGrab();
+        }
+        else
+        {
+            TryStartGrab();
+        }
+    }
+
+    public void TryStartGrab()
     {
         if (isMovementDisabled || grabJoint != null) return;
+
+        // With the new design, HeavyArmorShell is required to grab ANY movable object.
+        // The CanPushHeavyObjects flag now serves as a general "CanGrab" flag.
+        if (!CanPushHeavyObjects)
+        {
+            Debug.Log("[SimplePlayer] Cannot grab object. Heavy Armor Shell not equipped.");
+            return;
+        }
 
         float facingMul = (visualsRoot != null && visualsRoot.localScale.x < 0) ? -1f : 1f;
         Vector2 origin = (Vector2)transform.position + new Vector2(0, grabCheckOffset.y);
@@ -355,20 +379,9 @@ public class SimplePlayer : MonoBehaviour
         grabJoint.connectedBody = targetRb;
         grabJoint.autoConfigureConnectedAnchor = true;
         grabJoint.enableCollision = true;
-        grabJoint.breakForce = Mathf.Infinity;
-        grabJoint.breakTorque = Mathf.Infinity;
     }
 
-    /// <summary>
-    /// Temporarily disables the aggressive deceleration, allowing the player to keep their momentum.
-    /// Called by shell abilities when they want a natural physics-based slowdown.
-    /// </summary>
-    public void PreserveMomentumFor(float duration)
-    {
-        preserveMomentumUntil = Time.time + duration;
-    }
-
-    public void ReleaseGrab()
+    public void ReleaseGrab() // Made public so HeavyArmorShell can call it on key release
     {
         if (grabJoint == null) return;
         Destroy(grabJoint);
