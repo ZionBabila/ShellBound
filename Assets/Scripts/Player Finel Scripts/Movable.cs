@@ -1,0 +1,119 @@
+using UnityEngine;
+using System.Collections;
+
+/// <summary>
+/// Defines an object that can be pushed and pulled by the player.
+/// This script handles locking the object in place if the player is not strong enough.
+/// </summary>
+[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Collider2D))]
+public class Movable : MonoBehaviour
+{
+    private Rigidbody2D rb;
+    private RigidbodyConstraints2D baseConstraints;
+    private SimplePlayer simplePlayer;
+    private Coroutine lockCoroutine;
+    
+    // Compatibility field to prevent errors in SimplePlayer.cs
+    // It will point to the main collider of this object.
+    [HideInInspector]
+    public Collider2D grabHandleTrigger;
+
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        rb.constraints &= ~RigidbodyConstraints2D.FreezeRotation;
+        baseConstraints = rb.constraints;
+        grabHandleTrigger = GetComponent<Collider2D>(); // Make it point to self
+        simplePlayer = FindFirstObjectByType<SimplePlayer>();
+    }
+
+    private void FixedUpdate()
+    {
+        if (rb == null || simplePlayer == null) return;
+
+        bool isHeavy = rb.mass > simplePlayer.heavyMassThreshold;
+        bool canPush = simplePlayer.CanPushHeavyObjects;
+        bool isPlayerGrounded = simplePlayer.IsGrounded;
+
+        // Reverted to the original, more direct logic.
+        // An object is considered "grabbed" if and only if the player's FixedJoint2D is connected to THIS object's Rigidbody.
+        // We do a multi-line check to safely handle cases where the joint has been destroyed but is not yet null.
+        bool isGrabbed = false;
+        FixedJoint2D playerJoint = simplePlayer.GetComponent<FixedJoint2D>();
+        if (playerJoint != null)
+        {
+            // This check is now safe because it only runs if playerJoint is a valid, living component.
+            isGrabbed = playerJoint.connectedBody == rb;
+        }
+
+        // Freeze position if:
+        // 1. The player isn't grabbing it.
+        // 2. The object is too heavy for the player.
+        // 3. The player is grabbing it but is in the air.
+        bool shouldLock = !isGrabbed || (isGrabbed && !isPlayerGrounded); // Lock if not grabbed, or if grabbed but in the air.
+
+        // The lock for heavy objects should only apply IF the object is actually heavy.
+        if (isHeavy && !canPush) shouldLock = true;
+
+        if (shouldLock)
+        {
+            // If we need to lock and no locking coroutine is running, start one.
+            if (lockCoroutine == null)
+            {
+                lockCoroutine = StartCoroutine(LockAfterDelay(0.5f));
+            }
+        }
+        else
+        {
+            // If a locking coroutine was in progress, stop it because the player can now move the object.
+            if (lockCoroutine != null)
+            {
+                StopCoroutine(lockCoroutine);
+                lockCoroutine = null;
+            }
+
+            // Unlock X when actively grabbed
+            rb.constraints = baseConstraints;
+        }
+
+        // Handle dragging sound if the object is actually moving horizontally
+        if (Mathf.Abs(rb.linearVelocity.x) > 0.1f)
+        {
+            if (AudioManager.instance != null)
+                AudioManager.moveSound = true;
+        }
+    }
+
+    private IEnumerator LockAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        // After the delay, apply the locked constraints
+        rb.constraints = baseConstraints | RigidbodyConstraints2D.FreezePositionX;
+        
+        lockCoroutine = null; // Signal that the coroutine has finished
+    }
+
+    private void Reset()
+    {
+        // Default the Rigidbody2D to Dynamic so push/pull works out of the box.
+        Rigidbody2D currentRb = GetComponent<Rigidbody2D>(); 
+        if (currentRb != null) currentRb.bodyType = RigidbodyType2D.Dynamic; 
+
+        TryAssignMovableLayer(); 
+    }
+
+    private void OnValidate()
+    {
+        TryAssignMovableLayer(); 
+    }
+
+    private void TryAssignMovableLayer()
+    {
+        // Helper function to handle the object's layer assignment
+        int movableLayer = LayerMask.NameToLayer("Movable"); 
+        if (movableLayer < 0) return; // Prevent crash if layer doesn't exist
+        if (gameObject.layer != movableLayer) gameObject.layer = movableLayer; 
+    }
+}

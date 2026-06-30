@@ -274,17 +274,26 @@ public class SimplePlayer : MonoBehaviour
         Vector2 combinedNormal = Vector2.zero;
         int hitCount = 0;
 
+        RaycastHit2D closestHit = new RaycastHit2D(); // Store the closest valid hit
+
         foreach (Vector2 origin in origins)
         {
+            // Reverted to RaycastAll for robustness (it correctly filters out triggers).
             RaycastHit2D[] hits = Physics2D.RaycastAll(origin, Vector2.down, groundCheckDistance, groundLayer);
+
             foreach (RaycastHit2D hit in hits)
             {
+                // Ignore triggers and the player's own collider
                 if (hit.collider.isTrigger || hit.collider.gameObject == gameObject) continue;
-                
-                combinedNormal += hit.normal;
-                foundGround = true;
-                hitCount++;
-                break; // Only care about the first valid hit for this specific ray
+
+                // If this is the first valid ground we've found, or if this hit is closer
+                // than the previous closest one, it becomes our new reference point.
+                if (!foundGround || hit.distance < closestHit.distance)
+                {
+                    closestHit = hit;
+                }
+
+                foundGround = true; // We found at least one valid ground surface
             }
         }
 
@@ -292,8 +301,9 @@ public class SimplePlayer : MonoBehaviour
 
         if (foundGround)
         {
-            // Average the normals to create a smooth transition over small bumps and seams
-            surfaceNormal = (combinedNormal / hitCount).normalized;
+            // Use the normal from ONLY the closest hit point for maximum stability.
+            // This prevents averaging weird normals from collider seams.
+            surfaceNormal = closestHit.normal;
         }
         else
         {
@@ -350,42 +360,61 @@ public class SimplePlayer : MonoBehaviour
     {
         if (isMovementDisabled || grabJoint != null) return;
 
-        // With the new design, HeavyArmorShell is required to grab ANY movable object.
-        // The CanPushHeavyObjects flag now serves as a general "CanGrab" flag.
-        if (!CanPushHeavyObjects)
-        {
-            Debug.Log("[SimplePlayer] Cannot grab object. Heavy Armor Shell not equipped.");
-            return;
-        }
-
-        float facingMul = (visualsRoot != null && visualsRoot.localScale.x < 0) ? -1f : 1f;
-        Vector2 origin = (Vector2)transform.position + new Vector2(0, grabCheckOffset.y);
-        Vector2 direction = Vector2.right * facingMul;
-
-        // Dynamically increase reach if the player is wearing a shell (which has a wider collider)
-        float castDistance = grabCheckOffset.x;
-        if (withShellCollider != null && withShellCollider.enabled)
-        {
-            castDistance += 0.5f;
-        }
-
-        RaycastHit2D hit = Physics2D.CircleCast(origin, grabCheckRadius, direction, castDistance, movableLayer);
+        // Find a grabbable object using the same logic as CanGrabObject
+        RaycastHit2D hit = FindGrabbableObject();
         if (hit.collider == null) return;
 
-        Rigidbody2D targetRb = hit.collider.attachedRigidbody;
-        if (targetRb == null || targetRb.bodyType == RigidbodyType2D.Static) return;
+        // Check if the hit collider has a Movable script and if we hit the correct handle
+        Movable movable = hit.collider.GetComponentInParent<Movable>();
+        if (movable == null || movable.grabHandleTrigger == null) return;
 
-        grabJoint = gameObject.AddComponent<FixedJoint2D>();
-        grabJoint.connectedBody = targetRb;
-        grabJoint.autoConfigureConnectedAnchor = true;
-        grabJoint.enableCollision = true;
+        // The player can only grab if the collider they hit IS the designated grab handle.
+        bool isCorrectHandle = hit.collider == movable.grabHandleTrigger;
+        Rigidbody2D targetRb = movable.GetComponent<Rigidbody2D>();
+
+        if (isCorrectHandle && targetRb != null && targetRb.bodyType != RigidbodyType2D.Static)
+        {
+            grabJoint = gameObject.AddComponent<FixedJoint2D>();
+            grabJoint.connectedBody = targetRb;
+            grabJoint.autoConfigureConnectedAnchor = true;
+            grabJoint.enableCollision = true;
+        }
     }
 
-    public void ReleaseGrab() // Made public so HeavyArmorShell can call it on key release
+    public void ReleaseGrab()
     {
         if (grabJoint == null) return;
         Destroy(grabJoint);
         grabJoint = null;
+    }
+
+    private RaycastHit2D FindGrabbableObject()
+    {
+        float facingMul = (visualsRoot != null && visualsRoot.localScale.x < 0) ? -1f : 1f;
+        Vector2 origin = (Vector2)transform.position + new Vector2(0, grabCheckOffset.y);
+        Vector2 direction = Vector2.right * facingMul;
+        float castDistance = grabCheckOffset.x + (withShellCollider != null && withShellCollider.enabled ? 0.5f : 0f);
+        return Physics2D.CircleCast(origin, grabCheckRadius, direction, castDistance, movableLayer);
+    }
+    /// <summary>
+    /// Checks if a movable object is in range to be grabbed, without actually grabbing it.
+    /// </summary>
+    /// <returns>True if a valid, non-static movable object is in front of the player.</returns>
+    public bool CanGrabObject()
+    {
+        if (isMovementDisabled || grabJoint != null) return false;
+        
+        RaycastHit2D hit = FindGrabbableObject();
+        if (hit.collider == null) return false;
+
+        // Check if the hit collider has a Movable script and if we hit the correct handle
+        Movable movable = hit.collider.GetComponentInParent<Movable>();
+        if (movable == null || movable.grabHandleTrigger == null) return false;
+
+        // The player can only grab if the collider they hit IS the designated grab handle.
+        bool isCorrectHandle = hit.collider == movable.grabHandleTrigger;
+
+        return isCorrectHandle && movable.GetComponent<Rigidbody2D>()?.bodyType != RigidbodyType2D.Static;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)

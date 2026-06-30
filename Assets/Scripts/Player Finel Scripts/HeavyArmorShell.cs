@@ -76,14 +76,6 @@ public class HeavyArmorShell : BaseShell
     {
         if (CurrentState != ShellState.OnBack) return;
 
-        // --- Animation Trigger ---
-        // Find the animation component on the player and trigger the specific animation for this ability.
-        PlayerAnimation playerAnimation = playerSystem.Player.GetComponentInChildren<PlayerAnimation>();
-        if (playerAnimation != null)
-        {
-            playerAnimation.TriggerHeavyAbility();
-        }
-
         // --- BEHAVIOR 1: Ground Pound (if in the air) ---
         if (!playerSystem.Player.IsGrounded)
         {
@@ -92,9 +84,15 @@ public class HeavyArmorShell : BaseShell
         }
 
         // --- BEHAVIOR 2: Grab/Release Movable Object (if on the ground) ---
-        // Enter "InUse" state to enable the press-and-hold logic in Update().
+        // If an object is grabbable, trigger the animation and enter the "InUse" state
+        // which allows the Update() method to handle the hold-and-pull logic.
+        if (playerSystem.Player.CanGrabObject())
+        {
+            PlayerAnimation playerAnimation = playerSystem.Player.GetComponentInChildren<PlayerAnimation>();
+            if (playerAnimation != null) playerAnimation.TriggerHeavyAbility();
+        }
+        
         CurrentState = ShellState.InUse;
-        Debug.Log("[HeavyArmorShell] Entered grab-ready state. Hold SPACE to grab.");
     }
 
     public override void DeactivateAbility()
