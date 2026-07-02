@@ -331,90 +331,80 @@ public class SimplePlayer : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Temporarily disables the aggressive deceleration, allowing the player to keep their momentum.
-    /// Called by shell abilities when they want a natural physics-based slowdown.
-    /// </summary>
     public void PreserveMomentumFor(float duration)
     {
         preserveMomentumUntil = Time.time + duration;
     }
 
-    /// <summary>
-    /// Toggles the grab state. If not grabbing, tries to grab. If grabbing, releases.
-    /// This is now the single entry point for the grab action, called by the HeavyArmorShell.
-    /// </summary>
     public void ToggleGrab()
     {
-        if (grabJoint != null)
-        {
-            ReleaseGrab();
-        }
-        else
-        {
-            TryStartGrab();
-        }
+        if (grabJoint != null) ReleaseGrab();
+        else TryStartGrab();
     }
 
     public void TryStartGrab()
     {
         if (isMovementDisabled || grabJoint != null) return;
-
-        // Find a grabbable object using the same logic as CanGrabObject
-        RaycastHit2D hit = FindGrabbableObject();
-        if (hit.collider == null) return;
-
-        // Check if the hit collider has a Movable script and if we hit the correct handle
-        Movable movable = hit.collider.GetComponentInParent<Movable>();
-        if (movable == null || movable.grabHandleTrigger == null) return;
-
-        // The player can only grab if the collider they hit IS the designated grab handle.
-        bool isCorrectHandle = hit.collider == movable.grabHandleTrigger;
-        Rigidbody2D targetRb = movable.GetComponent<Rigidbody2D>();
-
-        if (isCorrectHandle && targetRb != null && targetRb.bodyType != RigidbodyType2D.Static)
+        
+        Movable targetMovable = FindGrabbableObject();
+        if (targetMovable != null)
         {
+            Rigidbody2D targetRb = targetMovable.GetComponent<Rigidbody2D>();
             grabJoint = gameObject.AddComponent<FixedJoint2D>();
             grabJoint.connectedBody = targetRb;
             grabJoint.autoConfigureConnectedAnchor = true;
             grabJoint.enableCollision = true;
+            Debug.Log($"[SimplePlayer] Grabbed {targetMovable.name}");
         }
     }
 
     public void ReleaseGrab()
     {
         if (grabJoint == null) return;
+        Debug.Log($"[SimplePlayer] Released {grabJoint.connectedBody.name}");
         Destroy(grabJoint);
         grabJoint = null;
     }
 
-    private RaycastHit2D FindGrabbableObject()
-    {
-        float facingMul = (visualsRoot != null && visualsRoot.localScale.x < 0) ? -1f : 1f;
-        Vector2 origin = (Vector2)transform.position + new Vector2(0, grabCheckOffset.y);
-        Vector2 direction = Vector2.right * facingMul;
-        float castDistance = grabCheckOffset.x + (withShellCollider != null && withShellCollider.enabled ? 0.5f : 0f);
-        return Physics2D.CircleCast(origin, grabCheckRadius, direction, castDistance, movableLayer);
-    }
     /// <summary>
     /// Checks if a movable object is in range to be grabbed, without actually grabbing it.
     /// </summary>
     /// <returns>True if a valid, non-static movable object is in front of the player.</returns>
     public bool CanGrabObject()
     {
-        if (isMovementDisabled || grabJoint != null) return false;
-        
-        RaycastHit2D hit = FindGrabbableObject();
-        if (hit.collider == null) return false;
+        return FindGrabbableObject() != null && grabJoint == null && !isMovementDisabled;
+    }
 
-        // Check if the hit collider has a Movable script and if we hit the correct handle
-        Movable movable = hit.collider.GetComponentInParent<Movable>();
-        if (movable == null || movable.grabHandleTrigger == null) return false;
+    /// <summary>
+    /// A simple, direct check for a grabbable object in front of the player.
+    /// </summary>
+    /// <returns>The Movable component if found, otherwise null.</returns>
+    private Movable FindGrabbableObject()
+    {
+        // Temporarily enable trigger detection for the check
+        bool originalQueriesHitTriggers = Physics2D.queriesHitTriggers;
+        Physics2D.queriesHitTriggers = true;
 
-        // The player can only grab if the collider they hit IS the designated grab handle.
-        bool isCorrectHandle = hit.collider == movable.grabHandleTrigger;
+        float facingMul = (visualsRoot != null && visualsRoot.localScale.x < 0) ? -1f : 1f;
+        Vector2 checkCenter = (Vector2)transform.position + new Vector2(grabCheckOffset.x * facingMul, grabCheckOffset.y);
 
-        return isCorrectHandle && movable.GetComponent<Rigidbody2D>()?.bodyType != RigidbodyType2D.Static;
+        // Find ALL colliders in a small circle in front of the player
+        Collider2D[] hits = Physics2D.OverlapCircleAll(checkCenter, grabCheckRadius, movableLayer);
+
+        // Restore original setting immediately
+        Physics2D.queriesHitTriggers = originalQueriesHitTriggers;
+
+        foreach (var hit in hits)
+        {
+            // Check if the found collider is a grab handle of a Movable object
+            Movable movable = hit.GetComponentInParent<Movable>();
+            if (movable != null && hit == movable.grabHandleTrigger)
+            {
+                return movable; // Found it!
+            }
+        }
+
+        return null; // Nothing found
     }
 
     private void OnCollisionEnter2D(Collision2D collision)

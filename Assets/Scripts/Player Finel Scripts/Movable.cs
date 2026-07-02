@@ -14,9 +14,8 @@ public class Movable : MonoBehaviour
     private SimplePlayer simplePlayer;
     private Coroutine lockCoroutine;
     
-    // Compatibility field to prevent errors in SimplePlayer.cs
-    // It will point to the main collider of this object.
-    [HideInInspector]
+    [Header("Grab Settings")]
+    [Tooltip("Optional. A specific trigger collider that the player must hit to grab this object. If null, the main collider will be used.")]
     public Collider2D grabHandleTrigger;
 
     private void Awake()
@@ -24,7 +23,11 @@ public class Movable : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         rb.constraints &= ~RigidbodyConstraints2D.FreezeRotation;
         baseConstraints = rb.constraints;
-        grabHandleTrigger = GetComponent<Collider2D>(); // Make it point to self
+        
+        // If no specific grab handle is assigned, default to the object's main collider for backward compatibility.
+        if (grabHandleTrigger == null)
+            grabHandleTrigger = GetComponent<Collider2D>();
+
         simplePlayer = FindFirstObjectByType<SimplePlayer>();
     }
 
