@@ -83,7 +83,8 @@ public class SimplePlayer : MonoBehaviour
     // Timer to temporarily disable aggressive braking for momentum preservation.
     private float preserveMomentumUntil = 0f;
 
-    private FixedJoint2D grabJoint;
+    private TargetJoint2D grabJoint;
+    private float grabDirection = 0f; // 0 = not grabbing, 1 = grabbed right, -1 = grabbed left
 
     [HideInInspector] public float currentSpeedMultiplier = 1f;
 
@@ -137,6 +138,12 @@ public class SimplePlayer : MonoBehaviour
             // While physics-controlled (rolling/hiding), never leave gravity zeroed by the grip logic.
             rb.gravityScale = defaultGravityScale;
         }
+
+        if (IsGrabbing)
+        {
+            UpdateGrabJointTarget();
+        }
+
         HandleGroundDetection();
     }
 
@@ -315,18 +322,52 @@ public class SimplePlayer : MonoBehaviour
     {
         if (visualsRoot == null) return;
 
-        // Calculate target rotation based on the normal (slope) discovered by the raycast
-        Quaternion targetRotation = Quaternion.FromToRotation(Vector3.up, surfaceNormal);
+        Quaternion targetRotation;
+
+        if (IsGrabbing)
+        {
+            // When grabbing, force the player to be upright to prevent the joint from breaking.
+            targetRotation = Quaternion.identity;
+        }
+        else
+        {
+            // When not grabbing, align to the slope as usual.
+            targetRotation = Quaternion.FromToRotation(Vector3.up, surfaceNormal);
+        }
         
         // Smoothly rotate the sprite to prevent sharp "jumps" at floor seams
-        visualsRoot.rotation = Quaternion.Lerp(visualsRoot.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+        visualsRoot.localRotation = Quaternion.Lerp(visualsRoot.localRotation, targetRotation, Time.deltaTime * rotationSpeed);
         
         // Flip visuals left or right
-        // We freeze flipping while grabbing so the crab doesn't spin around when pulling backwards
-        if (Mathf.Abs(moveInputX) > 0.01f && visualsRoot != null && grabJoint == null)
+        if (Mathf.Abs(moveInputX) > 0.01f && visualsRoot != null)
         {
             Vector3 scale = visualsRoot.localScale;
-            scale.x = Mathf.Abs(scale.x) * Mathf.Sign(moveInputX);
+            float targetFacingDirection;
+
+            if (IsGrabbing)
+            {
+                // When grabbing, logic is more complex: PUSH vs PULL
+                // With TargetJoint2D, the joint is ON the object, so we get its position directly.
+                // The connectedBody property is not used and will be null.
+                float objectDirection = Mathf.Sign(grabJoint.transform.position.x - transform.position.x);
+                float moveDirection = Mathf.Sign(moveInputX);
+
+                // If moving TOWARDS the object (pushing), face the object.
+                // If moving AWAY from the object (pulling), face away from it.
+                if (moveDirection == objectDirection) // Pushing
+                {
+                    targetFacingDirection = objectDirection;
+                }
+                else // Pulling
+                {
+                    targetFacingDirection = moveDirection;
+                }
+            }
+            else
+            {
+                targetFacingDirection = Mathf.Sign(moveInputX);
+            }
+            scale.x = Mathf.Abs(scale.x) * targetFacingDirection;
             visualsRoot.localScale = scale;
         }
     }
@@ -350,20 +391,51 @@ public class SimplePlayer : MonoBehaviour
         if (targetMovable != null)
         {
             Rigidbody2D targetRb = targetMovable.GetComponent<Rigidbody2D>();
-            grabJoint = gameObject.AddComponent<FixedJoint2D>();
+
+            // Set grab direction on successful grab
+            grabDirection = (visualsRoot != null && visualsRoot.localScale.x < 0) ? -1f : 1f;
+            grabJoint = targetRb.gameObject.AddComponent<TargetJoint2D>();
+            grabJoint.autoConfigureTarget = false; // We will set the target manually
             grabJoint.connectedBody = targetRb;
-            grabJoint.autoConfigureConnectedAnchor = true;
-            grabJoint.enableCollision = true;
+            grabJoint.anchor = targetRb.centerOfMass; // Grab the object from its center
+
+            // --- CRITICAL FIX for TargetJoint2D strength ---
+            // Set the spring-like properties of the joint so it's strong enough to pull the object.
+            grabJoint.frequency = 10f; // How quickly the object tries to return to the target (spring stiffness)
+            grabJoint.dampingRatio = 0.7f; // How much it resists overshooting (0=bouncy, 1=no bounce)
+
+            // --- NEW: Instant Flip on Grab ---
+            // Force the player to face the object they just grabbed.
+            float objectDirection = Mathf.Sign(targetMovable.transform.position.x - transform.position.x);
+            Vector3 scale = visualsRoot.localScale;
+            scale.x = Mathf.Abs(scale.x) * objectDirection;
+            visualsRoot.localScale = scale;
+
             Debug.Log($"[SimplePlayer] Grabbed {targetMovable.name}");
         }
+    }
+
+    private void UpdateGrabJointTarget()
+    {
+        if (grabJoint == null) return;
+
+        // The target for the joint is a point slightly in front of the player.
+        // This makes the object follow the player smoothly.
+        float facingMul = (visualsRoot.localScale.x > 0) ? 1f : -1f;
+        Vector2 targetPos = (Vector2)transform.position + new Vector2(grabCheckOffset.x * facingMul, grabCheckOffset.y);
+        grabJoint.target = targetPos;
     }
 
     public void ReleaseGrab()
     {
         if (grabJoint == null) return;
-        Debug.Log($"[SimplePlayer] Released {grabJoint.connectedBody.name}");
+
+        // The joint is on the object, not the player, so we need to get it from there.
+        Debug.Log($"[SimplePlayer] Released {grabJoint.gameObject.name}");
+
         Destroy(grabJoint);
         grabJoint = null;
+        grabDirection = 0f; // Reset grab direction
     }
 
     /// <summary>
@@ -385,7 +457,18 @@ public class SimplePlayer : MonoBehaviour
         bool originalQueriesHitTriggers = Physics2D.queriesHitTriggers;
         Physics2D.queriesHitTriggers = true;
 
-        float facingMul = (visualsRoot != null && visualsRoot.localScale.x < 0) ? -1f : 1f;
+        // float facingMul = (visualsRoot != null && visualsRoot.localScale.x < 0) ? -1f : 1f; // OLD: Always used current visual direction
+        float facingMul;
+        if (IsGrabbing)
+        {
+            // If we are already grabbing, the check MUST stay locked to the original grab direction.
+            facingMul = grabDirection;
+        }
+        else
+        {
+            // If we are not grabbing, the check depends on the current visual facing direction.
+            facingMul = (visualsRoot != null && visualsRoot.localScale.x < 0) ? -1f : 1f;
+        }
         Vector2 checkCenter = (Vector2)transform.position + new Vector2(grabCheckOffset.x * facingMul, grabCheckOffset.y);
 
         // Find ALL colliders in a small circle in front of the player
@@ -430,7 +513,18 @@ public class SimplePlayer : MonoBehaviour
 
         // Draw Grab Probe (Yellow = Free, Magenta = Grabbing)
         Gizmos.color = grabJoint != null ? Color.magenta : Color.yellow;
-        float facingMul = (visualsRoot != null && visualsRoot.localScale.x < 0) ? -1f : 1f;
+        // float facingMul = (visualsRoot != null && visualsRoot.localScale.x < 0) ? -1f : 1f; // OLD: Gizmo always followed visuals
+        float facingMul;
+        if (IsGrabbing)
+        {
+            // If grabbing, the gizmo MUST show the locked check direction.
+            facingMul = grabDirection;
+        }
+        else
+        {
+            // If not grabbing, the gizmo follows the current visual direction.
+            facingMul = (visualsRoot != null && visualsRoot.localScale.x < 0) ? -1f : 1f;
+        }
         Vector2 grabOrigin = (Vector2)transform.position + new Vector2(0, grabCheckOffset.y);
         Vector2 grabDir = Vector2.right * facingMul;
         Vector2 grabPos = grabOrigin + grabDir * grabCheckOffset.x;

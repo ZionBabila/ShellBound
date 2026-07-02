@@ -85,12 +85,6 @@ public class HeavyArmorShell : BaseShell
 
         // --- BEHAVIOR 2: Grab/Release Movable Object (if on the ground) ---
         // If an object is grabbable, trigger the animation and enter the "InUse" state
-        // which allows the Update() method to handle the hold-and-pull logic.
-        if (playerSystem.Player.CanGrabObject())
-        {
-            PlayerAnimation playerAnimation = playerSystem.Player.GetComponentInChildren<PlayerAnimation>();
-            if (playerAnimation != null) playerAnimation.TriggerHeavyAbility();
-        }
         
         CurrentState = ShellState.InUse;
     }

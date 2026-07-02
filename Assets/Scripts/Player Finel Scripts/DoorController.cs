@@ -17,6 +17,17 @@ public class DoorController : MonoBehaviour
     [Tooltip("The rotation offset to ADD to the door's starting rotation.")]
     public Vector3 rotationOffset = new Vector3(0, 0, 90f);
 
+    [Header("Linked Object Rotation Settings")]
+    [Tooltip("Check this to also control a separate rotating object.")]
+    public bool controlLinkedObject = false;
+
+    [Tooltip("The separate object to rotate when the door is activated (e.g., a gear).")]
+    public Transform objectToRotate;
+    [Tooltip("The transition speed for the linked object's rotation.")]
+    public float objectRotationSpeed = 90f;
+    [Tooltip("The total degrees to rotate the linked object on the Z-axis.")]
+    public float objectRotationDegrees = 90f;
+
     private bool isOpen = false;
 
     private Vector3 closedLocalPosition;
@@ -24,6 +35,9 @@ public class DoorController : MonoBehaviour
     
     private Quaternion closedRotation;
     private Quaternion openRotation;
+
+    private Quaternion objectClosedRotation;
+    private Quaternion objectOpenRotation;
 
     private void Awake()
     {
@@ -33,6 +47,12 @@ public class DoorController : MonoBehaviour
 
         closedRotation = transform.localRotation;
         openRotation = closedRotation * Quaternion.Euler(rotationOffset);
+
+        if (objectToRotate != null)
+        {
+            objectClosedRotation = objectToRotate.rotation;
+            objectOpenRotation = objectClosedRotation * Quaternion.Euler(0, 0, objectRotationDegrees);
+        }
     }
 
     private void Update()
@@ -47,6 +67,15 @@ public class DoorController : MonoBehaviour
         {
             Quaternion targetRot = isOpen ? openRotation : closedRotation;
             transform.localRotation = Quaternion.Lerp(transform.localRotation, targetRot, Time.deltaTime * transitionSpeed);
+        }
+
+        // If linked object control is enabled, rotate it in parallel, regardless of the door's mode.
+        if (controlLinkedObject)
+        {
+            if (objectToRotate == null) return;
+
+            Quaternion targetRot = isOpen ? objectOpenRotation : objectClosedRotation;
+            objectToRotate.rotation = Quaternion.Slerp(objectToRotate.rotation, targetRot, Time.deltaTime * objectRotationSpeed);
         }
     }
 
@@ -63,7 +92,7 @@ public class DoorController : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        // Show a visual preview of where the door will slide to in the Unity Editor
+        // Show a visual preview in the Unity Editor
         if (Application.isPlaying) return;
 
         Gizmos.color = Color.cyan;
@@ -111,6 +140,13 @@ public class DoorController : MonoBehaviour
                 Gizmos.matrix = Matrix4x4.TRS(transform.position, targetWorldRot, transform.lossyScale);
                 Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
             }
+        }
+
+        // Draw gizmos for the linked object if it's enabled.
+        if (controlLinkedObject && objectToRotate != null)
+        {
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawLine(transform.position, objectToRotate.position);
         }
     }
 }

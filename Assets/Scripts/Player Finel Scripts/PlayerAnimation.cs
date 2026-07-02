@@ -16,6 +16,7 @@ public class PlayerAnimation : MonoBehaviour
     // Animator parameter hashes for performance
     private static readonly int DeathTriggerHash = Animator.StringToHash("Die");
     private static readonly int HeavyAbilityTriggerHash = Animator.StringToHash("HeavyAbility");
+    private static readonly int IsGrabbingHash = Animator.StringToHash("IsGrabbing");
 
     // Store respawn info temporarily while the animation is playing
     private GameObject playerToRespawn;
@@ -36,11 +37,13 @@ public class PlayerAnimation : MonoBehaviour
         // 1. Read data from the player
         float currentSpeed = simplePlayer.CurrentSpeed;
         bool isGrounded = simplePlayer.IsGrounded;
+        bool isGrabbing = simplePlayer.IsGrabbing;
 
         // 2. Pass data to Animator
         animator.SetFloat("Speed", currentSpeed * animationSpeedMultiplier);
         animator.SetBool("IsGrounded", isGrounded);
-        
+        animator.SetBool(IsGrabbingHash, isGrabbing);
+
         // In the future, we will also add reading data from the shell system (PlayerShellSystem)
         // For example: animator.SetBool("IsRolling", shellSystem.IsRolling);
     }

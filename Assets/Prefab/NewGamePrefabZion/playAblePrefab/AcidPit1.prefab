@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7016072839227729621}
   - component: {fileID: 7826030366617841583}
   - component: {fileID: 7612772388584365343}
+  - component: {fileID: 2297289400392510542}
   m_Layer: 0
   m_Name: AcidPit1
   m_TagString: Untagged
@@ -53,6 +54,65 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HazardZone
   hazardID: Pit2
 --- !u!60 &7612772388584365343
+PolygonCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 286921699980780400}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Points:
+    m_Paths:
+    - - {x: 1.0538138, y: 0.36095533}
+      - {x: 0.83786595, y: 0.23006868}
+      - {x: -0.52179885, y: 0.26627445}
+      - {x: -1.0484638, y: 0.30199584}
+      - {x: -1.3496087, y: 0.5082933}
+      - {x: -1.2441583, y: 0.23124573}
+      - {x: -0.97873455, y: -0.07989061}
+      - {x: -0.48814696, y: -0.36064526}
+      - {x: 0.045935642, y: -0.3776992}
+      - {x: 0.58778536, y: -0.24289095}
+      - {x: 1.4143423, y: 0.4224036}
+      - {x: 1.6168216, y: 0.852498}
+  m_UseDelaunayMesh: 1
+--- !u!60 &2297289400392510542
 PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -279,11 +339,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.Light2D
   m_ComponentVersion: 2
-  m_LightType: 3
+  m_LightType: 1
   m_BlendStyleIndex: 0
-  m_FalloffIntensity: 0.458
+  m_FalloffIntensity: 1
   m_Color: {r: 1, g: 1, b: 0.14117648, a: 1}
-  m_Intensity: 3.64
+  m_Intensity: 2.96
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
   m_ApplyToSortingLayers: 00000000a74e4e10e30c21af35544821038946e69931721861790fafebf55640f745a1012f2454122b70a2a57126df05
@@ -302,8 +362,8 @@ MonoBehaviour:
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:
-    m_Center: {x: 0, y: -0.00000011920929, z: 0}
-    m_Extent: {x: 0.9985302, y: 0.99853027, z: 0}
+    m_Center: {x: -0.041199997, y: 0.04075, z: 0}
+    m_Extent: {x: 0.36339998, y: 0.13455, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
@@ -311,13 +371,15 @@ MonoBehaviour:
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
   m_ShapeLightParametricRadius: 1
-  m_ShapeLightFalloffSize: 0.5
+  m_ShapeLightFalloffSize: 0.02
   m_ShapeLightFalloffOffset: {x: 0, y: 0}
   m_ShapePath:
-  - {x: -0.5, y: -0.5, z: 0}
-  - {x: 0.5, y: -0.5, z: 0}
-  - {x: 0.5, y: 0.5, z: 0}
-  - {x: -0.5, y: 0.5, z: 0}
+  - {x: -0.32770807, y: 0.01926671, z: 0}
+  - {x: -0.19883889, y: -0.0747856, z: 0}
+  - {x: 0.07294793, y: -0.052666765, z: 0}
+  - {x: 0.21546324, y: 0.053669367, z: 0}
+  - {x: 0.3017968, y: 0.12489946, z: 0}
+  - {x: -0.38620743, y: 0.15508975, z: 0}
 --- !u!114 &2588765102380330173
 MonoBehaviour:
   m_ObjectHideFlags: 0
