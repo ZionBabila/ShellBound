@@ -49,8 +49,24 @@ MonoBehaviour:
   equipShell: {fileID: 0}
   throwShell: {fileID: 0}
   crabHurt: {fileID: 0}
+  playerHazardHit: {fileID: 0}
+  acidDropDestroy: {fileID: 0}
   uiClick: {fileID: 0}
   winLevel: {fileID: 0}
   loseLevel: {fileID: 0}
-  buttonPressSoundSorce: {fileID: 8300000, guid: f6b1f67b6b5b4fe45909243ac5858ffb, type: 3}
+  buttonPressSoundSource: {fileID: 0}
   buttonReleaseSoundSource: {fileID: 8300000, guid: f6b1f67b6b5b4fe45909243ac5858ffb, type: 3}
+  musicMasterVolume: 1
+  ambientMasterVolume: 1
+  defaultFadeDuration: 1.5
+  musicZones:
+  - name: 
+    music: {fileID: 0}
+    musicVolume: 0
+    changeAmbient: 0
+    ambient: {fileID: 0}
+    ambientVolume: 0
+    transition: 0
+    fadeDuration: 0
+    activationCollider: {fileID: 0}
+    playerTag: 
