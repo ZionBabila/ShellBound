@@ -1,5 +1,90 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2169688487145234276
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5752475649406972056}
+  - component: {fileID: 8204947406581552529}
+  m_Layer: 11
+  m_Name: PushArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5752475649406972056
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2169688487145234276}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8400392210947622566}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!60 &8204947406581552529
+PolygonCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2169688487145234276}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Points:
+    m_Paths:
+    - - {x: 1.5201054, y: -0.6623765}
+      - {x: -1.6727922, y: -0.9583571}
+      - {x: -1.4919306, y: -1.5262278}
+      - {x: -1.2050447, y: -1.6925707}
+      - {x: 1.6532843, y: -1.5463331}
+      - {x: 1.570014, y: -0.8925342}
+  m_UseDelaunayMesh: 1
 --- !u!1001 &5799283470663984826
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -22,11 +107,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2661347701702352924, guid: 024cdf0e25c7b904fb0bf77638d1beb1, type: 3}
       propertyPath: m_LocalPosition.x
+<<<<<<< HEAD
       value: 169.6608
       objectReference: {fileID: 0}
     - target: {fileID: 2661347701702352924, guid: 024cdf0e25c7b904fb0bf77638d1beb1, type: 3}
       propertyPath: m_LocalPosition.y
       value: -45.254032
+=======
+      value: 430.76
+      objectReference: {fileID: 0}
+    - target: {fileID: 2661347701702352924, guid: 024cdf0e25c7b904fb0bf77638d1beb1, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -49.13
+>>>>>>> parent of 1303ce6 (Revert "walabla")
       objectReference: {fileID: 0}
     - target: {fileID: 2661347701702352924, guid: 024cdf0e25c7b904fb0bf77638d1beb1, type: 3}
       propertyPath: m_LocalPosition.z
@@ -104,8 +197,20 @@ PrefabInstance:
       propertyPath: m_SortingLayerID
       value: -1357940383
       objectReference: {fileID: 0}
+    - target: {fileID: 8723589706488586134, guid: 024cdf0e25c7b904fb0bf77638d1beb1, type: 3}
+      propertyPath: grabHandleTrigger
+      value: 
+      objectReference: {fileID: 8204947406581552529}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 2661347701702352924, guid: 024cdf0e25c7b904fb0bf77638d1beb1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5752475649406972056}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 024cdf0e25c7b904fb0bf77638d1beb1, type: 3}
+--- !u!4 &8400392210947622566 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2661347701702352924, guid: 024cdf0e25c7b904fb0bf77638d1beb1, type: 3}
+  m_PrefabInstance: {fileID: 5799283470663984826}
+  m_PrefabAsset: {fileID: 0}
