@@ -44,6 +44,12 @@ public class SimplePlayer : MonoBehaviour
     [Tooltip("Radius of the grab probe used to find a Movable in front of the crab.")]
     public float grabCheckRadius = 0.4f;
 
+    [Tooltip("How tightly a grabbed object keeps its hold offset (horizontal drift correction). Higher = stiffer.")]
+    public float grabFollowStiffness = 12f;
+
+    [Tooltip("Maximum extra speed the drift correction can add, to avoid snapping when the object is blocked.")]
+    public float grabMaxCorrectionSpeed = 6f;
+
     [Tooltip("Objects with mass greater than this are considered 'heavy' and require a special shell.")]
     public float heavyMassThreshold = 3.0f;
 
@@ -83,8 +89,12 @@ public class SimplePlayer : MonoBehaviour
     // Timer to temporarily disable aggressive braking for momentum preservation.
     private float preserveMomentumUntil = 0f;
 
-    // Rigid connection used to drag Movable objects. Lives on the PLAYER, connected to the object.
-    private FixedJoint2D grabJoint;
+    // The Rigidbody being dragged, or null when not grabbing. No joint is used: we drive it manually
+    // on the horizontal axis and leave the vertical to gravity/collision so it rides slopes naturally.
+    private Rigidbody2D grabbedBody;
+
+    // Horizontal offset from the player captured at grab time, defining the hold distance.
+    private float grabHoldOffsetX;
     private float grabDirection = 0f; // 0 = not grabbing, 1 = grabbed right, -1 = grabbed left
 
     [HideInInspector] public float currentSpeedMultiplier = 1f;
@@ -106,11 +116,10 @@ public class SimplePlayer : MonoBehaviour
     // Ignoring micro-movements so the animator gets a "clean" 0 when the player barely moves
     public float CurrentSpeed => Mathf.Abs(rb.linearVelocity.x) < 0.15f ? 0f : Mathf.Abs(rb.linearVelocity.x);
     public bool IsGrounded { get; private set; }
-    public bool IsGrabbing => grabJoint != null;
+    public bool IsGrabbing => grabbedBody != null;
 
-    // The Rigidbody currently held by the grab joint, or null when not grabbing.
-    // Movable objects use this to know whether THIS object is the one being grabbed.
-    public Rigidbody2D GrabbedBody => grabJoint != null ? grabJoint.connectedBody : null;
+    // The Rigidbody currently held, or null when not grabbing. Movable uses this to identify the grabbed object.
+    public Rigidbody2D GrabbedBody => grabbedBody;
     
     // Property to be controlled by shells
     public bool CanPushHeavyObjects { get; set; } = false;
@@ -142,6 +151,11 @@ public class SimplePlayer : MonoBehaviour
         {
             // While physics-controlled (rolling/hiding), never leave gravity zeroed by the grip logic.
             rb.gravityScale = defaultGravityScale;
+        }
+
+        if (IsGrabbing)
+        {
+            DriveGrabbedObject();
         }
 
         HandleGroundDetection();
@@ -344,11 +358,10 @@ public class SimplePlayer : MonoBehaviour
             Vector3 scale = visualsRoot.localScale;
             float targetFacingDirection;
 
-            if (IsGrabbing && grabJoint.connectedBody != null)
+            if (IsGrabbing && grabbedBody != null)
             {
                 // When grabbing, logic is more complex: PUSH vs PULL.
-                // The FixedJoint2D lives on the player, so the grabbed object is its connectedBody.
-                float objectDirection = Mathf.Sign(grabJoint.connectedBody.transform.position.x - transform.position.x);
+                float objectDirection = Mathf.Sign(grabbedBody.transform.position.x - transform.position.x);
                 float moveDirection = Mathf.Sign(moveInputX);
 
                 // If moving TOWARDS the object (pushing), face the object.
@@ -378,14 +391,14 @@ public class SimplePlayer : MonoBehaviour
 
     public void ToggleGrab()
     {
-        if (grabJoint != null) ReleaseGrab();
+        if (grabbedBody != null) ReleaseGrab();
         else TryStartGrab();
     }
 
     public void TryStartGrab()
     {
-        if (isMovementDisabled || grabJoint != null) return;
-        
+        if (isMovementDisabled || grabbedBody != null) return;
+
         Movable targetMovable = FindGrabbableObject();
         if (targetMovable == null) return;
 
@@ -402,26 +415,41 @@ public class SimplePlayer : MonoBehaviour
             visualsRoot.localScale = scale;
         }
 
-        // Rigid connection: the object becomes part of the player's body.
-        // FixedJoint2D keeps the current relative offset (autoConfigureConnectedAnchor stays true),
-        // so grabbing does NOT snap or bounce the object. frequency = 0 => fully rigid (no spring).
-        grabJoint = gameObject.AddComponent<FixedJoint2D>();
-        grabJoint.connectedBody = targetRb;
-        grabJoint.dampingRatio = 1f;
-        grabJoint.frequency = 0f;
+        // No joint: we drive the object ourselves. Capture the current horizontal offset as the hold
+        // distance. The vertical axis is never touched, so gravity/collision keep it on the slope.
+        grabbedBody = targetRb;
+        grabHoldOffsetX = targetRb.position.x - transform.position.x;
 
         Debug.Log($"[SimplePlayer] Grabbed {targetMovable.name}");
     }
 
     public void ReleaseGrab()
     {
-        if (grabJoint == null) return;
+        if (grabbedBody == null) return;
 
-        Debug.Log($"[SimplePlayer] Released {(grabJoint.connectedBody != null ? grabJoint.connectedBody.name : "object")}");
+        Debug.Log($"[SimplePlayer] Released {grabbedBody.name}");
 
-        Destroy(grabJoint);
-        grabJoint = null;
+        grabbedBody = null;
         grabDirection = 0f; // Reset grab direction
+    }
+
+    /// <summary>
+    /// Drives the grabbed object horizontally to follow the player while leaving its vertical velocity
+    /// untouched, so gravity and collisions keep it resting on the ground/slope (no float, no bounce).
+    /// </summary>
+    private void DriveGrabbedObject()
+    {
+        if (grabbedBody == null) return;
+
+        // Feed-forward the player's horizontal velocity, plus a spring that corrects drift back to the
+        // hold offset. errorX is ~0 at grab time, so there is no yank/jump on grab.
+        float desiredX = transform.position.x + grabHoldOffsetX;
+        float errorX = desiredX - grabbedBody.position.x;
+        float correction = Mathf.Clamp(errorX * grabFollowStiffness, -grabMaxCorrectionSpeed, grabMaxCorrectionSpeed);
+
+        Vector2 v = grabbedBody.linearVelocity;
+        v.x = rb.linearVelocity.x + correction; // horizontal only; vertical stays physics-driven
+        grabbedBody.linearVelocity = v;
     }
 
     /// <summary>
@@ -430,7 +458,7 @@ public class SimplePlayer : MonoBehaviour
     /// <returns>True if a valid, non-static movable object is in front of the player.</returns>
     public bool CanGrabObject()
     {
-        return FindGrabbableObject() != null && grabJoint == null && !isMovementDisabled;
+        return FindGrabbableObject() != null && grabbedBody == null && !isMovementDisabled;
     }
 
     /// <summary>
@@ -498,7 +526,7 @@ public class SimplePlayer : MonoBehaviour
         Gizmos.DrawLine(rightPos, rightPos + Vector2.down * groundCheckDistance);
 
         // Draw Grab Probe (Yellow = Free, Magenta = Grabbing)
-        Gizmos.color = grabJoint != null ? Color.magenta : Color.yellow;
+        Gizmos.color = grabbedBody != null ? Color.magenta : Color.yellow;
         // float facingMul = (visualsRoot != null && visualsRoot.localScale.x < 0) ? -1f : 1f; // OLD: Gizmo always followed visuals
         float facingMul;
         if (IsGrabbing)

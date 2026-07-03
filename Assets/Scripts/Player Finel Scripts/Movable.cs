@@ -21,9 +21,9 @@ public class Movable : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        // Keep the crate upright: a pushable object should slide, never tip or rotate.
-        // Without this, the FixedJoint2D would fix the relative angle and tilt the object on grab.
-        rb.constraints |= RigidbodyConstraints2D.FreezeRotation;
+        // Allow rotation so the crate rests flush on slopes (gravity + contact align it naturally).
+        // Safe now that push/pull is driven manually (no joint), so nothing artificially tilts it.
+        rb.constraints &= ~RigidbodyConstraints2D.FreezeRotation;
         baseConstraints = rb.constraints;
         
         // If no specific grab handle is assigned, default to the object's main collider for backward compatibility.
