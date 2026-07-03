@@ -83,7 +83,8 @@ public class SimplePlayer : MonoBehaviour
     // Timer to temporarily disable aggressive braking for momentum preservation.
     private float preserveMomentumUntil = 0f;
 
-    private TargetJoint2D grabJoint;
+    // Rigid connection used to drag Movable objects. Lives on the PLAYER, connected to the object.
+    private FixedJoint2D grabJoint;
     private float grabDirection = 0f; // 0 = not grabbing, 1 = grabbed right, -1 = grabbed left
 
     [HideInInspector] public float currentSpeedMultiplier = 1f;
@@ -106,6 +107,10 @@ public class SimplePlayer : MonoBehaviour
     public float CurrentSpeed => Mathf.Abs(rb.linearVelocity.x) < 0.15f ? 0f : Mathf.Abs(rb.linearVelocity.x);
     public bool IsGrounded { get; private set; }
     public bool IsGrabbing => grabJoint != null;
+
+    // The Rigidbody currently held by the grab joint, or null when not grabbing.
+    // Movable objects use this to know whether THIS object is the one being grabbed.
+    public Rigidbody2D GrabbedBody => grabJoint != null ? grabJoint.connectedBody : null;
     
     // Property to be controlled by shells
     public bool CanPushHeavyObjects { get; set; } = false;
@@ -137,11 +142,6 @@ public class SimplePlayer : MonoBehaviour
         {
             // While physics-controlled (rolling/hiding), never leave gravity zeroed by the grip logic.
             rb.gravityScale = defaultGravityScale;
-        }
-
-        if (IsGrabbing)
-        {
-            UpdateGrabJointTarget();
         }
 
         HandleGroundDetection();
@@ -344,12 +344,11 @@ public class SimplePlayer : MonoBehaviour
             Vector3 scale = visualsRoot.localScale;
             float targetFacingDirection;
 
-            if (IsGrabbing)
+            if (IsGrabbing && grabJoint.connectedBody != null)
             {
-                // When grabbing, logic is more complex: PUSH vs PULL
-                // With TargetJoint2D, the joint is ON the object, so we get its position directly.
-                // The connectedBody property is not used and will be null.
-                float objectDirection = Mathf.Sign(grabJoint.transform.position.x - transform.position.x);
+                // When grabbing, logic is more complex: PUSH vs PULL.
+                // The FixedJoint2D lives on the player, so the grabbed object is its connectedBody.
+                float objectDirection = Mathf.Sign(grabJoint.connectedBody.transform.position.x - transform.position.x);
                 float moveDirection = Mathf.Sign(moveInputX);
 
                 // If moving TOWARDS the object (pushing), face the object.
@@ -388,50 +387,37 @@ public class SimplePlayer : MonoBehaviour
         if (isMovementDisabled || grabJoint != null) return;
         
         Movable targetMovable = FindGrabbableObject();
-        if (targetMovable != null)
+        if (targetMovable == null) return;
+
+        Rigidbody2D targetRb = targetMovable.GetComponent<Rigidbody2D>();
+        if (targetRb == null) return;
+
+        // Face the object at the moment of grabbing (flip via scale.x).
+        float objectDirection = Mathf.Sign(targetMovable.transform.position.x - transform.position.x);
+        grabDirection = objectDirection;
+        if (visualsRoot != null)
         {
-            Rigidbody2D targetRb = targetMovable.GetComponent<Rigidbody2D>();
-
-            // Set grab direction on successful grab
-            grabDirection = (visualsRoot != null && visualsRoot.localScale.x < 0) ? -1f : 1f;
-            grabJoint = targetRb.gameObject.AddComponent<TargetJoint2D>();
-            grabJoint.autoConfigureTarget = false; // We will set the target manually
-            grabJoint.connectedBody = targetRb;
-            grabJoint.anchor = targetRb.centerOfMass; // Grab the object from its center
-
-            // --- CRITICAL FIX for TargetJoint2D strength ---
-            // Set the spring-like properties of the joint so it's strong enough to pull the object.
-            grabJoint.frequency = 10f; // How quickly the object tries to return to the target (spring stiffness)
-            grabJoint.dampingRatio = 0.7f; // How much it resists overshooting (0=bouncy, 1=no bounce)
-
-            // --- NEW: Instant Flip on Grab ---
-            // Force the player to face the object they just grabbed.
-            float objectDirection = Mathf.Sign(targetMovable.transform.position.x - transform.position.x);
             Vector3 scale = visualsRoot.localScale;
             scale.x = Mathf.Abs(scale.x) * objectDirection;
             visualsRoot.localScale = scale;
-
-            Debug.Log($"[SimplePlayer] Grabbed {targetMovable.name}");
         }
-    }
 
-    private void UpdateGrabJointTarget()
-    {
-        if (grabJoint == null) return;
+        // Rigid connection: the object becomes part of the player's body.
+        // FixedJoint2D keeps the current relative offset (autoConfigureConnectedAnchor stays true),
+        // so grabbing does NOT snap or bounce the object. frequency = 0 => fully rigid (no spring).
+        grabJoint = gameObject.AddComponent<FixedJoint2D>();
+        grabJoint.connectedBody = targetRb;
+        grabJoint.dampingRatio = 1f;
+        grabJoint.frequency = 0f;
 
-        // The target for the joint is a point slightly in front of the player.
-        // This makes the object follow the player smoothly.
-        float facingMul = (visualsRoot.localScale.x > 0) ? 1f : -1f;
-        Vector2 targetPos = (Vector2)transform.position + new Vector2(grabCheckOffset.x * facingMul, grabCheckOffset.y);
-        grabJoint.target = targetPos;
+        Debug.Log($"[SimplePlayer] Grabbed {targetMovable.name}");
     }
 
     public void ReleaseGrab()
     {
         if (grabJoint == null) return;
 
-        // The joint is on the object, not the player, so we need to get it from there.
-        Debug.Log($"[SimplePlayer] Released {grabJoint.gameObject.name}");
+        Debug.Log($"[SimplePlayer] Released {(grabJoint.connectedBody != null ? grabJoint.connectedBody.name : "object")}");
 
         Destroy(grabJoint);
         grabJoint = null;

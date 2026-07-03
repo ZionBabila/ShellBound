@@ -21,7 +21,9 @@ public class Movable : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        rb.constraints &= ~RigidbodyConstraints2D.FreezeRotation;
+        // Keep the crate upright: a pushable object should slide, never tip or rotate.
+        // Without this, the FixedJoint2D would fix the relative angle and tilt the object on grab.
+        rb.constraints |= RigidbodyConstraints2D.FreezeRotation;
         baseConstraints = rb.constraints;
         
         // If no specific grab handle is assigned, default to the object's main collider for backward compatibility.
@@ -39,16 +41,9 @@ public class Movable : MonoBehaviour
         bool canPush = simplePlayer.CanPushHeavyObjects;
         bool isPlayerGrounded = simplePlayer.IsGrounded;
 
-        // Reverted to the original, more direct logic.
-        // An object is considered "grabbed" if and only if the player's FixedJoint2D is connected to THIS object's Rigidbody.
-        // We do a multi-line check to safely handle cases where the joint has been destroyed but is not yet null.
-        bool isGrabbed = false;
-        FixedJoint2D playerJoint = simplePlayer.GetComponent<FixedJoint2D>();
-        if (playerJoint != null)
-        {
-            // This check is now safe because it only runs if playerJoint is a valid, living component.
-            isGrabbed = playerJoint.connectedBody == rb;
-        }
+        // An object is "grabbed" when the player's grab joint (TargetJoint2D, on the object)
+        // is connected to THIS object's Rigidbody. SimplePlayer exposes it via GrabbedBody.
+        bool isGrabbed = simplePlayer.GrabbedBody == rb;
 
         // Freeze position if:
         // 1. The player isn't grabbing it.

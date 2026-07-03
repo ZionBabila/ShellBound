@@ -41,22 +41,37 @@ public class HeavyArmorShell : BaseShell
 
     private void Update()
     {
-        // This Update handles the "press and hold" logic for grabbing.
-        // It only runs when the shell is in the special "InUse" state on the ground.
-        if (CurrentState != ShellState.InUse || isGroundPounding) return;
+        // The heavy ability is engaged only while in the InUse state.
+        if (CurrentState != ShellState.InUse) return;
 
-        // Check if the ability key (Space) is being held down using the new Input System.
-        if (Keyboard.current != null && Keyboard.current.spaceKey.isPressed)
+        // A ground pound runs to completion on its own (see OnPlayerCollision).
+        if (isGroundPounding)
         {
-            // If the key is held, try to maintain the grab.
+            // Safety: if we settled on the ground without a top-down hit, end the pound.
+            if (playerSystem.Player.IsGrounded) EndGroundPound();
+            return;
+        }
+
+        bool spaceHeld = Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
+
+        if (!spaceHeld)
+        {
+            // Key released: drop any grabbed object and return to idle.
+            playerSystem.Player.ReleaseGrab();
+            CurrentState = ShellState.OnBack;
+            return;
+        }
+
+        // Space is held.
+        if (playerSystem.Player.IsGrounded)
+        {
+            // On the ground: grab and pull/push a Movable object.
             playerSystem.Player.TryStartGrab();
         }
         else
         {
-            // If the key is released, release the object and exit the "InUse" state.
-            playerSystem.Player.ReleaseGrab();
-            CurrentState = ShellState.OnBack;
-            Debug.Log("[HeavyArmorShell] Grab released, exiting InUse state.");
+            // In the air with Space held: slam down. Landing on a Breakable smashes it.
+            StartGroundPound();
         }
     }
 
@@ -76,16 +91,8 @@ public class HeavyArmorShell : BaseShell
     {
         if (CurrentState != ShellState.OnBack) return;
 
-        // --- BEHAVIOR 1: Ground Pound (if in the air) ---
-        if (!playerSystem.Player.IsGrounded)
-        {
-            StartGroundPound();
-            return;
-        }
-
-        // --- BEHAVIOR 2: Grab/Release Movable Object (if on the ground) ---
-        // If an object is grabbable, trigger the animation and enter the "InUse" state
-        
+        // Engage the heavy ability. While Space is held, Update() decides the behavior:
+        // grab & pull on the ground, or a ground pound in the air.
         CurrentState = ShellState.InUse;
     }
 
@@ -105,6 +112,9 @@ public class HeavyArmorShell : BaseShell
     private void StartGroundPound()
     {
         if (isGroundPounding) return;
+
+        // Drop any held object before slamming down.
+        playerSystem.Player.ReleaseGrab();
 
         isGroundPounding = true;
         CurrentState = ShellState.InUse; // Player is busy ground-pounding
