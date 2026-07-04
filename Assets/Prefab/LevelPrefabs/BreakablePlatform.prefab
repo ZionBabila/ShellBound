@@ -117,7 +117,6 @@ GameObject:
   - component: {fileID: 8324897353210835587}
   - component: {fileID: 1506149609099840719}
   - component: {fileID: 7237409180806465345}
-  - component: {fileID: 4939017727177756216}
   m_Layer: 13
   m_Name: BreakablePlatform
   m_TagString: Untagged
@@ -135,8 +134,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 3.85, y: -13.55, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.7125, y: 0.7125, z: 0.7125}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 522835528270016492}
   m_Father: {fileID: 0}
@@ -259,20 +258,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Breakable
   brokenSprite: {fileID: 4194658366085432031, guid: 77ff7d2bcdebd504c81ac3fad08367ac, type: 3}
---- !u!114 &4939017727177756216
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7038569199925091305}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4afe58539d199904ba0e0691bfb10096, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TutorialHint
-  message: Press Space To Breake the Platform
-  wornMessage: 
-  maxShows: 5
-  showRadius: 11.19
-  playerTag: Player
