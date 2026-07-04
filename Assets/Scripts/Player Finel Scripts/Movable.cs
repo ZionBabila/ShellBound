@@ -18,6 +18,9 @@ public class Movable : MonoBehaviour
     [Tooltip("Optional. A specific trigger collider that the player must hit to grab this object. If null, the main collider will be used.")]
     public Collider2D grabHandleTrigger;
 
+    [Tooltip("Delay (seconds) after release before the X axis locks. Lets the object keep sliding briefly with its momentum. Set to 0 to lock instantly.")]
+    public float lockDelay = 0.5f;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -59,7 +62,7 @@ public class Movable : MonoBehaviour
             // If we need to lock and no locking coroutine is running, start one.
             if (lockCoroutine == null)
             {
-                lockCoroutine = StartCoroutine(LockAfterDelay(0.5f));
+                lockCoroutine = StartCoroutine(LockAfterDelay(lockDelay));
             }
         }
         else

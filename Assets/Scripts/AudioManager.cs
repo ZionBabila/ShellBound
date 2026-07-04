@@ -49,6 +49,10 @@ public class AudioManager : MonoBehaviour
 
     private AudioSource source; // Plays one-shot sound effects
 
+    // PlayerPrefs keys so volume settings persist across scenes (and app restarts).
+    private const string SfxVolumeKey = "sfxVolume";
+    private const string MusicVolumeKey = "musicVolume";
+
     [Header("Sound Clips")]
     public AudioClip breakObject;
     public AudioClip moveObject;
@@ -79,6 +83,10 @@ public class AudioManager : MonoBehaviour
     public static bool buttonPressSound = false;
     public static bool buttonReleaseSound = false;
     private Camera mainCamera;
+
+    [Header("SFX")]
+    [Tooltip("Master volume for one-shot sound effects (settings-controlled).")]
+    [Range(0f, 1f)] public float sfxMasterVolume = 1f;
 
     [Header("Music & Ambient")]
     [Range(0f, 1f)] public float musicMasterVolume = 1f;
@@ -115,6 +123,11 @@ public class AudioManager : MonoBehaviour
         {
             source = gameObject.AddComponent<AudioSource>();
         }
+        // Load saved volumes so a fresh AudioManager in a new scene keeps the player's settings.
+        sfxMasterVolume = PlayerPrefs.GetFloat(SfxVolumeKey, sfxMasterVolume);
+        musicMasterVolume = PlayerPrefs.GetFloat(MusicVolumeKey, musicMasterVolume);
+
+        source.volume = sfxMasterVolume; // Apply the SFX master volume to the one-shot source.
 
         // Build the two persistent channels (two sources each for crossfading)
         musicChannel = CreateChannel(musicMasterVolume);
@@ -122,6 +135,10 @@ public class AudioManager : MonoBehaviour
 
         // Wire up each zone's activation collider so it can trigger a switch
         WireMusicZones();
+
+        // Warm up all zone clips so switching zones mid-game doesn't hitch while a
+        // clip loads/decompresses on the main thread on its first Play().
+        PreloadZoneAudio();
 
         // Reset all sound flags on start
         breakSound = false;
@@ -197,6 +214,21 @@ public class AudioManager : MonoBehaviour
         }
     }
 
+    // Preloads every zone's audio data ahead of time. Respects each clip's import
+    // settings (loads asynchronously when "Load In Background" is enabled), so the
+    // first Play() on a zone switch doesn't block the main thread.
+    private void PreloadZoneAudio()
+    {
+        foreach (MusicZoneEntry zone in musicZones)
+        {
+            if (zone.music != null && zone.music.loadState != AudioDataLoadState.Loaded)
+                zone.music.LoadAudioData();
+
+            if (zone.changeAmbient && zone.ambient != null && zone.ambient.loadState != AudioDataLoadState.Loaded)
+                zone.ambient.LoadAudioData();
+        }
+    }
+
     /// <summary>Switches both channels to the given zone (called by colliders and on start).</summary>
     public void PlayZone(int index)
     {
@@ -232,11 +264,20 @@ public class AudioManager : MonoBehaviour
         RunChannel(ambientChannel, null, 0f, MusicTransition.FadeOutIn, fadeDuration);
     }
 
+    /// <summary>Sets the SFX master volume (e.g. from a settings slider) and applies it live.</summary>
+    public void SetSfxVolume(float volume)
+    {
+        sfxMasterVolume = Mathf.Clamp01(volume);
+        if (source != null) source.volume = sfxMasterVolume;
+        PlayerPrefs.SetFloat(SfxVolumeKey, sfxMasterVolume); // Remember the setting across scenes.
+    }
+
     /// <summary>Sets the music master volume (e.g. from a settings menu) and applies it live.</summary>
     public void SetMusicVolume(float volume)
     {
         musicMasterVolume = Mathf.Clamp01(volume);
         ApplyMasterVolume(musicChannel, musicMasterVolume);
+        PlayerPrefs.SetFloat(MusicVolumeKey, musicMasterVolume); // Remember the setting across scenes.
     }
 
     /// <summary>Sets the ambient master volume (e.g. from a settings menu) and applies it live.</summary>

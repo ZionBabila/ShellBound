@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 /// <summary>
 /// Drives the two menu types in the game:
@@ -13,6 +14,10 @@ public class MenuController : MonoBehaviour
     [Header("Settings Panel (per scene)")]
     [Tooltip("The settings panel opened by the Settings button in this scene.")]
     public GameObject settingsPanel;
+
+    [Tooltip("Optional. If assigned, these sliders sync to the saved volume when Settings opens.")]
+    public Slider musicSlider;
+    public Slider sfxSlider;
 
     [Header("Opening Screen — New Game")]
     [Tooltip("Name of the first gameplay scene loaded by 'New Game'. Must be added to Build Settings.")]
@@ -94,9 +99,20 @@ public class MenuController : MonoBehaviour
     {
         if (settingsPanel != null)
         {
+            SyncSlidersToSavedVolumes();
             settingsPanel.SetActive(true);
             AudioManager.clickSound = true;
         }
+    }
+
+    // Sets each slider's handle to the current saved volume WITHOUT firing OnValueChanged
+    // (so opening settings doesn't re-trigger a volume change).
+    private void SyncSlidersToSavedVolumes()
+    {
+        if (AudioManager.instance == null) return;
+
+        if (musicSlider != null) musicSlider.SetValueWithoutNotify(AudioManager.instance.musicMasterVolume);
+        if (sfxSlider != null) sfxSlider.SetValueWithoutNotify(AudioManager.instance.sfxMasterVolume);
     }
 
     public void OnCloseSettingsClick()
@@ -117,5 +133,25 @@ public class MenuController : MonoBehaviour
         // Application.Quit() does nothing in the editor, so stop play mode instead.
         UnityEditor.EditorApplication.isPlaying = false;
 #endif
+    }
+
+    // ------------------------------------------------------------------
+    // Settings sliders — wire each Slider's OnValueChanged (float) to these.
+    // Both are 0..1 master volumes forwarded to the AudioManager.
+    // ------------------------------------------------------------------
+
+    // Music volume slider. Applies over the per-zone music volume, so it stays
+    // in effect even when the collider-based MusicZone system switches tracks.
+    public void SetMusicVolume(float value)
+    {
+        if (AudioManager.instance != null)
+            AudioManager.instance.SetMusicVolume(value);
+    }
+
+    // Effects (SFX) volume slider — controls all one-shot sound effects.
+    public void SetSfxVolume(float value)
+    {
+        if (AudioManager.instance != null)
+            AudioManager.instance.SetSfxVolume(value);
     }
 }

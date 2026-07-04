@@ -453,3 +453,33 @@
   2. באגי backlog ישנים (לא דחוף, לפי הצורך): `SpringShell` ריק, כפילות `AcidBarrel`/`AcidDrop`, באגי Code Review 2.2/2.3.
 * **בעיות ובאגים:** אין באגים פתוחים. המערכות ששונו יציבות.
 * **חתימת זמן:** סשן 20 נסגר בהצלחה — 03.07.2026.
+
+**סשן 21 (הושלם - מערכת תפריטים ומעברי סצנות):**
+* 🟢 **פתיחת סשן:** [04.07.2026] - מיקוד חדש (דילוג זמני ממטרת-העל של האנימטור): שילוב שני סקריפטים חדשים שהמפתח הוסיף — `Event Manager.cs` ו-`MenuController.cs` — למערכת תפריטים ומעברי סצנות. מסך פתיחה (New Game / Settings / Quit) + פנל השהיה (Pause) בתוך המשחק.
+* **סקירת מצב (Sync):** שני הסקריפטים החדשים היו שרידים מגרסה ישנה של המשחק — הם הפנו למחלקות שלא קיימות בפרויקט (`PlayerTopPart`/`PlayerBottomPart` — הגוף העליון/תחתון של הסרטן הישן) ולסאונד `clickSound` שלא היה קיים ב-`AudioManager`. לכן הם לא התקמפלו.
+* **הישגים:**
+  1. **מחיקת `EventManager` (הסרת קוד על פני הוספה):** הסקריפט היה קוד מת — משתני הפורטלים שלו (`TopOnPortalLevel1`, `TopWin` וכו') לא הוגדרו ל-`true` באף מקום בפרויקט הנוכחי, כלומר מערכת מעברי-השלבים שלו מעולם לא עבדה. נמחק (כולל `.meta`), והחלק השימושי (מעבר סצנות) עבר ל-`GameManager`.
+  2. **`GameManager` קיבל בעלות על מעברי סצנות:** נוספו `LoadScene(sceneName, delay, playWinSound)` (טעינת שלב עם השהיה + צליל ניצחון) ו-`ReloadCurrentScene(delay)` (טעינה מחדש). שתיהן מאפסות `Time.timeScale = 1f` לפני הטעינה כדי שהסצנה הבאה לא תתחיל קפואה. כל טריגר בסצנה יכול לקרוא להן (קוד או `UnityEvent`).
+  3. **`MenuController` נוקה ושוכתב** — סקריפט אחד, מופע נפרד בכל סצנה; כל סצנה מחווטת לפאנלים שלה, כך שאותה מתודה `OnSettingsClick` פותחת את פאנל ההגדרות של אותה סצנה.
+     * **שדות:** `settingsPanel`, `pausePanel`, `firstSceneName` (מחרוזת, ברירת מחדל `"Tutorial"`).
+     * **מתודות:** `OnNewGameClick` (→ טוען `firstSceneName`), `OnPauseClick` (פותח פנל + `timeScale=0`), `OnContinueClick` (סוגר + `timeScale=1` = resume), `OnPauseToggle` (כפתור אחד מתחלף פתיחה/סגירה), `OnRestartClick` (טעינה מחדש של הסצנה הנוכחית לפי `buildIndex`, בלי שם קשיח), `OnSettingsClick` / `OnCloseSettingsClick`, `OnQuitClick` (`Application.Quit` + עצירת Play ב-Editor).
+     * **הוסר:** תפריט ניצחון (`winM`/`Win`), `about`, פופאפים של tutorial, וריסטארט שהסתמך על `PlayerTopPart.isDead`.
+  4. **`AudioManager` — סאונד לחיצה:** נוספו דגל `clickSound`, שדה קליפ `click`, איפוס ב-`Start`, ומתודת `Click()` עם הגנת null (מונעת אזהרת `PlayOneShot null` אם עדיין לא הוצמד קליפ). `MenuController` מפעיל אותו בכל לחיצה.
+  5. **סליידרים לעוצמת שמע בהגדרות:** `MenuController` קיבל `SetMusicVolume` / `SetSfxVolume` שמעבירים ל-`AudioManager`. ב-`AudioManager` נוסף `sfxMasterVolume` + `SetSfxVolume` (שולט על `source.volume` = master לכל ה-one-shots). המוזיקה כבר הייתה נכונה: כל `Channel` מפריד `masterVolume` (ההגדרה) מ-`trackVolume` (האזור), אז ה-master נשמר גם כשמערכת ה-`MusicZone` (הקולידרים) מחליפה שירים.
+  6. **שמירת הגדרות בין סצנות (`PlayerPrefs`):** `AudioManager` טוען ב-`Start` את עוצמת המוזיקה/אפקטים מ-`PlayerPrefs` (מפתחות `musicVolume`/`sfxVolume`) ומחיל, וכותב בכל שינוי. פתר את הבעיה שכל סצנה יוצרת `AudioManager` חדש (הוא לא `DontDestroyOnLoad`). `MenuController` קיבל שדות אופציונליים `musicSlider`/`sfxSlider` ומסנכרן אותם לערך השמור ב-`OnSettingsClick` דרך `SetValueWithoutNotify` (בלי לירות מחדש את השינוי).
+  7. **תיקון hitch במעבר מוזיקה (קולידרים):** התקיעה נבעה מכך ש-`Play()` על קליפ מוזיקה טוען/מפענח אותו סינכרונית על ה-main thread בפעם הראשונה. פתרון: `PreloadZoneAudio()` ב-`Start` מחמם מראש את כל קליפי האזורים (`LoadAudioData()`). **התיקון השורשי (ב-Editor):** להגדיר קבצי מוזיקה ל-`Load Type = Streaming` + `Load In Background`.
+  8. **`Movable.lockDelay` נחשף ל-Inspector:** ההשהיה של 0.5 שנ' עד נעילת ציר ה-X אחרי שחרור (שהייתה מקודדת קשיח) הפכה לשדה ציבורי `lockDelay` (ברירת מחדל 0.5, `0` = נעילה מיידית).
+* **החלטות המפתח (אושרו):** Continue בפנל ההשהיה = resume (לא טעינת סצנה); Quit = `Application.Quit()`; Settings = אותה מתודה משותפת, פאנל לכל סצנה בנפרד.
+* **החלטה ארכיטקטונית חשובה — למה `MenuController` טוען סצנות ישירות ולא דרך `GameManager`:** `GameManager` מחזיק `respawnLinks` שהם `Transform`־ים של אובייקטים **בתוך סצנה ספציפית**, ולכן הוא לא יכול להיות `DontDestroyOnLoad` ואינו קיים בסצנת הפתיחה. חלוקת אחריות: `MenuController` = ניווט תפריטים/סצנות; `GameManager` = מעברים בתוך המשחק + respawn.
+
+### 🔴 סגירת סשן 21
+* **משימות פתוחות ב-Unity (חיווט ידני, לא קוד):**
+  1. להוסיף את כל הסצנות הנטענות (`ZionTesting`, סצנת הפתיחה, וכו') ל-`File → Build Profiles`, אחרת `LoadScene` נכשל.
+  2. לגרור קליפ אודיו לשדה `click` ב-`AudioManager` (אם רוצים סאונד לחיצה).
+  3. לחווט מחדש את הכפתורים לשמות המתודות החדשים (החיווט הישן ל-`OnstartClick` וכו' מצביע על מתודות שנמחקו).
+  4. לגרור את פאנל ההשהיה לשדה `pausePanel`, ופאנל ההגדרות לשדה `settingsPanel`, בכל סצנה.
+  5. סליידרים: לחווט `OnValueChanged (Dynamic float)` של כל סליידר ל-`SetMusicVolume`/`SetSfxVolume`, וגם לגרור אותם לשדות `musicSlider`/`sfxSlider`.
+  6. הגדרות Import של קבצי המוזיקה: `Load Type = Streaming` + `Load In Background` (התיקון השורשי ל-hitch).
+* **הערה — תפריט ניצחון:** מושג ה-Win Menu (`winM`) הוסר לגמרי מ-`MenuController` לבקשת המפתח. אם ירצו מסך ניצחון בעתיד — צריך לבנות אותו מחדש ולחבר לטריגר הניצחון האמיתי של השלב האחרון.
+* **בעיות ובאגים:** אין. הקוד מתקמפל (נשארה רק הערת סגנון של `WaitForSeconds` caching, תואמת לשאר הפרויקט).
+* **חתימת זמן:** סשן 21 נסגר בהצלחה — 04.07.2026.
