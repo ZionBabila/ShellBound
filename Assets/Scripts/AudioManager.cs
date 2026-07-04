@@ -58,6 +58,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip playerHazardHit;
     public AudioClip acidDropDestroy;
     public AudioClip uiClick;
+    public AudioClip click; // Button-click sound (used by MenuController)
     public AudioClip winLevel;
     public AudioClip loseLevel;
     public AudioClip buttonPressSoundSource;
@@ -72,6 +73,7 @@ public class AudioManager : MonoBehaviour
     public static bool playerHazardHitSound = false;
     public static bool acidDropDestroySound = false;
     public static bool uiClickSound = false;
+    public static bool clickSound = false; // Button-click flag (set by MenuController)
     public static bool winLevelSound = false;
     public static bool loseLevelSound = false;
     public static bool buttonPressSound = false;
@@ -130,6 +132,7 @@ public class AudioManager : MonoBehaviour
         playerHazardHitSound = false;
         acidDropDestroySound = false;
         uiClickSound = false;
+        clickSound = false;
         winLevelSound = false;
         loseLevelSound = false;
         buttonPressSound = false;
@@ -149,6 +152,7 @@ public class AudioManager : MonoBehaviour
         CrabHurt();
         PlayerHazardHit();
         UiClick();
+        Click();
         WinLevel();
         LoseLevel();
         ButtonPress();
@@ -464,6 +468,15 @@ public class AudioManager : MonoBehaviour
         {
             source.PlayOneShot(uiClick);
             uiClickSound = false;
+        }
+    }
+    // Button-click sound, triggered by MenuController via AudioManager.clickSound = true.
+    private void Click()
+    {
+        if (clickSound == true)
+        {
+            if (click != null) source.PlayOneShot(click); // Guard: avoids a warning if no clip is assigned yet.
+            clickSound = false;
         }
     }
     private void WinLevel()

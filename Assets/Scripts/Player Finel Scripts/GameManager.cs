@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 // The single, unified data structure for linking hazards to respawn points.
 [System.Serializable]
@@ -27,7 +29,38 @@ public class GameManager : MonoBehaviour
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
     }
-    
+
+    // ---------------------------------------------------------------------
+    // Scene Transitions
+    // Centralized here so every scene change (level progression, restart, etc.)
+    // goes through one place. Moved out of EventManager.
+    // ---------------------------------------------------------------------
+
+    // Loads a scene by name, optionally after a delay and with the "win level" jingle.
+    // Used for level progression (e.g. advancing to "Level 2").
+    public void LoadScene(string sceneName, float delay = 0f, bool playWinSound = false)
+    {
+        StartCoroutine(LoadSceneRoutine(sceneName, delay, playWinSound));
+    }
+
+    // Reloads the currently active scene (used on death / restart).
+    public void ReloadCurrentScene(float delay = 0f)
+    {
+        StartCoroutine(LoadSceneRoutine(SceneManager.GetActiveScene().name, delay, false));
+    }
+
+    private IEnumerator LoadSceneRoutine(string sceneName, float delay, bool playWinSound)
+    {
+        if (playWinSound) AudioManager.winLevelSound = true;
+        if (delay > 0f) yield return new WaitForSeconds(delay);
+
+        // Never carry a paused state (Time.timeScale == 0) across a scene load,
+        // otherwise the next scene would start frozen.
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(sceneName);
+    }
+
+
     // Function called by hazards (like AcidDrop or trigger zones) when they hit the player.
     // This is now the ONLY function for handling hazard collisions.
     public void HandleHazardCollision(string idOrTag, GameObject player, bool respectsShellProtection)
