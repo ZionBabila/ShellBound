@@ -21,6 +21,20 @@ public class Movable : MonoBehaviour
     [Tooltip("Delay (seconds) after release before the X axis locks. Lets the object keep sliding briefly with its momentum. Set to 0 to lock instantly.")]
     public float lockDelay = 0.5f;
 
+    [Header("Drag Sound")]
+    [Tooltip("Time in seconds between drag-sound 'steps' while the object is being pushed/pulled.")]
+    public float dragSoundInterval = 0.3f;
+
+    [Tooltip("Minimum horizontal speed the object must have for the drag sound to play.")]
+    public float dragMinSpeed = 0.1f;
+
+    [Tooltip("How far below the object to look for the surface it's scraping (picks metal vs normal drag sound).")]
+    public float dragGroundCheckDistance = 0.4f;
+
+    private Collider2D bodyCollider;   // Physical (non-trigger) collider, used to find the surface under the object.
+    private float dragTimer = 0f;      // Counts down to the next drag-sound step.
+    private bool wasDragging = false;  // Tracks drag state so we cut the sound only on the stop edge.
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -32,6 +46,13 @@ public class Movable : MonoBehaviour
         // If no specific grab handle is assigned, default to the object's main collider for backward compatibility.
         if (grabHandleTrigger == null)
             grabHandleTrigger = GetComponent<Collider2D>();
+
+        // Pick a non-trigger collider as the physical body (used to raycast the surface underneath).
+        foreach (Collider2D c in GetComponents<Collider2D>())
+        {
+            if (!c.isTrigger) { bodyCollider = c; break; }
+        }
+        if (bodyCollider == null) bodyCollider = GetComponent<Collider2D>();
 
         simplePlayer = FindFirstObjectByType<SimplePlayer>();
     }
@@ -59,9 +80,13 @@ public class Movable : MonoBehaviour
 
         if (shouldLock)
         {
-            // If we need to lock and no locking coroutine is running, start one.
-            if (lockCoroutine == null)
+            // Only start the lock sequence once (when not already locking and X isn't frozen yet).
+            if (lockCoroutine == null && (rb.constraints & RigidbodyConstraints2D.FreezePositionX) == 0)
             {
+                // Freeze rotation immediately so the player can't spin the object by walking into it.
+                // X stays free for now so the object can keep sliding with its momentum; the coroutine
+                // freezes X after the delay.
+                rb.constraints = baseConstraints | RigidbodyConstraints2D.FreezeRotation;
                 lockCoroutine = StartCoroutine(LockAfterDelay(lockDelay));
             }
         }
@@ -74,25 +99,69 @@ public class Movable : MonoBehaviour
                 lockCoroutine = null;
             }
 
-            // Unlock X when actively grabbed
+            // Actively grabbed: free both X and rotation (rotation free lets it rest flush on slopes).
             rb.constraints = baseConstraints;
         }
 
-        // Handle dragging sound if the object is actually moving horizontally
-        if (Mathf.Abs(rb.linearVelocity.x) > 0.1f)
+        HandleDragSound(isGrabbed);
+    }
+
+    // Plays a drag sound at a steady cadence while the player is actively pushing/pulling this
+    // object and it's moving. Uses a dedicated interruptible source (no cacophony) and cuts the
+    // sound the instant the object stops. Picks the metal clip based on the surface underneath.
+    private void HandleDragSound(bool isGrabbed)
+    {
+        // Require BOTH the object and the player to be moving. The player check stops a "fake" drag
+        // sound while pulling, where the spring correction can nudge the object while the crab stands still.
+        bool playerMoving = simplePlayer != null && Mathf.Abs(simplePlayer.Rb.linearVelocity.x) > dragMinSpeed;
+        bool dragging = isGrabbed && playerMoving && Mathf.Abs(rb.linearVelocity.x) > dragMinSpeed;
+
+        if (!dragging)
         {
-            if (AudioManager.instance != null)
-                AudioManager.moveSound = true;
+            // Cut the drag sound only on the transition to not-dragging, not every frame.
+            if (wasDragging && AudioManager.instance != null) AudioManager.instance.StopDrag();
+            wasDragging = false;
+            dragTimer = 0f; // Reset so the first drag step fires immediately when dragging resumes.
+            return;
         }
+        wasDragging = true;
+
+        dragTimer -= Time.fixedDeltaTime;
+        if (dragTimer <= 0f)
+        {
+            if (AudioManager.instance != null) AudioManager.instance.PlayDrag(IsDraggingOnMetal());
+            dragTimer = dragSoundInterval;
+        }
+    }
+
+    // Raycasts down from the object to see whether the surface it's scraping is metal-tagged.
+    private bool IsDraggingOnMetal()
+    {
+        if (simplePlayer == null || bodyCollider == null) return false;
+
+        Vector2 origin = bodyCollider.bounds.center;
+        float distance = bodyCollider.bounds.extents.y + dragGroundCheckDistance;
+
+        RaycastHit2D[] hits = Physics2D.RaycastAll(origin, Vector2.down, distance, simplePlayer.groundLayer);
+        foreach (RaycastHit2D hit in hits)
+        {
+            // Skip triggers and this object's own colliders.
+            if (hit.collider.isTrigger || hit.collider.attachedRigidbody == rb) continue;
+
+            // Trim so a stray space in the tag name (e.g. "Metal ") still matches.
+            return hit.collider.tag.Trim() == simplePlayer.metalGroundTag.Trim();
+        }
+        return false;
     }
 
     private IEnumerator LockAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
 
-        // After the delay, apply the locked constraints
-        rb.constraints = baseConstraints | RigidbodyConstraints2D.FreezePositionX;
-        
+        // After the delay, lock both the X position and rotation so the object stays put and
+        // can't be pushed or spun by the player walking into it.
+        rb.constraints = baseConstraints | RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezeRotation;
+
         lockCoroutine = null; // Signal that the coroutine has finished
     }
 

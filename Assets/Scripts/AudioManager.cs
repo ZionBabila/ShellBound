@@ -55,7 +55,8 @@ public class AudioManager : MonoBehaviour
 
     [Header("Sound Clips")]
     public AudioClip breakObject;
-    public AudioClip moveObject;
+    public AudioClip moveObject;      // Drag sound while pushing/pulling a Movable on normal ground
+    public AudioClip moveObjectMetal; // Drag sound while pushing/pulling on metal-tagged ground
     public AudioClip equipShell;
     public AudioClip throwShell;
     public AudioClip crabHurt;
@@ -67,10 +68,12 @@ public class AudioManager : MonoBehaviour
     public AudioClip loseLevel;
     public AudioClip buttonPressSoundSource;
     public AudioClip buttonReleaseSoundSource;
+    public AudioClip gearRotate; // Gear-turning sound (used by DoorController's linked gear)
+    public AudioClip footstep;      // Default walking sound (used by SimplePlayer while grounded and moving)
+    public AudioClip footstepMetal; // Walking sound on metal platforms (tagged ground)
 
     [Header("Sound Flags (Legacy)")]
     public static bool breakSound = false;
-    public static bool moveSound = false;
     public static bool equipShellSound = false;
     public static bool throwShellSound = false;
     public static bool crabHurtSound = false;
@@ -83,6 +86,17 @@ public class AudioManager : MonoBehaviour
     public static bool buttonPressSound = false;
     public static bool buttonReleaseSound = false;
     private Camera mainCamera;
+
+    // Dedicated source for the gear sound so a new rotation can Stop() and restart it
+    // (canceling an in-progress gear sound) without cutting off other one-shot SFX.
+    private AudioSource gearSource;
+
+    // Dedicated source for footsteps so each step can Stop() and restart the previous one
+    // (no overlap/cacophony), and so the sound can be cut the instant the player stops walking.
+    private AudioSource footstepSource;
+
+    // Dedicated source for the drag (push/pull) sound, same interruptible pattern as footsteps.
+    private AudioSource dragSource;
 
     [Header("SFX")]
     [Tooltip("Master volume for one-shot sound effects (settings-controlled).")]
@@ -129,6 +143,24 @@ public class AudioManager : MonoBehaviour
 
         source.volume = sfxMasterVolume; // Apply the SFX master volume to the one-shot source.
 
+        // Dedicated non-looping source for the interruptible gear sound.
+        gearSource = gameObject.AddComponent<AudioSource>();
+        gearSource.playOnAwake = false;
+        gearSource.loop = false;
+        gearSource.volume = sfxMasterVolume;
+
+        // Dedicated non-looping source for interruptible footsteps.
+        footstepSource = gameObject.AddComponent<AudioSource>();
+        footstepSource.playOnAwake = false;
+        footstepSource.loop = false;
+        footstepSource.volume = sfxMasterVolume;
+
+        // Dedicated non-looping source for the interruptible drag (push/pull) sound.
+        dragSource = gameObject.AddComponent<AudioSource>();
+        dragSource.playOnAwake = false;
+        dragSource.loop = false;
+        dragSource.volume = sfxMasterVolume;
+
         // Build the two persistent channels (two sources each for crossfading)
         musicChannel = CreateChannel(musicMasterVolume);
         ambientChannel = CreateChannel(ambientMasterVolume);
@@ -142,7 +174,6 @@ public class AudioManager : MonoBehaviour
 
         // Reset all sound flags on start
         breakSound = false;
-        moveSound = false;
         equipShellSound = false;
         throwShellSound = false;
         crabHurtSound = false;
@@ -163,7 +194,6 @@ public class AudioManager : MonoBehaviour
     void Update()
     {
         BreakObj();
-        MoveObj();
         EquipShell();
         ThrowShell();
         CrabHurt();
@@ -269,6 +299,9 @@ public class AudioManager : MonoBehaviour
     {
         sfxMasterVolume = Mathf.Clamp01(volume);
         if (source != null) source.volume = sfxMasterVolume;
+        if (gearSource != null) gearSource.volume = sfxMasterVolume;
+        if (footstepSource != null) footstepSource.volume = sfxMasterVolume;
+        if (dragSource != null) dragSource.volume = sfxMasterVolume;
         PlayerPrefs.SetFloat(SfxVolumeKey, sfxMasterVolume); // Remember the setting across scenes.
     }
 
@@ -432,7 +465,7 @@ public class AudioManager : MonoBehaviour
     {
         if (buttonReleaseSound == true)
         {
-            source.PlayOneShot(buttonReleaseSoundSource);
+            PlaySafe(buttonReleaseSoundSource);
             buttonReleaseSound = false;
         }
     }
@@ -440,31 +473,77 @@ public class AudioManager : MonoBehaviour
     {
         if (buttonPressSound == true)
         {
-            source.PlayOneShot(buttonPressSoundSource);
+            PlaySafe(buttonPressSoundSource);
             buttonPressSound = false;
         }
     }
+    // Gear-turning sound. Called directly by DoorController so it enters immediately on
+    // button press, and restarts on its dedicated source so a new rotation (e.g. going
+    // down) cancels one still playing (e.g. going up).
+    public void PlayGearRotate()
+    {
+        if (gearRotate == null || gearSource == null) return; // Guard: no clip assigned yet.
+        gearSource.Stop();                 // Cancel any gear sound still playing.
+        gearSource.clip = gearRotate;
+        gearSource.volume = sfxMasterVolume;
+        gearSource.Play();                 // Restart from the top for the new rotation.
+    }
+    // Plays one footstep, restarting its dedicated source so consecutive steps never
+    // overlap into cacophony. Called directly by SimplePlayer on each step. Picks the
+    // metal clip when the player is walking on a metal platform.
+    public void PlayFootstep(bool metal = false)
+    {
+        AudioClip clip = (metal && footstepMetal != null) ? footstepMetal : footstep;
+        if (clip == null || footstepSource == null) return; // Guard: no clip assigned yet.
+        footstepSource.Stop();                 // Cut the previous step if it's still ringing.
+        footstepSource.clip = clip;
+        footstepSource.volume = sfxMasterVolume;
+        footstepSource.Play();
+    }
+
+    // Cuts the footstep sound immediately (e.g. the moment the player stops walking).
+    public void StopFootstep()
+    {
+        if (footstepSource != null) footstepSource.Stop();
+    }
+    // Plays a one-shot only if the clip is assigned, avoiding
+    // "PlayOneShot was called with a null AudioClip" warnings for unassigned clips.
+    private void PlaySafe(AudioClip clip)
+    {
+        if (clip != null) source.PlayOneShot(clip);
+    }
+
     private void BreakObj()
     {
         if (breakSound == true)
         {
-            source.PlayOneShot(breakObject);
+            PlaySafe(breakObject);
             breakSound = false;
         }
     }
-    private void MoveObj()
+    // Plays one drag "step", restarting its dedicated source so consecutive drag sounds
+    // never overlap into cacophony. Called directly by Movable while an object is dragged.
+    // Picks the metal clip when the object is scraping metal-tagged ground.
+    public void PlayDrag(bool metal = false)
     {
-        if (moveSound == true)
-        {
-            source.PlayOneShot(moveObject);
-            moveSound = false;
-        }
+        AudioClip clip = (metal && moveObjectMetal != null) ? moveObjectMetal : moveObject;
+        if (clip == null || dragSource == null) return; // Guard: no clip assigned yet.
+        dragSource.Stop();                 // Cut the previous drag sound if it's still ringing.
+        dragSource.clip = clip;
+        dragSource.volume = sfxMasterVolume;
+        dragSource.Play();
+    }
+
+    // Cuts the drag sound immediately (e.g. the moment the object stops or is released).
+    public void StopDrag()
+    {
+        if (dragSource != null) dragSource.Stop();
     }
     private void EquipShell()
     {
         if (equipShellSound == true)
         {
-            source.PlayOneShot(equipShell);
+            PlaySafe(equipShell);
             equipShellSound = false;
         }
     }
@@ -472,7 +551,7 @@ public class AudioManager : MonoBehaviour
     {
         if (throwShellSound == true)
         {
-            source.PlayOneShot(throwShell);
+            PlaySafe(throwShell);
             throwShellSound = false;
         }
     }
@@ -480,7 +559,7 @@ public class AudioManager : MonoBehaviour
     {
         if (crabHurtSound == true)
         {
-            source.PlayOneShot(crabHurt);
+            PlaySafe(crabHurt);
             crabHurtSound = false;
         }
     }
@@ -489,7 +568,7 @@ public class AudioManager : MonoBehaviour
     {
         if (playerHazardHitSound == true)
         {
-            source.PlayOneShot(playerHazardHit);
+            PlaySafe(playerHazardHit);
             playerHazardHitSound = false;
         }
     }
@@ -498,7 +577,7 @@ public class AudioManager : MonoBehaviour
     {
         if (acidDropDestroySound)
         {
-            source.PlayOneShot(acidDropDestroy);
+            PlaySafe(acidDropDestroy);
             acidDropDestroySound = false;
         }
     }
@@ -507,7 +586,7 @@ public class AudioManager : MonoBehaviour
     {
         if (uiClickSound == true)
         {
-            source.PlayOneShot(uiClick);
+            PlaySafe(uiClick);
             uiClickSound = false;
         }
     }
@@ -516,7 +595,7 @@ public class AudioManager : MonoBehaviour
     {
         if (clickSound == true)
         {
-            if (click != null) source.PlayOneShot(click); // Guard: avoids a warning if no clip is assigned yet.
+            PlaySafe(click);
             clickSound = false;
         }
     }
@@ -524,7 +603,7 @@ public class AudioManager : MonoBehaviour
     {
         if (winLevelSound == true)
         {
-            source.PlayOneShot(winLevel);
+            PlaySafe(winLevel);
             winLevelSound = false;
         }
     }
@@ -532,7 +611,7 @@ public class AudioManager : MonoBehaviour
     {
         if (loseLevelSound == true)
         {
-            source.PlayOneShot(loseLevel);
+            PlaySafe(loseLevel);
             loseLevelSound = false;
         }
     }

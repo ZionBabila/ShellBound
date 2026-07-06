@@ -82,12 +82,25 @@ public class DoorController : MonoBehaviour
     // These functions can be called by UnityEvents (like from the PressureButton)
     public void OpenDoor()
     {
+        if (isOpen) return; // Already open; no new rotation starts.
         isOpen = true;
+        PlayGearSound();
     }
 
     public void CloseDoor()
     {
+        if (!isOpen) return; // Already closed; no new rotation starts.
         isOpen = false;
+        PlayGearSound();
+    }
+
+    // Fires the gear-turning sound the instant a linked gear starts a rotation.
+    // A direct call (not the flag pattern) means no one-frame delay, and it restarts
+    // the sound so a quick reverse cancels the previous direction's sound.
+    private void PlayGearSound()
+    {
+        if (controlLinkedObject && objectToRotate != null && AudioManager.instance != null)
+            AudioManager.instance.PlayGearRotate();
     }
 
     private void OnDrawGizmos()

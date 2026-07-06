@@ -46,7 +46,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AudioManager
   breakObject: {fileID: 8300000, guid: 544eb842b074340438c374de8ccfc7ac, type: 3}
-  moveObject: {fileID: 0}
+  moveObject: {fileID: 8300000, guid: ca93ec18305502046a78e2536d86196a, type: 3}
+  moveObjectMetal: {fileID: 8300000, guid: 84de121607ab8e44d9ff9b2e947ec4b6, type: 3}
   equipShell: {fileID: 0}
   throwShell: {fileID: 0}
   crabHurt: {fileID: 0}
@@ -56,8 +57,11 @@ MonoBehaviour:
   click: {fileID: 0}
   winLevel: {fileID: 0}
   loseLevel: {fileID: 0}
-  buttonPressSoundSource: {fileID: 8300000, guid: f6b1f67b6b5b4fe45909243ac5858ffb, type: 3}
-  buttonReleaseSoundSource: {fileID: 8300000, guid: f6b1f67b6b5b4fe45909243ac5858ffb, type: 3}
+  buttonPressSoundSource: {fileID: 8300000, guid: ba1cb06deffb23b4ea0b1e93de71856e, type: 3}
+  buttonReleaseSoundSource: {fileID: 8300000, guid: b6536adcfc5c1854dba7c730939490e3, type: 3}
+  gearRotate: {fileID: 8300000, guid: 9f65abb5fab4884469b47a924e3c6d2d, type: 3}
+  footstep: {fileID: 8300000, guid: 2151ba373d7c0de4bb888616145c420d, type: 3}
+  footstepMetal: {fileID: 8300000, guid: 65a05da0bc5d3f342abfe76fef55e70d, type: 3}
   sfxMasterVolume: 1
   musicMasterVolume: 1
   ambientMasterVolume: 1

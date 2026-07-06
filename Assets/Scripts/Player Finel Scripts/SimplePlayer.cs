@@ -64,6 +64,19 @@ public class SimplePlayer : MonoBehaviour
     [Tooltip("The round collider used for rolling. MUST be on this main GameObject.")]
     public Collider2D rollingCollider;
 
+    [Header("Footsteps")]
+    [Tooltip("Time in seconds between footstep sounds while walking.")]
+    public float footstepInterval = 0.35f;
+
+    [Tooltip("Minimum horizontal speed required to play footstep sounds.")]
+    public float footstepMinSpeed = 0.5f;
+
+    [Tooltip("Ground with this tag plays the metal footstep sound instead of the default one.")]
+    public string metalGroundTag = "Metal";
+
+    [Tooltip("TEMP: logs the surface under the player on each step (name/tag/layer) to diagnose footstep issues.")]
+    public bool footstepDebug = false;
+
     [Header("Debug")]
     [Tooltip("Print movement forces and speeds to the console.")]
     public bool showSpeedDebug = false;
@@ -96,6 +109,12 @@ public class SimplePlayer : MonoBehaviour
     // Horizontal offset from the player captured at grab time, defining the hold distance.
     private float grabHoldOffsetX;
     private float grabDirection = 0f; // 0 = not grabbing, 1 = grabbed right, -1 = grabbed left
+
+    // Counts down to the next footstep sound; reset whenever the player isn't walking.
+    private float footstepTimer = 0f;
+    private bool wasWalking = false; // Tracks the walking state so we cut the sound only on the stop edge.
+    private bool onMetalGround = false; // True when the closest ground under the player is tagged metal.
+    private Collider2D groundCollider;  // The closest ground collider under the player (for footstep debug).
 
     [HideInInspector] public float currentSpeedMultiplier = 1f;
 
@@ -172,6 +191,38 @@ public class SimplePlayer : MonoBehaviour
         if (!isMovementDisabled)
         {
             HandleVisualRotation();
+        }
+
+        HandleFootsteps();
+    }
+
+    // Plays a footstep sound at a steady cadence while the player walks on the ground.
+    // Skipped while airborne, standing still, or physics-overridden (rolling/hiding).
+    private void HandleFootsteps()
+    {
+        bool walking = IsGrounded && !isMovementDisabled && CurrentSpeed > footstepMinSpeed;
+
+        if (!walking)
+        {
+            // Cut the step sound the instant we stop walking (only on the transition, not every frame).
+            if (wasWalking && AudioManager.instance != null) AudioManager.instance.StopFootstep();
+            wasWalking = false;
+            footstepTimer = 0f; // Reset so the first step fires immediately when walking resumes.
+            return;
+        }
+        wasWalking = true;
+
+        footstepTimer -= Time.deltaTime;
+        if (footstepTimer <= 0f)
+        {
+            if (AudioManager.instance != null) AudioManager.instance.PlayFootstep(onMetalGround);
+            footstepTimer = footstepInterval;
+
+            // TEMP debug: shows exactly which surface drives the footstep choice.
+            if (footstepDebug && groundCollider != null)
+            {
+                Debug.Log($"[Footstep] name='{groundCollider.name}' | tag='{groundCollider.tag}' | layer='{LayerMask.LayerToName(groundCollider.gameObject.layer)}' | metal={onMetalGround} (looking for tag '{metalGroundTag}')");
+            }
         }
     }
 
@@ -325,10 +376,19 @@ public class SimplePlayer : MonoBehaviour
             // Use the normal from ONLY the closest hit point for maximum stability.
             // This prevents averaging weird normals from collider seams.
             surfaceNormal = closestHit.normal;
+
+            // Pick the footstep flavor from the surface we're actually standing on.
+            // Use a plain string compare, not CompareTag: CompareTag throws if the tag isn't
+            // defined in the project, which would spam every FixedUpdate and freeze the game.
+            // Trim so a stray space in the tag name (e.g. "Metal ") still matches.
+            onMetalGround = closestHit.collider.tag.Trim() == metalGroundTag.Trim();
+            groundCollider = closestHit.collider;
         }
         else
         {
             surfaceNormal = Vector2.up;
+            onMetalGround = false;
+            groundCollider = null;
         }
     }
 
