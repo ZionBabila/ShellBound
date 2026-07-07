@@ -50,6 +50,10 @@ public class SimplePlayer : MonoBehaviour
     [Tooltip("Maximum extra speed the drift correction can add, to avoid snapping when the object is blocked.")]
     public float grabMaxCorrectionSpeed = 6f;
 
+    [Tooltip("Caps the player's max speed while grabbing a Movable, so dragging feels heavy instead of weightless. 1 = no penalty, 0.5 = half speed.")]
+    [Range(0.1f, 1f)]
+    public float grabSpeedMultiplier = 0.5f;
+
     [Tooltip("Objects with mass greater than this are considered 'heavy' and require a special shell.")]
     public float heavyMassThreshold = 3.0f;
 
@@ -257,6 +261,9 @@ public class SimplePlayer : MonoBehaviour
         }
 
         float actualMaxSpeed = maxSpeed * currentSpeedMultiplier;
+
+        // Dragging a heavy object should feel weighty: cap the player's top speed while grabbing.
+        if (IsGrabbing) actualMaxSpeed *= grabSpeedMultiplier;
 
         // CASE B: Player is actively moving on walkable ground
         if (Mathf.Abs(moveInputX) > 0.01f)

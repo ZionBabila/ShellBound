@@ -83,10 +83,10 @@ public class Movable : MonoBehaviour
             // Only start the lock sequence once (when not already locking and X isn't frozen yet).
             if (lockCoroutine == null && (rb.constraints & RigidbodyConstraints2D.FreezePositionX) == 0)
             {
-                // Freeze rotation immediately so the player can't spin the object by walking into it.
-                // X stays free for now so the object can keep sliding with its momentum; the coroutine
-                // freezes X after the delay.
-                rb.constraints = baseConstraints | RigidbodyConstraints2D.FreezeRotation;
+                // Keep BOTH X and rotation free during the settle window so the object can fall under
+                // gravity and rotate to rest flush on the ground/slope, while still sliding with its
+                // leftover momentum. LockAfterDelay freezes X and rotation once it has settled.
+                rb.constraints = baseConstraints;
                 lockCoroutine = StartCoroutine(LockAfterDelay(lockDelay));
             }
         }

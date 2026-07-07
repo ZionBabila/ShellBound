@@ -26,8 +26,8 @@ Transform:
   m_GameObject: {fileID: 2781113886493548935}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0.052093, y: 0, z: 0}
+  m_LocalScale: {x: 1.25, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3811064558852131801}
@@ -78,13 +78,14 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: 0.6386901, y: 0.85667044}
-      - {x: -0.09658271, y: 0.85777164}
-      - {x: -0.66885746, y: 0.85210484}
-      - {x: -1.0720623, y: 0.8364918}
-      - {x: -1.0648754, y: -0.773677}
-      - {x: 0.5975223, y: -0.82181877}
-      - {x: 0.6553487, y: 0.8637264}
+    - - {x: 0.85593706, y: 1.0418242}
+      - {x: -0.10645757, y: 1.1663674}
+      - {x: -0.53060424, y: 1.1853878}
+      - {x: -0.91405934, y: 1.071023}
+      - {x: -0.96612674, y: -1.2854779}
+      - {x: 0.85427386, y: -1.2908843}
+      - {x: 0.9219751, y: 1.024196}
+      - {x: 0.63780826, y: 0.40869677}
       - {x: 0.63781106, y: 0.40869778}
   m_UseDelaunayMesh: 1
 --- !u!1 &6072943694273466399
@@ -100,6 +101,7 @@ GameObject:
   - component: {fileID: 4451640116726975483}
   - component: {fileID: 1695467574408043801}
   - component: {fileID: 2463918928584417944}
+  - component: {fileID: 1539605664010129147}
   m_Layer: 11
   m_Name: PUSH SQARUE OBJECT
   m_TagString: Untagged
@@ -117,8 +119,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 229.27, y: 1.7700005, z: 0}
-  m_LocalScale: {x: 2.059571, y: 2.059571, z: 2.0595706}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 1.7227186, y: 1.7227186, z: 1.7227182}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7677643489674437048}
   m_Father: {fileID: 0}
@@ -172,7 +174,7 @@ SpriteRenderer:
   m_SortingLayer: 6
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 1066460266818427312, guid: 37d39289713824642beafbc0d39b0544, type: 3}
+  m_Sprite: {fileID: -2494350410348764565, guid: 37d39289713824642beafbc0d39b0544, type: 3}
   m_Color: {r: 0.6839622, g: 0.6462043, b: 0.1322757, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -216,17 +218,17 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.22231936, y: 0.021659374}
+  m_Offset: {x: 0.03199005, y: -0.10549295}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 2.81, y: 1.83}
+    oldSize: {x: 2.97, y: 2.99}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1.8120253, y: 1.7524562}
+  m_Size: {x: 2.320644, y: 2.5936263}
   m_EdgeRadius: 0
 --- !u!50 &1695467574408043801
 Rigidbody2D:
@@ -268,3 +270,59 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Movable
   grabHandleTrigger: {fileID: 1214412673808972001}
+  lockDelay: 0.5
+  dragSoundInterval: 0.3
+  dragMinSpeed: 0.1
+  dragGroundCheckDistance: 0.4
+--- !u!114 &1539605664010129147
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6072943694273466399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 073797afb82c5a1438f328866b10b3f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.Light2D
+  m_ComponentVersion: 2
+  m_LightType: 1
+  m_BlendStyleIndex: 0
+  m_FalloffIntensity: 0.541
+  m_Color: {r: 1, g: 0.8431373, b: 0, a: 1}
+  m_Intensity: 2.43
+  m_LightVolumeIntensity: 1
+  m_LightVolumeEnabled: 0
+  m_ApplyToSortingLayers: 00000000a74e4e10e30c21af35544821038946e69931721861790fafebf55640f745a1012f2454122b70a2a57126df05
+  m_LightCookieSprite: {fileID: 0}
+  m_DeprecatedPointLightCookieSprite: {fileID: 0}
+  m_LightOrder: 0
+  m_AlphaBlendOnOverlap: 0
+  m_OverlapOperation: 0
+  m_NormalMapDistance: 3
+  m_NormalMapQuality: 2
+  m_UseNormalMap: 0
+  m_ShadowsEnabled: 1
+  m_ShadowIntensity: 0.75
+  m_ShadowSoftness: 0.3
+  m_ShadowSoftnessFalloffIntensity: 0.5
+  m_ShadowVolumeIntensityEnabled: 0
+  m_ShadowVolumeIntensity: 0.75
+  m_LocalBounds:
+    m_Center: {x: 0.06494999, y: -0.14384997, z: 0}
+    m_Extent: {x: 2.37075, y: 2.45605, z: 0}
+  m_PointLightInnerAngle: 360
+  m_PointLightOuterAngle: 360
+  m_PointLightInnerRadius: 0
+  m_PointLightOuterRadius: 1
+  m_ShapeLightParametricSides: 5
+  m_ShapeLightParametricAngleOffset: 0
+  m_ShapeLightParametricRadius: 1
+  m_ShapeLightFalloffSize: 1.19
+  m_ShapeLightFalloffOffset: {x: 0, y: 0}
+  m_ShapePath:
+  - {x: -1.1174192, y: -1.3286424, z: 0}
+  - {x: 1.1607479, y: -1.4115071, z: 0}
+  - {x: 1.2474033, y: 1.121481, z: 0}
+  - {x: -0.9982679, y: 1.1214789, z: 0}
