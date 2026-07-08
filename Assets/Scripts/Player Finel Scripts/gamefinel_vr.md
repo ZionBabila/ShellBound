@@ -505,3 +505,29 @@
   2. חיווט ידני פתוח מסשן 21 (Build Profiles, כפתורי תפריט, פאנלים, סליידרים, Import מוזיקה).
 * **בעיות ובאגים:** אין. שני השינויים מינימליים ומקומיים.
 * **חתימת זמן:** סשן 22 נסגר — 07.07.2026.
+
+**סשן 23 (הושלם - הגנת חומצה, כיוון זריקה, ומטרת-העל: מכונת מצבים לאנימטור):**
+* 🟢 **פתיחת סשן:** [08.07.2026] - התחלנו בכמה תיקוני feel קטנים וסגרנו את כל **צד הקוד** של מטרת-העל (Animator State Machine).
+* **הישגים:**
+  1. **הגנת קונכייה מפני חומצה — לפי מצב הקונכייה:** `GameManager.IsPlayerVulnerable` שוכתב כך שהקונכייה מגינה **רק במצב `InUse`**. במצב `OnBack` (סתם נשיאה על הגב) השחקן **חשוף** וטיפת החומצה פוגעת. השינוי משפיע **רק על `AcidDrop`** (היחיד ששולח `respectsShellProtection = true`); `HazardZone` (לבה/קוצים) שולח `false` וממשיך להרוג תמיד.
+  2. **כיוון זריקת קונכייה — לפי כיוון השחקן, לאחור:**
+     * **הבעיה:** הזריקה קראה `visualsRoot.localScale.x` שלא באמת משקף את כיוון הפנייה (ההיפוך הוויזואלי מגיע ממקום אחר), אז הזריקה תמיד יצאה לאותו כיוון.
+     * **הפתרון:** נוסף מקור-אמת יחיד `SimplePlayer.FacingDirection` (‎+1/-1) שמתעדכן **בדיוק במקום ההיפוך** ב-`HandleVisualRotation` וב-`TryStartGrab`. `PlayerShellSystem` זורק עם `-Player.FacingDirection` (לאחור, מעל הכתף) ו-`Mathf.Abs(throwDirection.x)` כך שהסימן ב-Inspector לא משנה — רק הכיוון קובע.
+     * **תובנה לכיול:** `throwForce` נמוך מדי (‎≈2‎) גורם לזריקה חלשה שהכבידה/השיפוע דורסים → נראה "תמיד לאותו כיוון". הועלה ל-`8` ב-Inspector ואז עבד. הכיוון עצמו אומת בלוג דיבאג (הוסר בסוף).
+  3. **🎯 מטרת-על — Animator State Machine (צד הקוד הושלם):**
+     * **Death (`AcidHit`):** החזרה ל-Idle קשורה עכשיו ל**רגע ההשרצה**, לא לאורך הקליפ. נוסף טריגר `Respawn` שנורה ב-`PlayerAnimation.OnDeathAnimationComplete` **אחרי** `FinishPlayerRespawn` (טלפורט + החזרת שליטה). בעורך: `Death → Idle` מותנה ב-`Respawn` (בלי Exit Time). הקוד כבר עוצר שליטה בתחילת ה-`PlayerDeathSequence`.
+     * **HeavyLift (one-shot):** `PlayerAnimation` יורה טריגר `HeavyAbility` **רק ברגע תחילת האחיזה** (edge detection על `IsGrabbing`, שדה `wasGrabbing`). המצב מנגן פעם אחת וחוזר ל-Idle/Walk (Exit Time). ההיפוך לכיוון האובייקט כבר עובד ב-`TryStartGrab`.
+     * **SkullSpin (נחיתת ריסוק):** נוסף `SimplePlayer.IsGroundPounding` (public). `HeavyArmorShell` מדליק אותו ב-`StartGroundPound`, מכבה ב-`EndGroundPound`, ומאפס ב-`Throw` (בטיחות). `PlayerAnimation` שולח `IsGroundPounding` bool. בעורך: `Any State → SkullSpin` על `IsGroundPounding==true`, `SkullSpin → Idle` על `false`.
+     * **מפרט העורך שנמסר למפתח:** Parameters (`Speed`,`IsGrounded`,`IsGrabbing`,`IsGroundPounding`,`HeavyAbility`,`Die`,`Respawn`); States (Idle/Walk/HeavyLift/SkullSpin/Death); כללי ברזל: `Transition Duration≈0`, `Has Exit Time` כבוי בטרנזישני gameplay, `Can Transition To Self` כבוי ב-Any State, Loop כבוי ל-HeavyLift+Death. **הגרף עצמו נבנה בעורך ע"י המפתח** — Claude רק מוודא פרמטרים + מפרט.
+     * **הערה חשובה (אנימציה):** בזמן גלגול קונכיית ה-Rolling מסתירה את הסרטן (`SetCrabVisualsActive(false)`), אז ה-Animator של הסרטן **לא צריך מצב גלגול**. השריון הכבד לא מסתיר → SkullSpin רץ על ה-Animator של הסרטן.
+  4. **תיקון באג — נחיתת ריסוק לא רצויה בזמן משיכה:** במשיכת אובייקט וירידה ממדרגה השחקן רגע באוויר עם רווח לחוץ → `HeavyArmorShell` הפעיל `StartGroundPound` (שחרר אחיזה + כוח מטה + סיבוב SkullSpin). תוקן ב**שורש**: הענף "באוויר+רווח" רץ עכשיו רק אם `!IsGrabbing`.
+  5. **`TutorialHint` — תנאי לפי קונכייה:** נוסף enum `ShellRequirement` (`Any`/`NoShell`/`RollingShell`/`HeavyShell`) ושדה `requiredShell`. הבדיקה `IsShellRequirementMet` (דרך `shellSystem.CurrentShell is RollingShell/HeavyArmorShell`) רצה **כל פריים** יחד עם בדיקת המרחק, אז החלפת קונכייה ליד הרמז מציגה/מסתירה אותו בזמן אמת. שימושי לרמזים על כפתורי-פאזל שדורשים קונכייה מסוימת.
+
+### 🔴 סגירת סשן 23
+* **מצב:** כל צד הקוד של מטרת-העל הושלם ואומת ע"י המפתח (Death, HeavyLift, SkullSpin, תיקון הריסוק-במשיכה — כולם עובדים). הגנת החומצה, כיוון הזריקה, ותנאי ה-TutorialHint — הוטמעו.
+* **🐞 באג פתוח לסשן הבא (עדיפות ראשונה):** **הטקסט של TextMeshPro ב-`TutorialHint`/`TutorialUI` לא מוצג בבילד** (עובד בעורך). המפתח כבר ניסה: Atlas Population Mode = `Dynamic`, ביטול `Clear Dynamic Data on Build`, ויבוא `TMP Essential Resources` — **לא עזר**. לברר בסשן הבא: (א) האם הטקסט בעברית או אנגלית? (עברית = כמעט בוודאות פונט בלי גליפים + RTL). (ב) איזה font asset בשימוש. (ג) האם ה-Canvas/אובייקטים נכללים בבילד. הקוד עצמו תקין (`TutorialUI` פשוט מקצה `.text` ומדליק את האובייקט) — הבעיה בהגדרות פונט/בילד.
+* **משימות פתוחות נוספות:**
+  1. **בניית גרף ה-Animator בעורך** לפי המפרט שנמסר (הקוד מוכן ושולח את כל הפרמטרים). המפתח בנה חלק במהלך הסשן; לוודא שכל 5 המצבים + הטרנזישנים קיימים.
+  2. חיווט ידני פתוח מסשן 21 (Build Profiles, כפתורי תפריט, פאנלים, סליידרים, Import מוזיקה).
+* **בעיות ובאגים:** מלבד באג ה-TMP-בבילד — אין. כל שינויי הקוד מינימליים ומקומיים.
+* **חתימת זמן:** סשן 23 נסגר — 08.07.2026.
