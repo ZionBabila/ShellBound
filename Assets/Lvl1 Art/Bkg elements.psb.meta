@@ -427,9 +427,9 @@ ScriptedImporter:
     spritePosition: {x: 3162, y: 1261}
   - name: MOving element1
     originalName: 
-    pivot: {x: 0.5, y: 0.5}
-    alignment: 0
-    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.078515895, y: 0.50785947}
+    alignment: 9
+    border: {x: 0, y: 0, z: 1313, w: 0}
     customData: 
     rect:
       serializedVersion: 2
