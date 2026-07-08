@@ -68,9 +68,11 @@ public class HeavyArmorShell : BaseShell
             // On the ground: grab and pull/push a Movable object.
             playerSystem.Player.TryStartGrab();
         }
-        else
+        else if (!playerSystem.Player.IsGrabbing)
         {
-            // In the air with Space held: slam down. Landing on a Breakable smashes it.
+            // In the air with Space held, and NOT holding an object: slam down.
+            // Skipping the pound while grabbing avoids an accidental slam (and its skull-spin
+            // animation) when the player just steps off a ledge while dragging an object.
             StartGroundPound();
         }
     }
