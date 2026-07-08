@@ -112,8 +112,15 @@ public class GameManager : MonoBehaviour
             Debug.Log($"[GameManager.IsPlayerVulnerable] PlayerShellSystem NOT found on {player.name}. Player is vulnerable.");
             return true; // No shell system, player is vulnerable
         }
-        Debug.Log($"[GameManager.IsPlayerVulnerable] PlayerShellSystem found on {player.name}. HasShell: {shellSystem.HasShell}.");
-        return !shellSystem.HasShell; // Player is vulnerable if they have a shell system but no shell equipped.
+
+        // No shell equipped at all -> vulnerable.
+        if (!shellSystem.HasShell) return true;
+
+        // The shell only shields the player while its ability is active (InUse).
+        // While simply carried on the back (OnBack), the player is exposed and takes the hit.
+        bool isProtected = shellSystem.CurrentShell.CurrentState == ShellState.InUse;
+        Debug.Log($"[GameManager.IsPlayerVulnerable] Shell state: {shellSystem.CurrentShell.CurrentState}. Protected: {isProtected}.");
+        return !isProtected;
     }
     private System.Collections.IEnumerator PlayerDeathSequence(GameObject player, Transform respawnPoint)
     {
