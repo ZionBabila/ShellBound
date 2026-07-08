@@ -117,8 +117,11 @@ public class PlayerShellSystem : MonoBehaviour
         // 1. Instantiate the world prefab
         if (CurrentShell.worldPrefab != null)
         {
-            float facingDir = VisualsRoot.localScale.x > 0 ? 1f : -1f;
-            Vector2 throwVelocity = new Vector2(facingDir * throwDirection.x, throwDirection.y).normalized * throwForce;
+            // Throw the shell BACKWARD, over the shoulder, opposite to the player's facing direction.
+            // Use the authoritative FacingDirection (not visualsRoot.localScale, which may not flip),
+            // and the absolute X so the Inspector sign doesn't matter; facing alone decides the direction.
+            float throwDir = -Player.FacingDirection;
+            Vector2 throwVelocity = new Vector2(throwDir * Mathf.Abs(throwDirection.x), throwDirection.y).normalized * throwForce;
             
             // Spawn slightly above the player to avoid clipping into the ground immediately
             Vector3 spawnPos = transform.position + Vector3.up * 0.5f;

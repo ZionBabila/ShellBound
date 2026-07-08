@@ -114,6 +114,10 @@ public class SimplePlayer : MonoBehaviour
     private float grabHoldOffsetX;
     private float grabDirection = 0f; // 0 = not grabbing, 1 = grabbed right, -1 = grabbed left
 
+    // Authoritative facing sign (+1 = right, -1 = left), kept in sync with the visual flip.
+    // Other systems (e.g. shell throwing) read this instead of guessing from visualsRoot.localScale.
+    public float FacingDirection { get; private set; } = 1f;
+
     // Counts down to the next footstep sound; reset whenever the player isn't walking.
     private float footstepTimer = 0f;
     private bool wasWalking = false; // Tracks the walking state so we cut the sound only on the stop edge.
@@ -146,6 +150,11 @@ public class SimplePlayer : MonoBehaviour
     
     // Property to be controlled by shells
     public bool CanPushHeavyObjects { get; set; } = false;
+
+    // True while the heavy shell is performing a ground pound (heavy shell + airborne + Space held).
+    // Read by PlayerAnimation to play the SkullSpin animation. Set by HeavyArmorShell.
+    public bool IsGroundPounding { get; set; } = false;
+
     public Rigidbody2D Rb => rb;
 
     private void Awake()
@@ -448,6 +457,9 @@ public class SimplePlayer : MonoBehaviour
             }
             scale.x = Mathf.Abs(scale.x) * targetFacingDirection;
             visualsRoot.localScale = scale;
+
+            // Keep the authoritative facing in sync with the visual flip.
+            FacingDirection = targetFacingDirection;
         }
     }
 
@@ -475,6 +487,7 @@ public class SimplePlayer : MonoBehaviour
         // Face the object at the moment of grabbing (flip via scale.x).
         float objectDirection = Mathf.Sign(targetMovable.transform.position.x - transform.position.x);
         grabDirection = objectDirection;
+        FacingDirection = objectDirection; // Keep the authoritative facing in sync.
         if (visualsRoot != null)
         {
             Vector3 scale = visualsRoot.localScale;

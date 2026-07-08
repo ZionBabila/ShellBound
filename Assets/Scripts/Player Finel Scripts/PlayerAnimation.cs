@@ -17,6 +17,11 @@ public class PlayerAnimation : MonoBehaviour
     private static readonly int DeathTriggerHash = Animator.StringToHash("Die");
     private static readonly int HeavyAbilityTriggerHash = Animator.StringToHash("HeavyAbility");
     private static readonly int IsGrabbingHash = Animator.StringToHash("IsGrabbing");
+    private static readonly int IsGroundPoundingHash = Animator.StringToHash("IsGroundPounding");
+    private static readonly int RespawnTriggerHash = Animator.StringToHash("Respawn");
+
+    // Tracks the previous grab state to fire the HeavyLift one-shot only on the grab start edge.
+    private bool wasGrabbing = false;
 
     // Store respawn info temporarily while the animation is playing
     private GameObject playerToRespawn;
@@ -38,14 +43,21 @@ public class PlayerAnimation : MonoBehaviour
         float currentSpeed = simplePlayer.CurrentSpeed;
         bool isGrounded = simplePlayer.IsGrounded;
         bool isGrabbing = simplePlayer.IsGrabbing;
+        bool isGroundPounding = simplePlayer.IsGroundPounding;
 
         // 2. Pass data to Animator
         animator.SetFloat("Speed", currentSpeed * animationSpeedMultiplier);
         animator.SetBool("IsGrounded", isGrounded);
         animator.SetBool(IsGrabbingHash, isGrabbing);
+        animator.SetBool(IsGroundPoundingHash, isGroundPounding);
 
-        // In the future, we will also add reading data from the shell system (PlayerShellSystem)
-        // For example: animator.SetBool("IsRolling", shellSystem.IsRolling);
+        // Fire the HeavyLift one-shot only on the moment a grab starts (rising edge).
+        // The HeavyLift state then plays once and exits back to Idle/Walk on its own.
+        if (isGrabbing && !wasGrabbing)
+        {
+            animator.SetTrigger(HeavyAbilityTriggerHash);
+        }
+        wasGrabbing = isGrabbing;
     }
 
     /// <summary>
@@ -78,7 +90,12 @@ public class PlayerAnimation : MonoBehaviour
     {
         if (GameManager.Instance != null && playerToRespawn != null && respawnTarget != null)
         {
+            // First teleport the player to the respawn point and restore control...
             GameManager.Instance.FinishPlayerRespawn(playerToRespawn, respawnTarget);
+
+            // ...then leave the Death state. Idle resumes exactly at the respawn point,
+            // not when the death clip happens to end.
+            animator.SetTrigger(RespawnTriggerHash);
         }
     }
 }

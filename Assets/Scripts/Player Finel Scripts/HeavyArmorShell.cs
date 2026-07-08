@@ -82,8 +82,10 @@ public class HeavyArmorShell : BaseShell
         {
             playerSystem.Player.currentSpeedMultiplier = 1f;
             playerSystem.Player.CanPushHeavyObjects = false;
+            playerSystem.Player.IsGroundPounding = false; // Safety: clear the pound flag if thrown mid-slam.
         }
 
+        isGroundPounding = false;
         base.Throw();
     }
 
@@ -119,6 +121,9 @@ public class HeavyArmorShell : BaseShell
         isGroundPounding = true;
         CurrentState = ShellState.InUse; // Player is busy ground-pounding
 
+        // Tell the animator to play the SkullSpin animation while pounding.
+        playerSystem.Player.IsGroundPounding = true;
+
         // Apply a strong downward force. Renamed from Rb.linearVelocity to Rb.velocity for clarity.
         playerSystem.Player.Rb.linearVelocity = new Vector2(playerSystem.Player.Rb.linearVelocity.x, 0); // Reset vertical speed for consistent pound
         playerSystem.Player.Rb.AddForce(Vector2.down * groundPoundForce, ForceMode2D.Impulse);
@@ -132,6 +137,10 @@ public class HeavyArmorShell : BaseShell
 
         isGroundPounding = false;
         CurrentState = ShellState.OnBack;
+
+        // Stop the SkullSpin animation.
+        playerSystem.Player.IsGroundPounding = false;
+
         Debug.Log("[HeavyArmorShell] Ground Pound finished.");
     }
 
