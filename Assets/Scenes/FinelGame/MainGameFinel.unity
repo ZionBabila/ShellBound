@@ -12737,6 +12737,14 @@ PrefabInstance:
       propertyPath: m_TagString
       value: Metal
       objectReference: {fileID: 0}
+    - target: {fileID: 7265794346158292865, guid: 8f876c02ccffd7e4784b56299777170b, type: 3}
+      propertyPath: m_Size.x
+      value: 1.1283731
+      objectReference: {fileID: 0}
+    - target: {fileID: 7265794346158292865, guid: 8f876c02ccffd7e4784b56299777170b, type: 3}
+      propertyPath: m_Offset.x
+      value: 0.06418678
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -14316,7 +14324,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3806871058172798633, guid: c8d01e5e769e26645b1112ff901a6006, type: 3}
       propertyPath: lockDelay
-      value: 1.2
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 4813499571465894369, guid: c8d01e5e769e26645b1112ff901a6006, type: 3}
       propertyPath: m_Name
@@ -21408,6 +21416,14 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3754970374656309016, guid: 96e329fc1b10af346a50d587903ded22, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4200046029663243879, guid: 96e329fc1b10af346a50d587903ded22, type: 3}
+      propertyPath: hintText
+      value: 
+      objectReference: {fileID: 1799787435}
+    - target: {fileID: 4729403885262533530, guid: 96e329fc1b10af346a50d587903ded22, type: 3}
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
@@ -42920,7 +42936,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3806871058172798633, guid: c8d01e5e769e26645b1112ff901a6006, type: 3}
       propertyPath: lockDelay
-      value: 1.2
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 4813499571465894369, guid: c8d01e5e769e26645b1112ff901a6006, type: 3}
       propertyPath: m_Name
@@ -63723,6 +63739,17 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &1799787435 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5297664270208216275, guid: 96e329fc1b10af346a50d587903ded22, type: 3}
+  m_PrefabInstance: {fileID: 648160455}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1 &1809510913
 GameObject:
   m_ObjectHideFlags: 0
@@ -76218,7 +76245,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1921922303830151742, guid: 821a595faa2fd0f4d9d0299a46bc5e72, type: 3}
       propertyPath: lockDelay
-      value: 2.5
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2230730366976839331, guid: 821a595faa2fd0f4d9d0299a46bc5e72, type: 3}
       propertyPath: m_LocalScale.x
