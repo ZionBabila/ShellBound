@@ -1,18 +1,16 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 // =============================================================================
 // TutorialHint
 // -----------------------------------------------------------------------------
 // Role:    Attach to any world element (shell pickup, light/heavy box).
-//          When the player gets within 'showRadius', it shows 'message' in the
-//          PRIMARY tutorial window (e.g. 'Press E to wear'). Hides on leave.
+//          While the player is within 'showRadius', it shows 'message' in the
+//          single tutorial window for 'displayDuration' seconds, hides it, and
+//          shows it again for as long as the player stays in range (a loop).
 // Notes:   - Self-contained proximity check (no extra trigger collider needed).
-//          - Uses a SHARED (static) show-count keyed by the message, so every
-//            prefab instance (picked up, thrown, future copies) shares one count.
-//            Once shown 'maxShows' times it never shows again this session.
-//          - The "after wearing" line (SPACE to roll) is handled by the shell
-//            system, not here, because this object is destroyed on pickup.
+//          - The "after wearing" line (e.g. SPACE to roll) is stored in
+//            'wornMessage' and shown by the shell system, because this object is
+//            destroyed on pickup.
 // =============================================================================
 // Condition on the player's currently worn shell for a hint to appear.
 public enum ShellRequirement
@@ -26,18 +24,19 @@ public enum ShellRequirement
 public class TutorialHint : MonoBehaviour
 {
     [Header("Hint Content")]
-    [Tooltip("Window 1: primary text shown on proximity. Example: 'Press E to wear'.")]
+    [Tooltip("Text shown on proximity. Example: 'Press E to wear'.")]
     [TextArea(2, 3)]
     public string message = "Press a key";
 
-    [Tooltip("Window 2: secondary text shown AFTER the player wears this (shells only). " +
-             "Example: 'SPACE to roll'. Leave empty for boxes or single-line hints.")]
+    [Tooltip("Text shown AFTER the player wears this (shells only), by the shell " +
+             "system. Example: 'SPACE to roll'. Leave empty for boxes or single-line hints.")]
     [TextArea(2, 3)]
     public string wornMessage;
 
-    [Header("Show Limit")]
-    [Tooltip("How many times this hint may appear before it stops showing for good. 0 = unlimited.")]
-    public int maxShows = 1;
+    [Header("Timing")]
+    [Tooltip("Seconds the hint stays visible each time it appears. It then hides " +
+             "for the same time and reappears while the player is still in range.")]
+    public float displayDuration = 3f;
 
     [Header("Detection")]
     [Tooltip("How close (in units) the player must be for the hint to appear.")]
@@ -50,16 +49,10 @@ public class TutorialHint : MonoBehaviour
              "'Any' = no condition. Useful for hints tied to a puzzle that needs a certain shell.")]
     public ShellRequirement requiredShell = ShellRequirement.Any;
 
-    // Shared across ALL instances so a respawned/new prefab does not reset the count.
-    // Resets automatically when entering Play mode (default domain reload).
-    private static readonly Dictionary<string, int> shownCounts = new Dictionary<string, int>();
-
     private Transform player;
     private PlayerShellSystem shellSystem; // Used to check the worn shell for 'requiredShell'.
-    private bool isShown = false;
-
-    // Group the count by the message text so all copies of the same hint share it
-    private string Key => message;
+    private bool isVisible = false;
+    private float cycleTimer = 0f;         // Counts down the current show/hide phase.
 
     private void Start()
     {
@@ -70,6 +63,10 @@ public class TutorialHint : MonoBehaviour
             // The shell system lives on the player root; search up in case the tag is on a child collider.
             shellSystem = playerObj.GetComponentInParent<PlayerShellSystem>();
         }
+
+        // DEBUG: report what this hint found on startup.
+        Debug.Log($"[TutorialHint] '{name}' Start -> player found: {player != null}, " +
+                  $"TutorialUI.Instance: {TutorialUI.Instance != null}", this);
     }
 
     private void Update()
@@ -80,21 +77,38 @@ public class TutorialHint : MonoBehaviour
 
         // Show only when both in range AND the worn-shell condition is met.
         // Both are re-checked every frame, so swapping shells nearby shows/hides the hint live.
-        bool shouldShow = distance <= showRadius && IsShellRequirementMet();
+        bool inRange = distance <= showRadius && IsShellRequirementMet();
 
-        if (shouldShow && !isShown)
+        if (!inRange)
         {
-            // Stop showing once the shared limit has been reached
-            if (HasReachedLimit()) return;
-
-            isShown = true;
-            shownCounts[Key] = GetCount() + 1; // Count this appearance
-            TutorialUI.Instance.ShowPrimary(message, this);
+            // Left range: hide and reset the cycle so it starts fresh next time.
+            if (isVisible) SetVisible(false);
+            cycleTimer = 0f;
+            return;
         }
-        else if (!shouldShow && isShown)
+
+        // In range: run the show -> hide -> show loop. Each phase lasts 'displayDuration'.
+        cycleTimer -= Time.deltaTime;
+        if (cycleTimer <= 0f)
         {
-            isShown = false;
-            TutorialUI.Instance.HidePrimary(this);
+            SetVisible(!isVisible);
+            cycleTimer = displayDuration;
+        }
+    }
+
+    // Toggles this hint's message in the shared tutorial window.
+    private void SetVisible(bool visible)
+    {
+        isVisible = visible;
+        if (visible)
+        {
+            // DEBUG: fires the moment the hint enters its "show" phase near the player.
+            Debug.Log($"[TutorialHint] '{name}' SHOW -> \"{message}\"", this);
+            TutorialUI.Instance.Show(message, this);
+        }
+        else
+        {
+            TutorialUI.Instance.Hide(this);
         }
     }
 
@@ -119,24 +133,15 @@ public class TutorialHint : MonoBehaviour
         }
     }
 
-    private int GetCount()
-    {
-        return shownCounts.TryGetValue(Key, out int count) ? count : 0;
-    }
-
-    private bool HasReachedLimit()
-    {
-        return maxShows > 0 && GetCount() >= maxShows;
-    }
-
     // Make sure the hint disappears if this object is turned off or collected
     private void OnDisable()
     {
-        if (isShown && TutorialUI.Instance != null)
+        if (isVisible && TutorialUI.Instance != null)
         {
-            TutorialUI.Instance.HidePrimary(this);
+            TutorialUI.Instance.Hide(this);
         }
-        isShown = false;
+        isVisible = false;
+        cycleTimer = 0f;
     }
 
     private void OnDrawGizmosSelected()

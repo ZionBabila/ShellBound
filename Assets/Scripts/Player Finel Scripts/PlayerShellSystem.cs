@@ -100,7 +100,7 @@ public class PlayerShellSystem : MonoBehaviour
         if (!HasShell) return;
 
         // Hide the "while worn" tutorial line, the shell is leaving the player
-        if (TutorialUI.Instance != null) TutorialUI.Instance.HideSecondary(this);
+        if (TutorialUI.Instance != null) TutorialUI.Instance.Hide(this);
         currentWornHint = "";
 
         // If the shell is currently active (e.g. player is hiding or rolling), deactivate it first
@@ -153,7 +153,7 @@ public class PlayerShellSystem : MonoBehaviour
             CurrentShell.ActivateAbility();
 
             // Ability used once: hide the "SPACE to roll" hint and never show it again
-            if (TutorialUI.Instance != null) TutorialUI.Instance.HideSecondary(this);
+            if (TutorialUI.Instance != null) TutorialUI.Instance.Hide(this);
             if (!string.IsNullOrEmpty(currentWornHint)) consumedWornHints.Add(currentWornHint);
         }
         else if (CurrentShell.CurrentState == ShellState.InUse)
@@ -169,7 +169,7 @@ public class PlayerShellSystem : MonoBehaviour
 
         if (TutorialUI.Instance != null)
         {
-            TutorialUI.Instance.ShowSecondary(currentWornHint, this);
+            TutorialUI.Instance.Show(currentWornHint, this);
         }
     }
 
