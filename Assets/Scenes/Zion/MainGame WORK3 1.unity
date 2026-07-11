@@ -16835,7 +16835,7 @@ Transform:
   m_GameObject: {fileID: 720765800}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 133, y: -45, z: 0}
+  m_LocalPosition: {x: 133.09, y: -45.15, z: 0}
   m_LocalScale: {x: 17.825, y: 10.59, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -24252,8 +24252,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialUI
   hintImage: {fileID: 0}
-  primaryText: {fileID: 0}
-  secondaryText: {fileID: 0}
+  hintText: {fileID: 0}
 --- !u!114 &1008174158
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24268,9 +24267,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TutorialHint
   message: "Hold ZTRL to \nPull/Push Objects"
   wornMessage: "Hold ZTRL to \nPull/Push Objects"
-  maxShows: 1
+  displayDuration: 3
   showRadius: 7.3
   playerTag: Player
+  requiredShell: 0
 --- !u!1 &1010145674
 GameObject:
   m_ObjectHideFlags: 0
@@ -28587,9 +28587,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TutorialHint
   message: Hold CTRL To Pull Objects
   wornMessage: 
-  maxShows: 1
+  displayDuration: 3
   showRadius: 14.3
   playerTag: Player
+  requiredShell: 0
 --- !u!1 &1193435996
 GameObject:
   m_ObjectHideFlags: 0
@@ -34787,9 +34788,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TutorialHint
   message: 'Press E To Throw Shell '
   wornMessage: 'Press E To Throw Shell '
-  maxShows: 1
+  displayDuration: 3
   showRadius: 5.27
   playerTag: Player
+  requiredShell: 0
 --- !u!114 &1482775432
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34803,8 +34805,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialUI
   hintImage: {fileID: 0}
-  primaryText: {fileID: 0}
-  secondaryText: {fileID: 0}
+  hintText: {fileID: 0}
 --- !u!1 &1487850345
 GameObject:
   m_ObjectHideFlags: 0
@@ -39473,6 +39474,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: 'HeavyArmor '
       objectReference: {fileID: 0}
+    - target: {fileID: 1450318972245508382, guid: e992cd07b1d941a429589a1963629509, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -40817,9 +40822,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TutorialHint
   message: Press E To Throw Shell
   wornMessage: 
-  maxShows: 1
+  displayDuration: 3
   showRadius: 4.01
   playerTag: Player
+  requiredShell: 0
 --- !u!212 &1782837943
 SpriteRenderer:
   serializedVersion: 2
@@ -46152,8 +46158,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialUI
   hintImage: {fileID: 0}
-  primaryText: {fileID: 0}
-  secondaryText: {fileID: 0}
+  hintText: {fileID: 0}
 --- !u!114 &2000368519
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -46168,9 +46173,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TutorialHint
   message: "Press SPACE To \nHide in Shell "
   wornMessage: "Hiding is Shell \nCan Open Hatches from a Height"
-  maxShows: 2
+  displayDuration: 3
   showRadius: 7.3
   playerTag: Player
+  requiredShell: 0
 --- !u!1 &2000481578
 GameObject:
   m_ObjectHideFlags: 0
