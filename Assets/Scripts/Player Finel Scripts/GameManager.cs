@@ -48,6 +48,30 @@ public class GameManager : MonoBehaviour
     {
         StartCoroutine(LoadSceneRoutine(SceneManager.GetActiveScene().name, delay, false));
     }
+    [Header("Cinematic Curtain")]
+    [Tooltip("How long the game freezes for when TriggerGameStopCurtain is called.")]
+    public float curtainDuration = 5f;
+    public float delayTime = 0.5f; // Optional: small delay before freezing, for dramatic effect
+    private bool isCurtainActive = false;
+
+    // Hook this up to a CinemachineTriggerAction's "On Object Enter" event to freeze
+    // the game for a few seconds when the player enters the trigger zone.
+    public void TriggerGameStopCurtain()
+    {
+        if (isCurtainActive) return;
+
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        SimplePlayer playerController = player != null ? player.GetComponent<SimplePlayer>() : null;
+        if (playerController == null) return;
+
+        // Only trigger while the player is wearing the Heavy Armor shell AND actively using
+        // its ability (Space held -> ShellState.InUse). Any other state, ignore the trigger.
+        PlayerShellSystem shellSystem = player.GetComponent<PlayerShellSystem>();
+        if (shellSystem == null || !shellSystem.HasShell) return;
+        if (shellSystem.CurrentShell is not HeavyArmorShell || shellSystem.CurrentShell.CurrentState != ShellState.InUse) return;
+
+        StartCoroutine(GameStopCurtainRoutine(playerController));
+    }
 
     private IEnumerator LoadSceneRoutine(string sceneName, float delay, bool playWinSound)
     {
@@ -59,6 +83,24 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
         SceneManager.LoadScene(sceneName);
     }
+
+    private IEnumerator GameStopCurtainRoutine(SimplePlayer playerController)
+    {
+        isCurtainActive = true;
+
+        // Freeze only the player's physics (gravity + velocity). Time.timeScale stays at 1,
+        // so the Animator keeps playing the current animation (e.g. the fall pose) instead
+        // of freezing mid-frame.
+        yield return new WaitForSeconds(delayTime);  // Optional: small delay before freezing, for dramatic effect
+
+        playerController.SetPhysicsFrozen(true);
+
+        yield return new WaitForSeconds(curtainDuration);
+
+        playerController.SetPhysicsFrozen(false);
+        isCurtainActive = false;
+    }
+
 
 
     // Function called by hazards (like AcidDrop or trigger zones) when they hit the player.
@@ -88,7 +130,7 @@ public class GameManager : MonoBehaviour
                         return; // Player is protected, do nothing.
                     }
                 }
-                
+
                 if (link.respawnPoint != null)
                 {
                     // Start the death sequence instead of teleporting immediately
@@ -108,7 +150,8 @@ public class GameManager : MonoBehaviour
     private bool IsPlayerVulnerable(GameObject player)
     {
         PlayerShellSystem shellSystem = player.GetComponent<PlayerShellSystem>();
-        if (shellSystem == null) {
+        if (shellSystem == null)
+        {
             Debug.Log($"[GameManager.IsPlayerVulnerable] PlayerShellSystem NOT found on {player.name}. Player is vulnerable.");
             return true; // No shell system, player is vulnerable
         }
@@ -130,7 +173,7 @@ public class GameManager : MonoBehaviour
         // --- Step 1: Freeze Player & Start Animation ---
         SimplePlayer playerController = player.GetComponent<SimplePlayer>();
         Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
-        
+
         if (playerController != null) playerController.isMovementDisabled = true;
         if (rb != null)
         {

@@ -129,14 +129,28 @@ public class SimplePlayer : MonoBehaviour
     [SerializeField, HideInInspector] 
     private bool _isMovementDisabled = false;
 
-    public bool isMovementDisabled 
-    { 
-        get => _isMovementDisabled; 
-        set 
-        { 
-            _isMovementDisabled = value; 
+    public bool isMovementDisabled
+    {
+        get => _isMovementDisabled;
+        set
+        {
+            _isMovementDisabled = value;
             if (value) ReleaseGrab(); // Safety check (Code Review 1.2)
-        } 
+        }
+    }
+
+    // True while a cinematic curtain (GameManager.TriggerGameStopCurtain) is holding the
+    // player in place. Unlike isMovementDisabled, this zeroes gravity too (so a mid-air
+    // player stays frozen instead of continuing to fall) but leaves Time.timeScale alone,
+    // so Update()-driven animations keep playing normally during the freeze.
+    private bool isPhysicsFrozen = false;
+    public bool IsPhysicsFrozen => isPhysicsFrozen;
+
+    public void SetPhysicsFrozen(bool frozen)
+    {
+        isPhysicsFrozen = frozen;
+        rb.gravityScale = frozen ? 0f : defaultGravityScale;
+        if (frozen) rb.linearVelocity = Vector2.zero;
     }
 
     // Public read-only properties (for animation system and other scripts)
@@ -175,7 +189,12 @@ public class SimplePlayer : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (!isMovementDisabled)
+        if (isPhysicsFrozen)
+        {
+            // Re-zero every step: gravity/collisions could otherwise nudge velocity away from zero.
+            rb.linearVelocity = Vector2.zero;
+        }
+        else if (!isMovementDisabled)
         {
             HandleMovement();
         }

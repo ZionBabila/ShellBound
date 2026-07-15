@@ -39,6 +39,11 @@ public class PlayerAnimation : MonoBehaviour
     {
         if (simplePlayer == null || animator == null) return;
 
+        // While a curtain freeze is active, rb.linearVelocity is forced to zero every
+        // FixedUpdate. Syncing that here would slam Speed to 0 and snap whatever animation
+        // was playing (e.g. a fall loop) back to Idle. Skip the sync so it keeps playing as-is.
+        if (simplePlayer.IsPhysicsFrozen) return;
+
         // 1. Read data from the player
         float currentSpeed = simplePlayer.CurrentSpeed;
         bool isGrounded = simplePlayer.IsGrounded;
