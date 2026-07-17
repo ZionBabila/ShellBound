@@ -531,3 +531,30 @@
   2. חיווט ידני פתוח מסשן 21 (Build Profiles, כפתורי תפריט, פאנלים, סליידרים, Import מוזיקה).
 * **בעיות ובאגים:** מלבד באג ה-TMP-בבילד — אין. כל שינויי הקוד מינימליים ומקומיים.
 * **חתימת זמן:** סשן 23 נסגר — 08.07.2026.
+
+**סשן 24 (הושלם - תיקוני צינור/גלגול, הבהרת Cinemachine Impulse, ומערכת AirVent):**
+* 🟢 **פתיחת סשן:** [17.07.2026]
+* **הישגים:**
+  1. **באג צינור → נחיתת ריסוק תקועה (`SkullSpin`):** בכניסה לצינור, לחיצה על `רווח` הפעילה את יכולת השריון הכבד תוך כדי הוורפ. הגוף Kinematic → `AddForce` לא עשה כלום → נחיתת הריסוק אף פעם לא "נחתה" → תקוע ב-`SkullSpin`. **תיקון כפול:**
+     * `PlayerShellSystem.HandleAbility` — חוסם **הפעלת** יכולת כש-`Player.isMovementDisabled` (ורפ בצינור).
+     * `HeavyArmorShell.DeactivateAbility` — אם נכנסים לצינור *באמצע* ריסוק, קורא `EndGroundPound()` שמאפס את דגל `IsGroundPounding` → האנימטור חוזר ל-Idle.
+  2. **באג-המשך שהתיקון גרם — גלגול לא חוזר מ-`InUse` ל-`OnBack`:** `RollingShell.ActivateAbility` מדליק `isMovementDisabled = true` בעצמו (לתת לפיזיקה לגלגל), אז ההגנה הגורפת שהוספתי בלעה גם את פקודת הכיבוי. **תיקון:** הזזתי את בדיקת `isMovementDisabled` ל**תוך ענף ה-`OnBack` בלבד** ב-`HandleAbility` — חוסם רק הפעלה, כיבוי (InUse→OnBack) תמיד עובד. `ActivateAbility` נקראת רק מ-`HandleAbility`, אז זה מספיק.
+  3. **הבהרת שגיאת `CS1061` על `SetPhysicsFrozen`:** false-positive של OmniSharp/Roslyn (cache ישן) — הקוד תקין, אין `asmdef` שמפריד, מחלקה יחידה, המתודה `public`. פתרון: restart של ה-language server / Regenerate project files. אין באג אמיתי.
+  4. **Cinemachine Impulse — הבהרה ארכיטקטונית + ניקוי:** נבנה `ImpactFreeze.cs` (hit-stop + shake) אבל **נמחק** — הוא שכפל את עצירת הזמן שכבר קיימת ב-`GameManager.TriggerGameStopCurtain`. המסקנה למפתח: `GenerateImpulse()` הוא `public void` בלי פרמטרים → מחווטים אותו **ישירות** ל-UnityEvent של `On Object Exit` ב-`CinemachineTriggerAction`, בלי סקריפט. שולטים בעוצמת הרעידה דרך ה-**Impulse Listener** (Amplitude Gain) על המצלמה, לא דרך הקוד. באג שאותר בצילום מסך: המפתח בחר את העומס `GenerateImpulse(float)` עם `0` → אין רעידה; לבחור את הגרסה בלי הפרמטר. (מודל מנטלי: Source משדר → מנהל גלובלי → Listener על המצלמה מזיז; הסקריפט לא נוגע במצלמה.)
+  5. **🌬️ מערכת AirVent חדשה (נבנתה יחד, שורה-שורה):** צינור שפולט לחץ אוויר במחזוריות. `Assets/Scripts/Player Finel Scripts/AirVent.cs`.
+     * **דחיפה:** מדליק/מכבה קוליידר-טריגר (`pushZone`, עם `Used By Effector` + `AreaEffector2D`) — דלוק = דוחף את השחקן.
+     * **פרטיקלס:** `airParticles.Play()`/`Stop()`.
+     * **סאונד — דרך `AudioManager` בתבנית הדגלים:** נוסף `public AudioClip airVent`, דגל `public static bool airVentSound`, איפוס ב-`Start`, קריאה `AirVentBlast()` ב-`Update` (זהה 1:1 ל-`AcidDropDestroy`). `AirVent` מרים `AudioManager.airVentSound = true`.
+     * **מחזור (`VentCycle` coroutine):** `activeDuration` נשיפה → `StopBlow` → הפסקה **רנדומלית** `Random.Range(inactiveDurationMin, inactiveDurationMax)` → חוזר חלילה. `startDelay` לדה-סנכרון בין צינורות.
+     * **סנכרון פרטיקלס-סאונד (`particleDelay`):** הדחיפה+הסאונד יוצאים ב-t=0, הפרטיקלס מחכים `particleDelay` (כי לסאונד יש לג קטן דרך הדגל) — מכוונים בעורך.
+     * **השתקה מחוץ למסך:** `IsVisibleToCamera()` (בדיקת viewport מול `Camera.main`, כמו `PlaySoundAtPosition`) — הסאונד מורם רק אם הצינור על המסך. הדחיפה והפרטיקלס ממשיכים תמיד.
+
+### 🔴 סגירת סשן 24
+* **מצב:** כל התיקונים והמערכת החדשה בקוד — ממתינים לבדיקה/כוונון של המפתח בעורך (במיוחד `AirVent`: לגרור `pushZone`/`airParticles`, לגרור קליפ ל-`AudioManager.airVent`, לכוון `particleDelay` וטווח ההפסקה).
+* **🐞 באג פתוח (עדיין עדיפות ראשונה):** **טקסט TMP ב-`TutorialHint`/`TutorialUI` לא מוצג בבילד** (עובד בעורך). דיאגנוסטיקה לסשן הבא: עברית/אנגלית? איזה font asset? האם ה-Canvas נכלל בבילד. הקוד תקין — בעיית פונט/בילד.
+* **משימות פתוחות נוספות:**
+  1. בדיקת `AirVent` בעורך + חיווט `CinemachineImpulseSource.GenerateImpulse()` ל-`On Object Exit` והוספת `Impulse Listener` למצלמה.
+  2. בניית גרף ה-Animator בעורך לפי המפרט (הקוד מוכן ושולח את כל הפרמטרים).
+  3. חיווט ידני פתוח מסשן 21 (Build Profiles, כפתורי תפריט, פאנלים, סליידרים, Import מוזיקה).
+* **בעיות ובאגים:** מלבד באג ה-TMP-בבילד — אין. כל שינויי הקוד מינימליים ומקומיים.
+* **חתימת זמן:** סשן 24 נסגר — 17.07.2026.
