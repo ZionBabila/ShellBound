@@ -18437,11 +18437,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33509bf2611892e4db3f623f6741504d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Movable
-  grabHandleTrigger: {fileID: 0}
-  lockDelay: 0.5
-  dragSoundInterval: 0.3
-  dragMinSpeed: 0.1
-  dragGroundCheckDistance: 0.4
 --- !u!50 &774605528
 Rigidbody2D:
   serializedVersion: 5
