@@ -71,6 +71,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip gearRotate; // Gear-turning sound (used by DoorController's linked gear)
     public AudioClip footstep;      // Default walking sound (used by SimplePlayer while grounded and moving)
     public AudioClip footstepMetal; // Walking sound on metal platforms (tagged ground)
+    public AudioClip airVent;       // Air-vent blast hiss (played by AirVent at the start of each blow)
 
     [Header("Sound Flags (Legacy)")]
     public static bool breakSound = false;
@@ -85,6 +86,7 @@ public class AudioManager : MonoBehaviour
     public static bool loseLevelSound = false;
     public static bool buttonPressSound = false;
     public static bool buttonReleaseSound = false;
+    public static bool airVentSound = false; // Air-vent blast (set by AirVent each cycle)
     private Camera mainCamera;
 
     // Dedicated source for the gear sound so a new rotation can Stop() and restart it
@@ -185,6 +187,7 @@ public class AudioManager : MonoBehaviour
         loseLevelSound = false;
         buttonPressSound = false;
         buttonReleaseSound = false;
+        airVentSound = false;
 
         // Play the first zone automatically when the game starts
         if (musicZones.Count > 0)
@@ -205,6 +208,7 @@ public class AudioManager : MonoBehaviour
         ButtonPress();
         ButtonRelease();
         AcidDropDestroy();
+        AirVentBlast();
     }
 
     // ---------------------------------------------------------------------
@@ -459,6 +463,16 @@ public class AudioManager : MonoBehaviour
     {
         if (instance != null)
             instance.PlaySoundAtPosition(instance.acidDropDestroy, position);
+    }
+
+    // Air-vent blast sound, triggered by AirVent via AudioManager.airVentSound = true.
+    private void AirVentBlast()
+    {
+        if (airVentSound == true)
+        {
+            PlaySafe(airVent);
+            airVentSound = false;
+        }
     }
 
     public void ButtonRelease()
