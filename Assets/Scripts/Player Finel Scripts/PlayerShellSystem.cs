@@ -146,16 +146,16 @@ public class PlayerShellSystem : MonoBehaviour
     {
         if (!HasShell) return;
 
-        // Ignore ability input while the player isn't in control (e.g. mid pipe warp).
-        // Otherwise a Space press during a teleport activates the shell and can trigger
-        // a ground pound that never lands (kinematic body), leaving the player stuck in
-        // the SkullSpin animation.
-        if (Player.isMovementDisabled) return;
-
         // Since we only have one event, we'll toggle the state.
         // Activate if on back, deactivate if in use.
         if (CurrentShell.CurrentState == ShellState.OnBack)
         {
+            // Only block *activation* while the player isn't in control (e.g. mid pipe warp),
+            // so a Space press during a teleport can't trigger a ground pound that never lands.
+            // Deactivation (below) must always work: shells like RollingShell disable movement
+            // themselves, so blocking it here would trap the player in the rolling state.
+            if (Player.isMovementDisabled) return;
+
             CurrentShell.ActivateAbility();
 
             // Ability used once: hide the "SPACE to roll" hint and never show it again
