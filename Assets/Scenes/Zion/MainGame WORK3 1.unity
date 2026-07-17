@@ -6239,7 +6239,7 @@ Transform:
   m_GameObject: {fileID: 295177859}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -113.71108, y: -73.94, z: -15}
+  m_LocalPosition: {x: -114.3024, y: -72.880005, z: -15}
   m_LocalScale: {x: 0.17, y: 0.17, z: 0.17}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6364,7 +6364,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 10.6
+  orthographic size: 4.98
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -15806,6 +15806,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5215721075819760923, guid: 96e329fc1b10af346a50d587903ded22, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6519381254876733274, guid: 96e329fc1b10af346a50d587903ded22, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 0
@@ -16666,7 +16670,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 715350814735816936, guid: e024d2521b60ba246bf7536349654479, type: 3}
       propertyPath: curtainDuration
-      value: 2
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 715350814735816936, guid: e024d2521b60ba246bf7536349654479, type: 3}
       propertyPath: respawnLinks.Array.data[0].respawnPoint
@@ -26547,7 +26551,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 54.83531, y: -59.43995}
+  m_Offset: {x: 54.83531, y: -59.797005}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -26557,7 +26561,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 9.83252, y: 6.1961403}
+  m_Size: {x: 9.83252, y: 6.9102516}
   m_EdgeRadius: 0
 --- !u!1 &1084497908
 GameObject:
@@ -38208,13 +38212,13 @@ MonoBehaviour:
   CameraDistance: 15
   DeadZoneDepth: 0
   Composition:
-    ScreenPosition: {x: 0.012499198, y: -0.05}
+    ScreenPosition: {x: 0.06000001, y: 0}
     DeadZone:
       Enabled: 1
-      Size: {x: 0.22472385, y: 0.18784228}
+      Size: {x: 0.0010416667, y: 0}
     HardLimits:
       Enabled: 1
-      Size: {x: 0.42, y: 0.3032051}
+      Size: {x: 0.5, y: 0.5}
       Offset: {x: 0, y: 0}
   CenterOnActivate: 1
   TargetOffset: {x: 0.66, y: 0.62, z: 0}
@@ -38249,7 +38253,7 @@ MonoBehaviour:
     CustomLookAtTarget: 0
   Lens:
     FieldOfView: 34
-    OrthographicSize: 3.5
+    OrthographicSize: 4.98
     NearClipPlane: 0.3
     FarClipPlane: 1000
     Dutch: 0
@@ -38276,7 +38280,7 @@ Transform:
   m_GameObject: {fileID: 1653169828}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -113.395546, y: -73.23, z: -15}
+  m_LocalPosition: {x: -114.3024, y: -72.880005, z: -15}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

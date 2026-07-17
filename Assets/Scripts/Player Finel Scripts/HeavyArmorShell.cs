@@ -106,11 +106,18 @@ public class HeavyArmorShell : BaseShell
         // It serves as a manual override to release the grab and exit the "InUse" state.
         if (CurrentState == ShellState.InUse)
         {
+            // If interrupted mid-slam (e.g. forced out by a pipe warp), end the pound cleanly
+            // so the SkullSpin animation flag resets and the animator returns to Idle.
+            if (isGroundPounding)
+            {
+                EndGroundPound();
+                return;
+            }
+
             playerSystem.Player.ReleaseGrab();
             CurrentState = ShellState.OnBack;
             Debug.Log("[HeavyArmorShell] Ability deactivated manually. Releasing grab.");
         }
-        // The ground pound is a one-shot and resets itself on landing, so it doesn't need deactivation.
     }
 
     private void StartGroundPound()
