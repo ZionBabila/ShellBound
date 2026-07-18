@@ -69,10 +69,11 @@ public class PlayerDetection : MonoBehaviour
         // --- CRITICAL FIX ---
         // If the colliding object has its own logic (like AcidDrop or HazardZone), let it handle itself.
         // This prevents PlayerDetection from hijacking the collision and using the generic tag system.
-        if (collision.GetComponent<AcidDrop>() != null || 
-            collision.GetComponent<HazardZone>() != null)
+        if (collision.GetComponent<AcidDrop>() != null ||
+            collision.GetComponent<HazardZone>() != null ||
+            collision.GetComponentInParent<BuoyancyEffector2D>() != null) // Water volume: the effector / WaterSwim handle it
         {
-            return; // Do nothing, let AcidDrop handle its own collision.
+            return; // Do nothing, let the object handle its own collision.
         }
         if (GameManager.Instance != null)
         {

@@ -124,7 +124,7 @@ CircleCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -169,6 +169,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee51f365d38b7ba4892784326f4cf960, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaterSpring
-  velocity: 0
-  height: 0
+  velocity: 0.64
+  height: 0.64
   impactResistance: 40

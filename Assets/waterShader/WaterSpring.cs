@@ -60,17 +60,14 @@ public class WaterSpring : MonoBehaviour
         }
     }
 
-    // Something splashed in: convert its vertical speed into downward velocity.
-    private void OnCollisionEnter2D(Collision2D other)
+    // Something crossed the surface: convert its vertical speed into a ripple.
+    // Trigger (not collision) so bodies pass through the surface into the water
+    // instead of resting on top of it.
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!other.gameObject.CompareTag("FallingObject"))
+        if (other.attachedRigidbody != null)
         {
-            return;
-        }
-
-        if (other.gameObject.TryGetComponent(out Rigidbody2D rb))
-        {
-            velocity += rb.linearVelocity.y / impactResistance;
+            velocity += other.attachedRigidbody.linearVelocity.y / impactResistance;
         }
     }
 }

@@ -10,6 +10,8 @@ TagManager:
   - Lava2
   - Acid
   - Metal
+  - 'FallingObject '
+  - FallingObject
   layers:
   - Default
   - TransparentFX
