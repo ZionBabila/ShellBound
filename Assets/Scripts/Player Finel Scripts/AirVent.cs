@@ -33,12 +33,25 @@ public class AirVent : MonoBehaviour
     [Tooltip("Delay before the particles appear each blast, to line them up with the sound (which has a tiny lag). 0 = together.")]
     public float particleDelay = 0f;
 
-    // Cached main camera, used to skip the sound when the vent is off-screen.
-    private Camera mainCamera;
+    [Header("Sound Distance Fade")]
+    [Tooltip("Peak volume of this vent's blast when the player is close (0 = silent, 1 = full).")]
+    [Range(0f, 1f)]
+    public float soundMaxVolume = 1f;
+
+    [Tooltip("Within this distance from the player the blast is at full volume.")]
+    [Range(0f, 50f)]
+    public float soundFullVolumeDistance = 6f;
+
+    [Tooltip("Beyond this distance the player no longer hears the blast. Between the two it fades gradually.")]
+    [Range(0f, 100f)]
+    public float soundSilenceDistance = 20f;
+
+    // Cached player transform, used to fade the sound by distance.
+    private Transform player;
 
     private void Start()
     {
-        mainCamera = Camera.main;
+        player = FindPlayer();
 
         // Start idle: no push, no particles, no sound. The cycle turns it on.
         StopBlow();
@@ -57,8 +70,14 @@ public class AirVent : MonoBehaviour
             // with the sound (which lags slightly through the AudioManager flag).
             if (pushZone != null) pushZone.enabled = true;
 
-            // Only play the sound when the vent is on-screen, so off-camera vents stay silent.
-            if (IsVisibleToCamera()) AudioManager.airVentSound = true;
+            // Fade the blast sound by the player's distance: full volume up close,
+            // fading out with distance, silent only once the player is really far.
+            float volume = ComputeSoundVolume();
+            if (volume > 0f)
+            {
+                AudioManager.airVentVolume = volume;
+                AudioManager.airVentSound = true;
+            }
 
             if (particleDelay > 0f) yield return new WaitForSeconds(particleDelay);
             if (airParticles != null) airParticles.Play();
@@ -80,14 +99,22 @@ public class AirVent : MonoBehaviour
         if (airParticles != null) airParticles.Stop();
     }
 
-    // True if the vent's position is inside the main camera's view. Used to skip the
-    // sound when the pipe is off-screen (the sound plays once at the start of each blast).
-    private bool IsVisibleToCamera()
+    // Blast volume based on the player's distance: 1 within soundFullVolumeDistance,
+    // fading to 0 at soundSilenceDistance (silent only when the player is really far).
+    private float ComputeSoundVolume()
     {
-        if (mainCamera == null) mainCamera = Camera.main; // Re-find if the camera changed (e.g. scene switch).
-        if (mainCamera == null) return false;
+        if (player == null) player = FindPlayer(); // Re-find if lost (e.g. respawn/scene switch).
+        if (player == null) return 1f;             // No player found - don't silence the vent.
 
-        Vector3 vp = mainCamera.WorldToViewportPoint(transform.position);
-        return vp.z > 0f && vp.x >= 0f && vp.x <= 1f && vp.y >= 0f && vp.y <= 1f;
+        float distance = Vector2.Distance(transform.position, player.position);
+        float distanceFactor = Mathf.InverseLerp(soundSilenceDistance, soundFullVolumeDistance, distance);
+        return distanceFactor * soundMaxVolume;
+    }
+
+    // Finds the active player in the scene (no tag needed).
+    private Transform FindPlayer()
+    {
+        SimplePlayer simplePlayer = FindFirstObjectByType<SimplePlayer>();
+        return simplePlayer != null ? simplePlayer.transform : null;
     }
 }

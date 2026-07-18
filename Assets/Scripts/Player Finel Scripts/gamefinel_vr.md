@@ -573,13 +573,26 @@
 * **ארכיטקטורה — סדר `FixedUpdate` הקנוני:** `WaveSpringUpdate` (כל ה-springs) → `UpdateSprings` (הפצה) → `WavePointUpdate` (כתיבה ל-spline). מיפוי: sibling index `i` → spline index `i+1` (עקבי בין המנהל ל-`WaterSpring.Init`).
 * **חיווט ידני שנותר בעורך (כדי שיעבוד):** על `WaterShapeController` לגרור `spriteShapeController`/`wavePointPref`/`wavePoints`; לפריפאב `wavePointPref` צריך קוליידר; לאובייקט הנפילה tag `FallingObject` + `Rigidbody2D`. הערה: הקוליידרים לא-trigger → האובייקט נוחת על המים; ל"כניסה" למים להפוך ל-trigger + `OnTriggerEnter2D`.
 
+* **🔀 מפנה באמצע הסשן — המפתח בחר לוותר על מערכת ה-springs ולעבוד עם `BuoyancyEffector2D` המובנה של Unity לפיזיקת המים.** (סקריפטי ה-springs נשארו בפרויקט לעתיד, אבל לא בשימוש בשלב הנוכחי.) העבודה מכאן התמקדה ב**שחייה של הסרטן**:
+  4. **🌊 שחיית הסרטן — קונכיית `WaterSwim.cs` חדשה (שחייה חופשית):**
+     * **תובנת מפתח (ניתוח `SimplePlayer`):** במצב אוויר (לא-grounded, כמו במים) `SimplePlayer` שולט רק ב-`vel.x` (CASE B/D) ו**לא נוגע ב-`vel.y` בכלל**. לכן רכיב שמוסיף כוח **אנכי** לא נלחם בו — הם חולקים צירים (אופקי=SimplePlayer, אנכי=WaterSwim).
+     * **הקלט כבר קיים:** `PlayerInputHandler.MoveValue` הוא Vector2; `SimplePlayer` קורא רק `.x` ומתעלם מ-`.y`. אז W/S כבר מייצרים ציר אנכי — פשוט "הדלקנו" אותו במים. **לא נוספו מקשים.**
+     * **זיהוי מים ללא תג:** אחרי חיכוך חוזר של תגים (`FallingObject`, `Water`), `WaterSwim` מזהה מים דרך `GetComponentInParent<BuoyancyEffector2D>()` על הטריגר — בלי תג בכלל. מונה `waterOverlaps` תומך בכמה קוליידרים/נפחים.
+     * **ערכים נפרדים לעלייה/ירידה:** `swimUpForce` / `swimDownForce` בנפרד (המפתח ביקש). **ההחלטה הסופית: השחקן נשאר בתוך ה-effector** (הציפה+דראג של ה-effector = התחושה הטובה), ו-`WaterSwim` רק **מוסיף** כוח. `swimDownForce` גבוה (המפתח כייל ל-**150**) מתגבר על הציפה כדי לצלול — כך רק השחקן שוקע בלחיצה למטה, האובייקטים סתם צפים.
+     * **מבוי סתום שנחקר ונזנח:** ניסיון להוציא את השחקן מ-`Collider Mask` של ה-effector ולתת ל-`WaterSwim` לבטל כבידה ידנית — התחושה יצאה פחות טובה מה-effector. חזרנו ל"שחקן בתוך ה-effector + כוח צלילה חזק". (הקונפליקט המקורי: `Density` גלובלי — נמוך=השחקן שוקע אבל גם אובייקטים; גבוה=אובייקטים צפים אבל השחקן לא. הפתרון: `Density` גבוה + `swimDownForce` חזק.)
+  5. **`WaterSpring` → trigger:** `OnCollisionEnter2D` הוחלף ב-`OnTriggerEnter2D` (משתמש ב-`other.attachedRigidbody`), כדי שגופים יעברו דרך פני המים במקום לנחות עליהם.
+  6. **🗑️ נמחקה `Assets/Cainos/Interactive Pixel Water/`** — 4 שיידרים שלה משתמשים ב-`GrabPass` (Built-in RP בלבד) וזרקו שגיאת SRP תחת URP. מאומת שלא בשימוש באף סצנת משחק/prefab (רק סצנת הדמו של Cainos). שאר תיקיות Cainos לא נגעו.
+  7. **פטור מים ב-`PlayerDetection` (קלאס קיים — באישור המפתח):** `PlayerDetection.OnTriggerEnter2D` העביר **כל** טריגר ל-`GameManager` כמפגע (מלבד `AcidDrop`/`HazardZone`). נוסף פטור שלישי ל-`GetComponentInParent<BuoyancyEffector2D>()` — עקבי לפטורים הקיימים. (ה-`GameManager` לא הרג בפועל, רק הזהיר על תג לא-ממופה — אבל ניקינו את הרעש בשורש.)
+  8. **🔊 AirVent — סאונד דועך לפי מרחק (במקום השתקה בינארית):** המפתח ביקש שסאונד הנשיפה **יִדעך** לפי מרחק השחקן ולא ייעלם בבת אחת. הוחלף `IsVisibleToCamera()` (on/off לפי מסך) ב-`ComputeSoundVolume()` — `Mathf.InverseLerp(soundSilenceDistance, soundFullVolumeDistance, distance)` נותן 1 קרוב, דועך ל-0 רק כשהשחקן **ממש רחוק**. השחקן נמצא דרך `FindFirstObjectByType<SimplePlayer>()` (בלי תג). **תוספת מינימלית ל-`AudioManager`** (חלק מפיצ'ר ה-airVent מסשן 24): `static float airVentVolume`, ו-`AirVentBlast` מנגן `source.PlayOneShot(airVent, airVentVolume)` — כך גם הדעיכה לפי מרחק וגם ה-`sfxMasterVolume` (הגדרות) חלים. שדות כוונון ב-AirVent: `soundFullVolumeDistance` (6), `soundSilenceDistance` (20). **פיידרים ב-Inspector (לכל צינור):** `soundMaxVolume` [Range 0-1] (עוצמת שיא), `soundFullVolumeDistance` [Range 0-50], `soundSilenceDistance` [Range 0-100] (מרחק ההשתקה). עוצמה סופית = `distanceFactor × soundMaxVolume × sfxMasterVolume`. הדעיכה מבודדת ל-airVent בלבד (`volumeScale` ב-`PlayOneShot` לא נוגע ב-`source.volume` או בסאונדים אחרים).
+
 ### 🔴 סגירת סשן 25
-* **מצב:** שלושת סקריפטי המים נכתבו ותואמים זה לזה; ממתין לחיווט ובדיקה של המפתח בעורך.
+* **מצב:** מערכת המים הפעילה = **`BuoyancyEffector2D` + `WaterSwim`**. השחקן שוחה חופשי (W/S), נשאר בתוך ה-effector, ו-`swimDownForce=150` מאפשר צלילה נגד הציפה. עובד ואושר ע"י המפתח. מערכת ה-springs (`WaterShapeController`/`WaterSpring`/`FallingObject`) קיימת אך לא פעילה כרגע.
 * **🐞 באג פתוח (עדיין עדיפות ראשונה):** **טקסט TMP ב-`TutorialHint`/`TutorialUI` לא מוצג בבילד** (עובד בעורך). דיאגנוסטיקה: עברית/אנגלית? איזה font asset? האם ה-Canvas נכלל בבילד.
+* **⚠️ אזהרת `'Untagged'` פתוחה:** אחרי הפטור למים, עדיין מופיע `[GameManager] Hazard 'Untagged' hit the player` מטריגר **אחר** (לא המים — הם מוחרגים). כנראה שריד נקודת-גל (`WaterSpring`) או טריגר אחר. **לזהות:** double-click על האזהרה בקונסול (Unity יסמן את האובייקט) → למחוק אם שריד, או להחריג נקי. לא מזיק (רק אזהרה, השחקן לא מת).
 * **משימות פתוחות נוספות:**
-  1. חיווט + בדיקת מערכת המים בעורך (ראה "חיווט ידני שנותר" למעלה).
+  1. פוליש מים (effector): לכוונן `Density` לאובייקטים, `Linear Drag` של ה-effector, ו-`swimUpForce`/`swimDownForce` ב-`WaterSwim`. אופציונלי לעתיד: להחזיר את מערכת ה-springs לוויזואל גלי המים.
   2. בדיקת `AirVent` בעורך + חיווט `CinemachineImpulseSource.GenerateImpulse()` ל-`On Object Exit` והוספת `Impulse Listener` למצלמה.
   3. בניית גרף ה-Animator בעורך לפי המפרט (הקוד מוכן).
   4. חיווט ידני פתוח מסשן 21 (Build Profiles, כפתורי תפריט, פאנלים, סליידרים, Import מוזיקה).
-* **בעיות ובאגים:** מלבד באג ה-TMP-בבילד — אין.
+* **בעיות ובאגים:** באג ה-TMP-בבילד (פתוח), ואזהרת ה-`'Untagged'` (לא מזיקה). כל שינויי הקוד היום נגעו רק בסקריפטי המים החדשים + שורה אחת ב-`PlayerDetection` (באישור).
 * **חתימת זמן:** סשן 25 נסגר — 18.07.2026.

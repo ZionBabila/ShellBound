@@ -12,6 +12,7 @@ TagManager:
   - Metal
   - 'FallingObject '
   - FallingObject
+  - 'Water '
   layers:
   - Default
   - TransparentFX

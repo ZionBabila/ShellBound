@@ -87,6 +87,7 @@ public class AudioManager : MonoBehaviour
     public static bool buttonPressSound = false;
     public static bool buttonReleaseSound = false;
     public static bool airVentSound = false; // Air-vent blast (set by AirVent each cycle)
+    public static float airVentVolume = 1f;  // Distance-based volume for the next blast (set by AirVent, 0..1)
     private Camera mainCamera;
 
     // Dedicated source for the gear sound so a new rotation can Stop() and restart it
@@ -470,7 +471,9 @@ public class AudioManager : MonoBehaviour
     {
         if (airVentSound == true)
         {
-            PlaySafe(airVent);
+            // volumeScale multiplies source.volume (the SFX master), so distance fade
+            // and the settings volume both apply.
+            if (airVent != null) source.PlayOneShot(airVent, airVentVolume);
             airVentSound = false;
         }
     }
