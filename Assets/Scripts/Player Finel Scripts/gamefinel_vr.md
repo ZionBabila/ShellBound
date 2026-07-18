@@ -558,3 +558,28 @@
   3. חיווט ידני פתוח מסשן 21 (Build Profiles, כפתורי תפריט, פאנלים, סליידרים, Import מוזיקה).
 * **בעיות ובאגים:** מלבד באג ה-TMP-בבילד — אין. כל שינויי הקוד מינימליים ומקומיים.
 * **חתימת זמן:** סשן 24 נסגר — 17.07.2026.
+
+**סשן 25 (הושלם - מערכת מים 2D מבוססת SpriteShape):**
+* 🟢 **פתיחת סשן:** [18.07.2026] - המפתח הוסיף מערכת מים חדשה בתיקייה `Assets/waterShader/` (מהטוטוריאל הקלאסי של SpriteShape water). מיקוד: להתאים את הסקריפטים החדשים לשאר הפרויקט **בלי לגעת בקלאסים הקיימים**. שלושה סקריפטים: `WaterShapeController` (מנהל), `WaterSpring` (נקודת-spring בודדת), `FallingObject` (אובייקט בדיקה).
+* **הישגים:**
+  1. **`FallingObject`:** תיקון ה-API הישן `rigidbody2D.velocity` → `linearVelocity` (Unity 6.3, תואם לשאר הפרויקט שכולו `linearVelocity`). השליטה נשמרה על אותם מקשים (`Horizontal`/`Vertical`) לבקשת המפתח (למקרה שירצה ליישם על השחקן). הוסר קוד מת (`timeElapsed`, לוגיקת `isMoving` השבירה עם `GetKeyDown/Up` שנתקעת כשמשחררים חץ אחד מתוך שניים).
+  2. **`WaterSpring` — `height` הפך למקור-האמת:** במקור `WaveSpringUpdate` קרא `height = transform.localPosition.y` בכל פריים, אז שינויי `height` מ-`UpdateSprings` נדרסו (הפצת הגל הייתה חלקית בלבד). עכשיו `height`/`velocity` הם ה-state הסמכותי, `WavePointUpdate` כותב אותם גם ל-transform וגם ל-spline. `OnCollisionEnter2D` נוקה (`CompareTag`+`TryGetComponent`), `resistance`→`impactResistance` נחשף לכוונון. הוסרו שדות מתים (`force`, `springTransform`, `List<WaterSpring> springs`).
+  3. **`WaterShapeController` — נשמר כקובץ + 4 תיקונים:**
+     * **🔴 באג הכי חשוב — `springs` ריק ב-Play:** הרשימה התמלאה רק ב-`SetWaves` (זמן עריכה דרך `OnValidate`); בזמן Play השדה מתאתחל לרשימה ריקה (לא `[SerializeField]`) → `FixedUpdate` לא עשה כלום. תוקן: `Start`→`CollectSprings` אוסף את נקודות הגל מהילדים (`wavePoints`) ומריץ `Init` על כל אחת.
+     * **הפצת גל:** `UpdateSprings` הפיץ רק `velocity` אך לא יישם את ה-`height` deltas (חסרה הלולאה השנייה של האלגוריתם הקנוני). נוספה → הגל מתפשט נכון.
+     * **`OnValidate`:** במקום קורוטינות שבירות (`StartCoroutine` בתוך `OnValidate` — Unity חוסם `DestroyImmediate`/עריכת spline שם), עבר ל-`EditorApplication.delayCall` (עטוף `#if UNITY_EDITOR`) עם דגל `rebuildQueued` למניעת בנייה כפולה.
+     * **`Smoothen`:** גבולות בטוחים לפי `GetPointCount()`, והוסר קוד מת (חישוב tangent ידני שנדרס מיד ע"י `SplineUtility.CalculateTangents`).
+     * **בונוס:** `FixedUpdate` רץ רק ב-Play (בלי ריצוד מים בעורך); `Splash(index,speed)` נחשף `public` להפעלה ממערכות אחרות; `CorsnersCount`→`cornersCount`.
+* **ארכיטקטורה — סדר `FixedUpdate` הקנוני:** `WaveSpringUpdate` (כל ה-springs) → `UpdateSprings` (הפצה) → `WavePointUpdate` (כתיבה ל-spline). מיפוי: sibling index `i` → spline index `i+1` (עקבי בין המנהל ל-`WaterSpring.Init`).
+* **חיווט ידני שנותר בעורך (כדי שיעבוד):** על `WaterShapeController` לגרור `spriteShapeController`/`wavePointPref`/`wavePoints`; לפריפאב `wavePointPref` צריך קוליידר; לאובייקט הנפילה tag `FallingObject` + `Rigidbody2D`. הערה: הקוליידרים לא-trigger → האובייקט נוחת על המים; ל"כניסה" למים להפוך ל-trigger + `OnTriggerEnter2D`.
+
+### 🔴 סגירת סשן 25
+* **מצב:** שלושת סקריפטי המים נכתבו ותואמים זה לזה; ממתין לחיווט ובדיקה של המפתח בעורך.
+* **🐞 באג פתוח (עדיין עדיפות ראשונה):** **טקסט TMP ב-`TutorialHint`/`TutorialUI` לא מוצג בבילד** (עובד בעורך). דיאגנוסטיקה: עברית/אנגלית? איזה font asset? האם ה-Canvas נכלל בבילד.
+* **משימות פתוחות נוספות:**
+  1. חיווט + בדיקת מערכת המים בעורך (ראה "חיווט ידני שנותר" למעלה).
+  2. בדיקת `AirVent` בעורך + חיווט `CinemachineImpulseSource.GenerateImpulse()` ל-`On Object Exit` והוספת `Impulse Listener` למצלמה.
+  3. בניית גרף ה-Animator בעורך לפי המפרט (הקוד מוכן).
+  4. חיווט ידני פתוח מסשן 21 (Build Profiles, כפתורי תפריט, פאנלים, סליידרים, Import מוזיקה).
+* **בעיות ובאגים:** מלבד באג ה-TMP-בבילד — אין.
+* **חתימת זמן:** סשן 25 נסגר — 18.07.2026.
