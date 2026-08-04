@@ -1116,12 +1116,8 @@ MonoBehaviour:
     m_Bits: 2048
   grabCheckOffset: {x: 2.21, y: 9.63}
   grabCheckRadius: 1.11
-  baseMaxPushMass: 3
-  currentMaxPushMass: 0
-  massMapMin: 2
-  massMapMax: 6
-  speedMultAtMaxMass: 0.8
-  heavyPushAccelPenalty: 0.15
+  heavyObjectMassThreshold: 3
+  canPushHeavyObjects: 0
 --- !u!95 &7788835377042074925
 Animator:
   serializedVersion: 7
@@ -1321,7 +1317,7 @@ MonoBehaviour:
       m_Flags: 0
     m_Flags: 0
   JumpAction:
-    m_Name: 
+    m_Name: Jump
     m_Type: 0
     m_ExpectedControlType: 
     m_Id: 69cc4a31-59db-40a2-8a62-7ec2d5d167e2
