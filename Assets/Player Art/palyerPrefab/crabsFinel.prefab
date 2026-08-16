@@ -2900,11 +2900,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: e45749fedb0f698429ce329ddf41d61d, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -486.3
+      value: -487.55
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: e45749fedb0f698429ce329ddf41d61d, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 40.9
+      value: 41.76
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: e45749fedb0f698429ce329ddf41d61d, type: 3}
       propertyPath: m_LocalPosition.z
@@ -3934,6 +3934,46 @@ MonoBehaviour:
       m_Groups: 
       m_Action: Move
       m_Flags: 8
+    - m_Name: 2D Vector
+      m_Id: cc5d3059-6187-465e-9a03-348e0f76fd73
+      m_Path: 2DVector
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Move
+      m_Flags: 4
+    - m_Name: up
+      m_Id: 61a146ad-853f-4b98-9554-ca9aad940d12
+      m_Path: <XInputController>/leftStick/up
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Move
+      m_Flags: 8
+    - m_Name: down
+      m_Id: ce154a51-8115-4354-9cdb-7f48b5b282e7
+      m_Path: <XInputController>/leftStick/down
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Move
+      m_Flags: 8
+    - m_Name: left
+      m_Id: cbefbaf0-a417-4ed6-bba2-baee1e737d9a
+      m_Path: <XInputController>/leftStick/left
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Move
+      m_Flags: 8
+    - m_Name: right
+      m_Id: 5f940075-e208-41d9-849d-220849b64078
+      m_Path: <XInputController>/leftStick/right
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Move
+      m_Flags: 8
     m_Flags: 0
   InteractAction:
     m_Name: Interact
@@ -3954,6 +3994,14 @@ MonoBehaviour:
     - m_Name: 
       m_Id: 31efc69d-9ad2-43a7-b66c-bc52d630e911
       m_Path: <Mouse>/rightButton
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Interact
+      m_Flags: 0
+    - m_Name: 
+      m_Id: 978a2519-887b-4260-b2b3-221db43e0114
+      m_Path: <XInputController>/buttonSouth
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -3984,6 +4032,14 @@ MonoBehaviour:
       m_Groups: 
       m_Action: Ability
       m_Flags: 0
+    - m_Name: 
+      m_Id: a64d1880-1683-4792-a438-f73b802d2e3d
+      m_Path: <XInputController>/buttonWest
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Ability
+      m_Flags: 0
     m_Flags: 0
   GrabAction:
     m_Name: Grab
@@ -4004,6 +4060,14 @@ MonoBehaviour:
     - m_Name: 
       m_Id: 79a837bc-6f7c-4e4e-867a-5e8ae195885f
       m_Path: <Mouse>/middleButton
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Grab
+      m_Flags: 0
+    - m_Name: 
+      m_Id: 77126881-c7b1-40da-bafd-c7d159c83e26
+      m_Path: <XInputController>/buttonNorth
       m_Interactions: 
       m_Processors: 
       m_Groups: 
