@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 77ff7d2bcdebd504c81ac3fad08367ac
+guid: b8d15e61e22d51e4aa478a37fe8d1587
 ScriptedImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -32,7 +32,7 @@ ScriptedImporter:
     sRGBTexture: 1
     spriteMode: 2
     spriteExtrude: 1
-    spriteMeshType: 1
+    spriteMeshType: 0
     alignment: 0
     spritePivot: {x: 0.5, y: 0.5}
     spritePixelsToUnits: 100
