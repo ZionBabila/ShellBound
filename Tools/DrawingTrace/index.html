@@ -1,0 +1,724 @@
+<title>Trace Forge</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --paper:#F4F2EE; --board:#E9E5DC; --panel:#FBFAF7;
+    --ink:#23272C; --ink-2:#4A4F57; --guide:#8A8F98; --guide-2:#B9BCC0;
+    --line:#DAD6CC; --line-2:#E7E3D9;
+    --accent:#C8622D; --accent-soft:#E4A87F; --blueprint:#2E6E8E;
+    --sheet:#FAF8F3; --grid:#E4DFD3;
+    --shadow:0 1px 2px rgba(35,39,44,.06),0 8px 30px rgba(35,39,44,.08);
+    --r:10px;
+  }
+  :root:not([data-theme="light"]){ }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#16181C; --board:#101215; --panel:#1B1E23;
+      --ink:#ECEAE4; --ink-2:#B6BAC0; --guide:#7A8088; --guide-2:#565b62;
+      --line:#2A2E34; --line-2:#23262B;
+      --accent:#E17A44; --accent-soft:#7a4527; --blueprint:#5AA5C6;
+      --sheet:#1E2126; --grid:#2B2F35;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 34px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#16181C; --board:#101215; --panel:#1B1E23;
+    --ink:#ECEAE4; --ink-2:#B6BAC0; --guide:#7A8088; --guide-2:#565b62;
+    --line:#2A2E34; --line-2:#23262B;
+    --accent:#E17A44; --accent-soft:#7a4527; --blueprint:#5AA5C6;
+    --sheet:#1E2126; --grid:#2B2F35;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 34px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--board); color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.5;
+    display:flex; flex-direction:column; min-height:100%;
+  }
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--guide);
+  }
+  a{color:var(--accent)}
+
+  /* ---------- Masthead ---------- */
+  header.top{
+    display:flex; align-items:baseline; gap:16px; flex-wrap:wrap;
+    padding:14px 22px; border-bottom:1px solid var(--line);
+    background:var(--panel);
+  }
+  header.top .brand{
+    font-family:"Archivo",sans-serif; font-weight:700; font-size:19px;
+    letter-spacing:-.01em; display:flex; align-items:center; gap:10px;
+  }
+  header.top .brand b{color:var(--accent); font-weight:700}
+  header.top .tag{color:var(--ink-2); font-size:13px; max-width:52ch}
+  header.top .spacer{flex:1}
+  .themebtn{
+    font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--ink-2); background:transparent;
+    border:1px solid var(--line); border-radius:99px; padding:6px 12px; cursor:pointer;
+  }
+  .themebtn:hover{border-color:var(--guide); color:var(--ink)}
+
+  /* ---------- Shell ---------- */
+  main{display:grid; grid-template-columns:340px 1fr; flex:1; min-height:0}
+  @media (max-width:860px){ main{grid-template-columns:1fr} }
+
+  /* ---------- Brief panel ---------- */
+  .brief{
+    background:var(--panel); border-right:1px solid var(--line);
+    padding:20px; overflow-y:auto;
+  }
+  .brief h1{
+    font-family:"Archivo",sans-serif; font-size:15px; font-weight:600;
+    margin:0 0 2px; letter-spacing:.01em;
+  }
+  .brief .sub{color:var(--ink-2); font-size:12.5px; margin:0 0 18px}
+  .field{margin-bottom:18px}
+  .field > label.q{
+    display:flex; align-items:center; gap:8px; margin-bottom:9px;
+    font-size:12px; font-weight:600; color:var(--ink);
+  }
+  .field .num{
+    font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--accent);
+    border:1px solid var(--accent-soft); border-radius:5px; padding:1px 5px;
+  }
+  .chips{display:flex; flex-wrap:wrap; gap:7px}
+  .chip{
+    font-size:12px; padding:7px 11px; border-radius:8px; cursor:pointer;
+    border:1px solid var(--line); background:var(--paper); color:var(--ink-2);
+    user-select:none; transition:.12s; line-height:1.2;
+  }
+  .chip .k{font-family:"IBM Plex Mono",monospace; font-size:10px; color:var(--guide); display:block; margin-top:2px}
+  .chip:hover{border-color:var(--guide)}
+  .chip[aria-pressed="true"]{
+    background:var(--accent); border-color:var(--accent); color:#fff;
+  }
+  .chip[aria-pressed="true"] .k{color:rgba(255,255,255,.7)}
+  .seedrow{display:flex; gap:8px; align-items:center}
+  .seedrow input{
+    flex:1; font-family:"IBM Plex Mono",monospace; font-size:13px;
+    padding:8px 10px; border-radius:8px; border:1px solid var(--line);
+    background:var(--paper); color:var(--ink);
+  }
+  .seedrow button, .roll{
+    font-family:"IBM Plex Mono",monospace; font-size:12px; cursor:pointer;
+    padding:8px 11px; border-radius:8px; border:1px solid var(--line);
+    background:var(--paper); color:var(--ink);
+  }
+  .seedrow button:hover,.roll:hover{border-color:var(--guide)}
+  .generate{
+    width:100%; margin-top:6px; padding:12px; border:none; cursor:pointer;
+    background:var(--accent); color:#fff; border-radius:9px;
+    font-family:"Archivo",sans-serif; font-weight:600; font-size:14px; letter-spacing:.01em;
+  }
+  .generate:hover{filter:brightness(1.05)}
+  .hint{font-size:11.5px; color:var(--guide); margin-top:12px; line-height:1.55}
+  .hint b{color:var(--ink-2); font-weight:600}
+
+  /* ---------- Stage ---------- */
+  .stage{display:flex; flex-direction:column; min-width:0; background:var(--board)}
+  .toolbar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    padding:11px 18px; border-bottom:1px solid var(--line); background:var(--panel);
+  }
+  .toolbar .title{font-family:"Archivo",sans-serif; font-weight:600; font-size:13.5px}
+  .toolbar .meta{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--guide)}
+  .toolbar .spacer{flex:1}
+  .tbtn{
+    font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.04em;
+    padding:7px 12px; border-radius:8px; border:1px solid var(--line);
+    background:var(--paper); color:var(--ink); cursor:pointer; display:inline-flex; gap:7px; align-items:center;
+  }
+  .tbtn:hover{border-color:var(--guide)}
+  .tbtn.primary{background:var(--ink); color:var(--paper); border-color:var(--ink)}
+  .tbtn.primary:hover{filter:brightness(1.08)}
+  .toggle{display:inline-flex; align-items:center; gap:7px; font-size:11.5px; color:var(--ink-2); cursor:pointer}
+  .toggle input{accent-color:var(--accent)}
+
+  .scroll{flex:1; overflow:auto; padding:24px; display:flex; justify-content:center; align-items:flex-start}
+  .sheetwrap{
+    background:var(--sheet); box-shadow:var(--shadow); border-radius:4px;
+    position:relative; max-width:100%;
+  }
+  svg#sheet{display:block; width:min(100%, 1040px); height:auto}
+  .caption{
+    text-align:center; font-family:"IBM Plex Mono",monospace; font-size:11px;
+    color:var(--guide); padding:10px 0 4px;
+  }
+</style>
+
+<header class="top">
+  <div class="brand">Trace&nbsp;<b>Forge</b></div>
+  <div class="tag">A drafting bench that builds research-grounded line sheets in true perspective — print or drop into Procreate and trace the construction until the moves are yours.</div>
+  <div class="spacer"></div>
+  <button class="themebtn" id="theme">Theme</button>
+</header>
+
+<main>
+  <!-- ============ BRIEF ============ -->
+  <aside class="brief">
+    <h1>Today's brief</h1>
+    <p class="sub">Answer four questions. The bench builds a fresh sheet you can trace.</p>
+
+    <div class="field">
+      <label class="q"><span class="num">01</span> What are we drilling?</label>
+      <div class="chips" id="focus" data-multi="1">
+        <div class="chip" data-v="fundamentals" aria-pressed="true">Fundamentals<span class="k">boxes · ellipses</span></div>
+        <div class="chip" data-v="fillets" aria-pressed="true">Fillets<span class="k">radii · transitions</span></div>
+        <div class="chip" data-v="archetypes">Product archetypes<span class="k">bottle · mug · pod</span></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="q"><span class="num">02</span> Perspective</label>
+      <div class="chips" id="persp">
+        <div class="chip" data-v="2p" aria-pressed="true">2-point<span class="k">verticals true</span></div>
+        <div class="chip" data-v="3p">3-point<span class="k">worm / bird's eye</span></div>
+        <div class="chip" data-v="mix">Mix<span class="k">per tile</span></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="q"><span class="num">03</span> Difficulty</label>
+      <div class="chips" id="diff">
+        <div class="chip" data-v="warmup">Warm-up<span class="k">gentle angles</span></div>
+        <div class="chip" data-v="builder" aria-pressed="true">Builder<span class="k">working angles</span></div>
+        <div class="chip" data-v="challenge">Challenge<span class="k">steep · detailed</span></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="q"><span class="num">04</span> Tiles on the sheet</label>
+      <div class="chips" id="count">
+        <div class="chip" data-v="1">1</div>
+        <div class="chip" data-v="2" aria-pressed="true">2</div>
+        <div class="chip" data-v="4">4</div>
+        <div class="chip" data-v="6">6</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="q"><span class="num">05</span> Seed</label>
+      <div class="seedrow">
+        <input id="seed" class="mono" value="ID-1024" aria-label="Seed">
+        <button class="roll" id="roll" title="New random seed">↻</button>
+      </div>
+    </div>
+
+    <button class="generate" id="gen">Forge sheet →</button>
+
+    <p class="hint">
+      <b>How to use it.</b> Export the PNG at 2× and import to Procreate on its own layer at low opacity. Trace the <span style="color:var(--guide)">grey construction</span> first — crate, then ellipse minor-axis, then contour — not just the dark outline. Re-roll the seed for a new variation on the same drill.
+    </p>
+  </aside>
+
+  <!-- ============ STAGE ============ -->
+  <section class="stage">
+    <div class="toolbar">
+      <span class="title">Sheet</span>
+      <span class="meta" id="stamp">—</span>
+      <label class="toggle"><input type="checkbox" id="showConstruction" checked> construction lines</label>
+      <label class="toggle"><input type="checkbox" id="showLabels" checked> labels</label>
+      <span class="spacer"></span>
+      <button class="tbtn" id="svgBtn">SVG</button>
+      <button class="tbtn primary" id="pngBtn">Download PNG ↧</button>
+    </div>
+    <div class="scroll">
+      <div class="sheetwrap">
+        <svg id="sheet" viewBox="0 0 1040 760" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="caption" id="cap">Trace Forge — construction sheet</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ============================================================
+   Trace Forge — true-perspective line-sheet generator
+   ------------------------------------------------------------
+   Everything here is deterministic given the seed, so a sheet
+   can be reproduced and iterated. The projection is a real
+   pinhole camera; ellipses are projections of 3D circles, so
+   they are correct by construction rather than eyeballed.
+   ============================================================ */
+
+const SVGNS = "http://www.w3.org/2000/svg";
+
+/* ---------- seeded RNG (mulberry32) ---------- */
+function hashStr(s){ let h=1779033703^s.length; for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),3432918353); h=h<<13|h>>>19;} return (h>>>0); }
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+/* ---------- tiny vec3 ---------- */
+const V=(x,y,z)=>({x,y,z});
+const add=(a,b)=>V(a.x+b.x,a.y+b.y,a.z+b.z);
+const sub=(a,b)=>V(a.x-b.x,a.y-b.y,a.z-b.z);
+const mul=(a,s)=>V(a.x*s,a.y*s,a.z*s);
+const dot=(a,b)=>a.x*b.x+a.y*b.y+a.z*b.z;
+const cross=(a,b)=>V(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
+const len=a=>Math.hypot(a.x,a.y,a.z);
+const norm=a=>{const l=len(a)||1; return V(a.x/l,a.y/l,a.z/l);};
+
+function rotY(p,a){const c=Math.cos(a),s=Math.sin(a);return V(c*p.x+s*p.z,p.y,-s*p.x+c*p.z);}
+function rotX(p,a){const c=Math.cos(a),s=Math.sin(a);return V(p.x,c*p.y-s*p.z,s*p.y+c*p.z);}
+
+/* ============================================================
+   Projector — pinhole camera.
+   yaw about Y gives 2-point perspective (verticals stay true);
+   adding pitch about X gives the third vanishing point.
+   ============================================================ */
+class Projector{
+  constructor(o){
+    this.yaw=o.yaw; this.pitch=o.pitch||0;
+    this.dist=o.dist; this.focal=o.focal;
+    // `lift` drops the object below eye-line so horizontal faces open into
+    // readable ellipses. A pure vertical shift keeps verticals true, so
+    // 2-point perspective survives — only pitch adds a third vanishing point.
+    this.lift=o.lift||0;
+  }
+  cam(p){
+    let q=rotY(p,this.yaw);
+    if(this.pitch) q=rotX(q,this.pitch);
+    q=V(q.x, q.y-this.lift, q.z+this.dist);
+    return q;
+  }
+  proj(p){
+    const q=this.cam(p);
+    const z=Math.max(q.z,0.001);
+    return {x:this.focal*q.x/z, y:-this.focal*q.y/z};
+  }
+}
+
+/* ============================================================
+   Geometry — every builder returns polylines:
+   { pts:[{x,y}...], role:'crate'|'contour'|'guide'|'detail', closed:bool }
+   ============================================================ */
+
+// A circle living in 3D → sampled → gives a correct projected ellipse.
+function circle3D(center, u, v, r, {a0=0, a1=Math.PI*2, seg=64}={}){
+  u=norm(u); v=norm(v); const out=[];
+  const n=Math.max(6, Math.round(seg*(a1-a0)/(Math.PI*2)));
+  for(let i=0;i<=n;i++){ const t=a0+(a1-a0)*i/n;
+    out.push(add(center, add(mul(u,r*Math.cos(t)), mul(v,r*Math.sin(t))))); }
+  return out;
+}
+
+// Axis-aligned box wireframe (12 edges) centered at c.
+function box(c, hx,hy,hz){
+  const s=[-1,1], V3=[];
+  for(const sx of s) for(const sy of s) for(const sz of s)
+    V3.push(add(c,V(sx*hx,sy*hy,sz*hz)));
+  // index: bit0=x,1=y,2=z
+  const idx=(x,y,z)=>((x<0?0:1)*1)+((y<0?0:2))+((z<0?0:4));
+  const P=(x,y,z)=>V3[idx(x,y,z)];
+  const E=[];
+  const push=(a,b)=>E.push([a,b]);
+  for(const y of s) for(const z of s) push(P(-1,y,z),P(1,y,z)); // x edges
+  for(const x of s) for(const z of s) push(P(x,-1,z),P(x,1,z)); // y edges
+  for(const x of s) for(const y of s) push(P(x,y,-1),P(x,y,1)); // z edges
+  return E.map(([a,b])=>({pts:[a,b], role:'crate'}));
+}
+
+// Rounded box: straight seam edges shortened by r + quarter-circle
+// arcs at each of the 8 corners. This is the classic ID "fillet" form.
+function roundedBox(c, hx,hy,hz, r){
+  r=Math.min(r, hx*0.9, hy*0.9, hz*0.9);
+  const ax=hx-r, ay=hy-r, az=hz-r, s=[-1,1];
+  const out=[];
+  // 12 straight seam edges — each sits at the rounded offset on two axes
+  // and spans the flat inner range on the third.
+  const seams=[];
+  // edges along X: y=±(ay->hy? no). seam sits at y=±hy? Actually flat face top is y=hy over x in [-ax,ax], z in [-az,az]; seam where top meets rounded edge runs along x at y=hy, z=±az and along z at ... we draw the 12 edges at the rounded offset:
+  for(const sy of s) for(const sz of s) seams.push({p0:V(-ax, sy*hy, sz*az), p1:V(ax, sy*hy, sz*az)});
+  for(const sx of s) for(const sz of s) seams.push({p0:V(sx*hx, -ay, sz*az), p1:V(sx*hx, ay, sz*az)});
+  for(const sx of s) for(const sy of s) seams.push({p0:V(sx*hx, sy*hy, -az), p1:V(sx*hx, sy*hy, az)});
+  for(const e of seams) out.push({pts:[add(c,e.p0), add(c,e.p1)], role:'contour'});
+
+  // 3 quarter-arcs per corner (24 total)
+  for(const sx of s) for(const sy of s) for(const sz of s){
+    const cornerCtr=V(sx*ax, sy*ay, sz*az);
+    // arc in plane ⟂ Z: connects x-edge end (sx*hx,sy*ay) to y-edge end (sx*ax,sy*hy) at z=sz*hz
+    const mkArc=(u,v,zc)=>{
+      const cc=add(c, zc);
+      // pick angular range so arc sweeps the outer 90°
+      const pts=arcBetween(cc, u, v, r);
+      out.push({pts, role:'contour'});
+    };
+    mkArc(V(sx,0,0), V(0,sy,0), V(sx*ax,sy*ay,sz*hz)); // ⟂Z
+    mkArc(V(0,sy,0), V(0,0,sz), V(sx*hx,sy*ay,sz*az)); // ⟂X
+    mkArc(V(sx,0,0), V(0,0,sz), V(sx*ax,sy*hy,sz*az)); // ⟂Y
+  }
+  function arcBetween(center,u,v,r){
+    u=norm(u); v=norm(v); const pts=[];
+    for(let i=0;i<=8;i++){ const t=(Math.PI/2)*i/8;
+      pts.push(add(center, add(mul(u,r*Math.cos(t)), mul(v,r*Math.sin(t))))); }
+    return pts;
+  }
+  return out;
+}
+
+// Cylinder along Y with cross-contour ellipses.
+function cylinder(c, r, hy, {contours=1}={}){
+  const out=[];
+  const top=add(c,V(0,hy,0)), bot=add(c,V(0,-hy,0));
+  out.push({pts:circle3D(top, V(1,0,0), V(0,0,1), r), role:'contour', closed:true});
+  out.push({pts:circle3D(bot, V(1,0,0), V(0,0,1), r), role:'contour', closed:true});
+  // side seams (silhouette approximation): left & right verticals
+  out.push({pts:[add(top,V(-r,0,0)), add(bot,V(-r,0,0))], role:'contour'});
+  out.push({pts:[add(top,V(r,0,0)), add(bot,V(r,0,0))], role:'contour'});
+  for(let i=1;i<=contours;i++){ const y=-hy+2*hy*i/(contours+1);
+    out.push({pts:circle3D(add(c,V(0,y,0)),V(1,0,0),V(0,0,1),r), role:'guide', closed:true}); }
+  return out;
+}
+
+// Surface of revolution about Y from a profile [{y, r}] (bottom→top).
+function revolve(c, profile){
+  const out=[];
+  // silhouette: left and right profile curves
+  const left=[], right=[];
+  for(const p of profile){ left.push(add(c,V(-p.r,p.y,0))); right.push(add(c,V(p.r,p.y,0))); }
+  out.push({pts:left, role:'contour'});
+  out.push({pts:right, role:'contour'});
+  // cross-section ellipses at each profile ring with r>0
+  for(const p of profile){ if(p.r>0.001)
+    out.push({pts:circle3D(add(c,V(0,p.y,0)),V(1,0,0),V(0,0,1),p.r), role: p.key?'contour':'guide', closed:true}); }
+  return out;
+}
+
+/* ============================================================
+   Exercise builders — each returns { shapes, label }
+   in object space; the packer fits them into a tile.
+   ============================================================ */
+
+function exFundamentals(rng, diff){
+  // A crate with an inscribed ellipse on top + a leaning cylinder beside it.
+  const hx=1+ rng()*0.4, hy=0.7+rng()*0.5, hz=1+rng()*0.4;
+  let shapes = box(V(0,0,0), hx,hy,hz);
+  // ellipse inscribed on top face (y=+hy)
+  shapes.push({pts:circle3D(V(0,hy,0), V(1,0,0), V(0,0,1), Math.min(hx,hz), {seg:72}), role:'contour', closed:true});
+  // minor-axis guide (teaches ellipse orientation)
+  shapes.push({pts:[V(0,hy,-hz),V(0,hy,hz)], role:'guide'});
+  shapes.push({pts:[V(-hx,hy,0),V(hx,hy,0)], role:'guide'});
+  // a small cylinder to the side
+  const cx=hx+1.1+rng()*0.3;
+  shapes=shapes.concat(box(V(cx,0,0),0.7,hy+0.2,0.7));
+  shapes=shapes.concat(cylinder(V(cx,-0.1,0),0.62, hy, {contours: diff==='challenge'?2:1}));
+  return {shapes, label:'FUNDAMENTALS · crate + inscribed ellipse + cylinder'};
+}
+
+function exFillet(rng, diff){
+  const hx=1.1+rng()*0.4, hy=0.7+rng()*0.4, hz=0.9+rng()*0.4;
+  // Radius as a clean fraction of the smallest half-extent, kept modest so
+  // the corner arcs stay legible instead of merging into a blob.
+  const frac = diff==='warmup'?0.42 : diff==='builder'?0.34 : 0.26;
+  const rr = Math.min(hx,hy,hz)*frac;
+  let shapes = box(V(0,0,0), hx,hy,hz);            // the construction crate
+  shapes = shapes.concat(roundedBox(V(0,0,0), hx,hy,hz, rr)); // filleted form
+  return {shapes, label:`FILLETS · soft-radius block  r/h≈${frac}`};
+}
+
+function exBottle(rng){
+  // Revolved profile: base, body, shoulder, neck, lip.
+  const R=0.62+rng()*0.12;
+  const neck=0.2+rng()*0.06;
+  const prof=[
+    {y:-1.5, r:R*0.86, key:1},
+    {y:-1.35, r:R},
+    {y:-0.2, r:R},
+    {y:0.15, r:R*0.98, key:1},
+    {y:0.55, r:R*0.6},
+    {y:0.8, r:neck},
+    {y:1.15, r:neck, key:1},
+    {y:1.22, r:neck*1.25, key:1},
+  ];
+  const shapes = revolve(V(0,0,0), prof);
+  return {shapes, label:'ARCHETYPE · bottle (revolved surface)'};
+}
+
+function exMug(rng){
+  const r=0.7, hy=0.72;
+  let shapes = cylinder(V(0,0,0), r, hy, {contours:1});
+  // inner rim ellipse
+  shapes.push({pts:circle3D(V(0,hy,0),V(1,0,0),V(0,0,1),r*0.82), role:'guide', closed:true});
+  // handle: arc in the x-y plane on +x side
+  const cx=r+0.02;
+  const handleCtr=V(cx,0,0);
+  const hp=[];
+  for(let i=0;i<=16;i++){ const t=-Math.PI*0.5+Math.PI*i/16;
+    hp.push(V(cx+Math.cos(t)*0.42, Math.sin(t)*0.5, 0)); }
+  shapes.push({pts:hp, role:'contour'});
+  const hp2=hp.map(p=>V(p.x-0.14,p.y,p.z));
+  shapes.push({pts:hp2, role:'contour'});
+  return {shapes, label:'ARCHETYPE · mug (cylinder + handle)'};
+}
+
+function exPod(rng, diff){
+  // A rounded-box speaker/handheld with a grille circle + parting line + button.
+  const hx=0.7+rng()*0.2, hy=1.0+rng()*0.4, hz=0.7+rng()*0.2;
+  const rr=Math.min(0.32, hx*0.7,hz*0.7);
+  let shapes = box(V(0,0,0), hx,hy,hz);
+  shapes = shapes.concat(roundedBox(V(0,0,0), hx,hy,hz, rr));
+  // front grille: circle on +z face
+  shapes.push({pts:circle3D(V(0,0.15,hz),V(1,0,0),V(0,1,0),Math.min(hx,hy)*0.62,{seg:56}), role:'detail', closed:true});
+  shapes.push({pts:circle3D(V(0,0.15,hz),V(1,0,0),V(0,1,0),Math.min(hx,hy)*0.4,{seg:56}), role:'detail', closed:true});
+  // parting line wrapping the middle
+  shapes.push({pts:circle3D(V(0,-0.35,0),V(1,0,0),V(0,0,1),hx,{seg:56}), role:'guide', closed:true});
+  // top button
+  shapes.push({pts:circle3D(V(0,hy,0),V(1,0,0),V(0,0,1),hx*0.35), role:'detail', closed:true});
+  return {shapes, label:'ARCHETYPE · audio pod (filleted block + details)'};
+}
+
+/* ---------- pick an exercise given the brief ---------- */
+function buildExercise(kind, rng, diff){
+  if(kind==='fundamentals') return exFundamentals(rng,diff);
+  if(kind==='fillets') return exFillet(rng,diff);
+  // archetypes → rotate through variants
+  const pick=Math.floor(rng()*3);
+  if(pick===0) return exBottle(rng);
+  if(pick===1) return exMug(rng);
+  return exPod(rng,diff);
+}
+
+/* ============================================================
+   Fit a set of object-space polylines into a tile rect and
+   emit SVG. Projection happens here.
+   ============================================================ */
+function projectShapes(shapes, projector){
+  return shapes
+    .filter(s=>s.pts && s.pts.length>1)
+    .map(s=>({role:s.role, closed:s.closed, pts:s.pts.map(p=>projector.proj(p))}));
+}
+
+function bounds(projected){
+  let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+  for(const s of projected) for(const p of s.pts){
+    if(p.x<minx)minx=p.x; if(p.y<miny)miny=p.y;
+    if(p.x>maxx)maxx=p.x; if(p.y>maxy)maxy=p.y;
+  }
+  return {minx,miny,maxx,maxy,w:maxx-minx,h:maxy-miny};
+}
+
+const ROLE_STYLE={
+  crate:   {stroke:'var(--tf-guide)', w:0.9, dash:'3 4', op:.75},
+  guide:   {stroke:'var(--tf-guide)', w:0.9, dash:'2 4', op:.7},
+  contour: {stroke:'var(--tf-ink)',   w:2.1, dash:'',    op:1},
+  detail:  {stroke:'var(--tf-ink)',   w:1.4, dash:'',    op:.92},
+};
+
+function tileGroup(ex, projector, rect, opts){
+  const g=document.createElementNS(SVGNS,'g');
+  let projected=projectShapes(ex.shapes, projector);
+  if(!opts.construction) projected=projected.filter(s=>s.role==='contour'||s.role==='detail');
+  const b=bounds(projected);
+  const pad=Math.min(rect.w,rect.h)*0.13;
+  const scale=Math.min((rect.w-2*pad)/(b.w||1),(rect.h-2*pad)/(b.h||1));
+  const ox=rect.x+rect.w/2 - (b.minx+b.w/2)*scale;
+  const oy=rect.y+rect.h/2 - (b.miny+b.h/2)*scale;
+  const T=p=>`${(ox+p.x*scale).toFixed(2)},${(oy+p.y*scale).toFixed(2)}`;
+
+  for(const s of projected){
+    const st=ROLE_STYLE[s.role]||ROLE_STYLE.contour;
+    const el=document.createElementNS(SVGNS, s.closed?'polygon':'polyline');
+    el.setAttribute('points', s.pts.map(T).join(' '));
+    el.setAttribute('fill','none');
+    el.setAttribute('stroke', st.stroke);
+    el.setAttribute('stroke-width', st.w);
+    el.setAttribute('stroke-opacity', st.op);
+    el.setAttribute('stroke-linejoin','round');
+    el.setAttribute('stroke-linecap','round');
+    if(st.dash) el.setAttribute('stroke-dasharray', st.dash);
+    g.appendChild(el);
+  }
+  // tile frame + label
+  const frame=document.createElementNS(SVGNS,'rect');
+  frame.setAttribute('x',rect.x+6); frame.setAttribute('y',rect.y+6);
+  frame.setAttribute('width',rect.w-12); frame.setAttribute('height',rect.h-12);
+  frame.setAttribute('rx',6); frame.setAttribute('fill','none');
+  frame.setAttribute('stroke','var(--tf-frame)'); frame.setAttribute('stroke-width',1);
+  g.appendChild(frame);
+
+  if(opts.labels){
+    const t=document.createElementNS(SVGNS,'text');
+    t.setAttribute('x',rect.x+16); t.setAttribute('y',rect.y+26);
+    t.setAttribute('font-family','"IBM Plex Mono",monospace');
+    t.setAttribute('font-size','11'); t.setAttribute('fill','var(--tf-label)');
+    t.setAttribute('letter-spacing','.03em');
+    t.textContent=ex.label;
+    g.appendChild(t);
+  }
+  return g;
+}
+
+/* ============================================================
+   Sheet assembly
+   ============================================================ */
+const SHEET_W=1040, SHEET_H=760;
+
+function projectorFor(persp, diff, rng){
+  const which = persp==='mix' ? (rng()<0.5?'2p':'3p') : persp;
+  const yawBase = diff==='warmup'?0.44 : diff==='builder'?0.62 : 0.82;
+  const yaw = (rng()<0.5?1:-1)*(yawBase + (rng()-0.5)*0.18);
+  let pitch=0;
+  if(which==='3p'){
+    const pB = diff==='warmup'?0.14:diff==='builder'?0.24:0.36;
+    pitch=(rng()<0.5?1:-1)*(pB+(rng()-0.5)*0.1);
+  }
+  // Below-horizon lift: strong for flat 2-point (so top faces open to a
+  // traceable ~30° ellipse), eased off for 3-point where pitch already tips
+  // the object toward the viewer.
+  const lift = which==='3p' ? 1.1 : (2.7 + rng()*0.5);
+  return new Projector({yaw, pitch, lift, dist: 6.8 - (diff==='challenge'?0.9:0), focal: 640});
+}
+
+function gridRects(n){
+  const m=18;
+  const cols = n===1?1 : n===2?2 : n===6?3 : 2;
+  const rows = n===1?1 : n===2?1 : n===6?2 : 2;
+  const cw=(SHEET_W-m*(cols+1))/cols, ch=(SHEET_H-m*(rows+1))/rows;
+  const out=[];
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++)
+    out.push({x:m+c*(cw+m), y:m+r*(ch+m), w:cw, h:ch});
+  return out.slice(0,n);
+}
+
+const state={ focus:['fundamentals','fillets'], persp:'2p', diff:'builder', count:2, seed:'ID-1024' };
+
+function render(){
+  const svg=document.getElementById('sheet');
+  // theme-driven stroke colors resolved to concrete values for export fidelity
+  const cs=getComputedStyle(document.documentElement);
+  svg.style.setProperty('--tf-ink', cs.getPropertyValue('--ink').trim());
+  svg.style.setProperty('--tf-guide', cs.getPropertyValue('--guide').trim());
+  svg.style.setProperty('--tf-frame', cs.getPropertyValue('--grid').trim());
+  svg.style.setProperty('--tf-label', cs.getPropertyValue('--guide').trim());
+  while(svg.firstChild) svg.removeChild(svg.firstChild);
+
+  // background paper + faint grid
+  const bg=document.createElementNS(SVGNS,'rect');
+  bg.setAttribute('width',SHEET_W); bg.setAttribute('height',SHEET_H);
+  bg.setAttribute('fill', cs.getPropertyValue('--sheet').trim());
+  svg.appendChild(bg);
+  const gcol=cs.getPropertyValue('--grid').trim();
+  for(let x=40;x<SHEET_W;x+=40){ const l=document.createElementNS(SVGNS,'line');
+    l.setAttribute('x1',x);l.setAttribute('y1',0);l.setAttribute('x2',x);l.setAttribute('y2',SHEET_H);
+    l.setAttribute('stroke',gcol);l.setAttribute('stroke-width',.5);l.setAttribute('stroke-opacity',.5);svg.appendChild(l);}
+  for(let y=40;y<SHEET_H;y+=40){ const l=document.createElementNS(SVGNS,'line');
+    l.setAttribute('x1',0);l.setAttribute('y1',y);l.setAttribute('x2',SHEET_W);l.setAttribute('y2',y);
+    l.setAttribute('stroke',gcol);l.setAttribute('stroke-width',.5);l.setAttribute('stroke-opacity',.5);svg.appendChild(l);}
+
+  const rng=mulberry32(hashStr(state.seed));
+  const focus=state.focus.length?state.focus:['fundamentals'];
+  const rects=gridRects(state.count);
+  const opts={
+    construction: document.getElementById('showConstruction').checked,
+    labels: document.getElementById('showLabels').checked,
+  };
+  rects.forEach((rect,i)=>{
+    const kind=focus[i%focus.length];
+    const ex=buildExercise(kind, rng, state.diff);
+    const proj=projectorFor(state.persp, state.diff, rng);
+    svg.appendChild(tileGroup(ex, proj, rect, opts));
+  });
+
+  document.getElementById('stamp').textContent =
+    `${state.seed} · ${state.persp.toUpperCase()} · ${state.diff} · ${state.count}×`;
+  document.getElementById('cap').textContent =
+    `Trace Forge · ${focus.join(' + ')} · seed ${state.seed}`;
+}
+
+/* ============================================================
+   UI wiring
+   ============================================================ */
+function wireChips(id, key, multi){
+  const box=document.getElementById(id);
+  box.addEventListener('click', e=>{
+    const chip=e.target.closest('.chip'); if(!chip) return;
+    if(multi){
+      const on=chip.getAttribute('aria-pressed')==='true';
+      // keep at least one selected
+      const pressed=[...box.querySelectorAll('[aria-pressed="true"]')];
+      if(on && pressed.length===1) return;
+      chip.setAttribute('aria-pressed', on?'false':'true');
+      state[key]=[...box.querySelectorAll('[aria-pressed="true"]')].map(c=>c.dataset.v);
+    }else{
+      box.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));
+      chip.setAttribute('aria-pressed','true');
+      let v=chip.dataset.v; if(id==='count') v=parseInt(v,10);
+      state[key]=v;
+    }
+    render();
+  });
+}
+wireChips('focus','focus',true);
+wireChips('persp','persp',false);
+wireChips('diff','diff',false);
+wireChips('count','count',false);
+
+document.getElementById('seed').addEventListener('input',e=>{ state.seed=e.target.value||'seed'; });
+document.getElementById('seed').addEventListener('change', render);
+document.getElementById('roll').addEventListener('click',()=>{
+  const s='ID-'+Math.floor(1000+Math.random()*9000);
+  state.seed=s; document.getElementById('seed').value=s; render();
+});
+document.getElementById('gen').addEventListener('click', render);
+document.getElementById('showConstruction').addEventListener('change', render);
+document.getElementById('showLabels').addEventListener('change', render);
+
+/* theme toggle */
+document.getElementById('theme').addEventListener('click',()=>{
+  const r=document.documentElement;
+  const cur=r.getAttribute('data-theme');
+  const sysDark=matchMedia('(prefers-color-scheme: dark)').matches;
+  const next = cur ? (cur==='dark'?'light':'dark') : (sysDark?'light':'dark');
+  r.setAttribute('data-theme', next);
+  render();
+});
+
+/* ---------- export ---------- */
+function serialize(){
+  const svg=document.getElementById('sheet').cloneNode(true);
+  // inline resolved stroke colors so the export is theme-independent
+  const cs=getComputedStyle(document.getElementById('sheet'));
+  const map={'--tf-ink':cs.getPropertyValue('--tf-ink'),'--tf-guide':cs.getPropertyValue('--tf-guide'),
+             '--tf-frame':cs.getPropertyValue('--tf-frame'),'--tf-label':cs.getPropertyValue('--tf-label')};
+  let str=new XMLSerializer().serializeToString(svg);
+  for(const k in map) str=str.split(`var(${k})`).join(map[k].trim());
+  str=str.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+  return str;
+}
+document.getElementById('svgBtn').addEventListener('click',()=>{
+  const blob=new Blob([serialize()],{type:'image/svg+xml'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download=`traceforge-${state.seed}.svg`; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+document.getElementById('pngBtn').addEventListener('click',()=>{
+  const scale=2; // ~2080px wide — crisp for Procreate tracing
+  const svgStr=serialize();
+  const img=new Image();
+  const svg64='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svgStr)));
+  img.onload=()=>{
+    const cv=document.createElement('canvas');
+    cv.width=SHEET_W*scale; cv.height=SHEET_H*scale;
+    const ctx=cv.getContext('2d');
+    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--sheet').trim();
+    ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.drawImage(img,0,0,cv.width,cv.height);
+    cv.toBlob(b=>{ const url=URL.createObjectURL(b); const a=document.createElement('a');
+      a.href=url; a.download=`traceforge-${state.seed}.png`; a.click();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+    },'image/png');
+  };
+  img.src=svg64;
+});
+
+/* first paint */
+render();
+</script>
