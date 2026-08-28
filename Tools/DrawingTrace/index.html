@@ -693,17 +693,30 @@ function serialize(){
   str=str.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
   return str;
 }
-document.getElementById('svgBtn').addEventListener('click',()=>{
-  const blob=new Blob([serialize()],{type:'image/svg+xml'});
+// Save a Blob. On the hosted artifact, downloads are mediated by the viewer
+// (claude.use("downloads")); opened as a local file, we fall back to a plain
+// anchor download. Either path works without changing the caller.
+let _downloads; // memoized namespace lookup
+async function saveFile(filename, blob){
+  if(_downloads===undefined){
+    try{ _downloads = (window.claude && claude.use) ? await claude.use('downloads') : null; }
+    catch(_){ _downloads=null; }
+  }
+  if(_downloads){
+    try{ await _downloads.save({filename, data:blob}); return; }
+    catch(err){ if(err && err.code==='declined') return; /* else fall through */ }
+  }
   const url=URL.createObjectURL(blob); const a=document.createElement('a');
-  a.href=url; a.download=`traceforge-${state.seed}.svg`; a.click();
+  a.href=url; a.download=filename; a.click();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+document.getElementById('svgBtn').addEventListener('click',()=>{
+  saveFile(`traceforge-${state.seed}.svg`, new Blob([serialize()],{type:'image/svg+xml'}));
 });
 document.getElementById('pngBtn').addEventListener('click',()=>{
   const scale=2; // ~2080px wide — crisp for Procreate tracing
-  const svgStr=serialize();
   const img=new Image();
-  const svg64='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svgStr)));
   img.onload=()=>{
     const cv=document.createElement('canvas');
     cv.width=SHEET_W*scale; cv.height=SHEET_H*scale;
@@ -711,12 +724,9 @@ document.getElementById('pngBtn').addEventListener('click',()=>{
     ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--sheet').trim();
     ctx.fillRect(0,0,cv.width,cv.height);
     ctx.drawImage(img,0,0,cv.width,cv.height);
-    cv.toBlob(b=>{ const url=URL.createObjectURL(b); const a=document.createElement('a');
-      a.href=url; a.download=`traceforge-${state.seed}.png`; a.click();
-      setTimeout(()=>URL.revokeObjectURL(url),1000);
-    },'image/png');
+    cv.toBlob(b=>saveFile(`traceforge-${state.seed}.png`, b),'image/png');
   };
-  img.src=svg64;
+  img.src='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(serialize())));
 });
 
 /* first paint */
