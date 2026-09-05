@@ -33,6 +33,13 @@ public class AirVent : MonoBehaviour
     [Tooltip("Delay before the particles appear each blast, to line them up with the sound (which has a tiny lag). 0 = together.")]
     public float particleDelay = 0f;
 
+    [Header("Particle Sweep")]
+    [Tooltip("The path the particle system travels each blast, relative to the vent's own rotation. " +
+             "Rate over Distance emits along this movement, so this is the direction and length of the jet. " +
+             "The cyan gizmo shows it in the Scene view. Needs Simulation Space = World on the particle " +
+             "system, so emitted particles stay behind instead of riding along.")]
+    public Vector2 particleTravel = new Vector2(0f, 3f);
+
     [Header("Sound Distance Fade")]
     [Tooltip("Peak volume of this vent's blast when the player is close (0 = silent, 1 = full).")]
     [Range(0f, 1f)]
@@ -49,9 +56,13 @@ public class AirVent : MonoBehaviour
     // Cached player transform, used to fade the sound by distance.
     private Transform player;
 
+    // Where the particle system sits between blasts. The sweep starts and returns here.
+    private Vector3 particlesRestPosition;
+
     private void Start()
     {
         player = FindPlayer();
+        if (airParticles != null) particlesRestPosition = airParticles.transform.position;
 
         // Start idle: no push, no particles, no sound. The cycle turns it on.
         StopBlow();
@@ -82,7 +93,7 @@ public class AirVent : MonoBehaviour
             if (particleDelay > 0f) yield return new WaitForSeconds(particleDelay);
             if (airParticles != null) airParticles.Play();
 
-            yield return new WaitForSeconds(activeDuration);
+            yield return SweepParticles();
 
             StopBlow();
 
@@ -92,11 +103,37 @@ public class AirVent : MonoBehaviour
         }
     }
 
+    // Slides the particle system along particleTravel over the length of the blast.
+    // That movement is what a Rate over Distance emitter turns into particles, so the
+    // jet is drawn along the path instead of piling up in one spot.
+    private IEnumerator SweepParticles()
+    {
+        if (airParticles == null || activeDuration <= 0f)
+        {
+            yield return new WaitForSeconds(activeDuration);
+            yield break;
+        }
+
+        Vector3 offset = transform.TransformVector(particleTravel);
+        float elapsed = 0f;
+
+        while (elapsed < activeDuration)
+        {
+            elapsed += Time.deltaTime;
+            airParticles.transform.position = particlesRestPosition + offset * Mathf.Clamp01(elapsed / activeDuration);
+            yield return null;
+        }
+    }
+
     // Turns the vent off: no push, and stop the particles (live ones fade out naturally).
     private void StopBlow()
     {
         if (pushZone != null) pushZone.enabled = false;
-        if (airParticles != null) airParticles.Stop();
+        if (airParticles != null)
+        {
+            airParticles.Stop();
+            airParticles.transform.position = particlesRestPosition; // Back to the start for the next blast.
+        }
     }
 
     // Blast volume based on the player's distance: 1 within soundFullVolumeDistance,
@@ -116,5 +153,18 @@ public class AirVent : MonoBehaviour
     {
         SimplePlayer simplePlayer = FindFirstObjectByType<SimplePlayer>();
         return simplePlayer != null ? simplePlayer.transform : null;
+    }
+
+    // Draws the particle sweep in the Scene view so the path can be aimed without entering Play.
+    private void OnDrawGizmosSelected()
+    {
+        if (airParticles == null) return;
+
+        Vector3 start = Application.isPlaying ? particlesRestPosition : airParticles.transform.position;
+        Vector3 end = start + transform.TransformVector(particleTravel);
+
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawLine(start, end);
+        Gizmos.DrawWireSphere(end, 0.15f);
     }
 }

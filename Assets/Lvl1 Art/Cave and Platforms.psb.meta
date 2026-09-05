@@ -337,6 +337,28 @@ ScriptedImporter:
     tessellationDetail: 0
     uvTransform: {x: 3581, y: 434}
     spritePosition: {x: 1049, y: 928}
+  - name: Layer 1
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 4044
+      y: 434
+      width: 26
+      height: 18
+    spriteID: 9a343371b413dc8448aaf292597909a0
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 4044, y: 434}
+    spritePosition: {x: 937, y: 957}
   - name: Cave Platform
     originalName: 
     pivot: {x: 0.5, y: 0.5}
@@ -770,6 +792,16 @@ ScriptedImporter:
     flatten: 0
     isImported: 1
     isVisible: 1
+  - name: Layer 1
+    spriteName: Layer 1
+    isGroup: 0
+    parentIndex: 1
+    spriteID: 9a343371b413dc8448aaf292597909a0
+    layerID: 40
+    mosaicPosition: {x: 4044, y: 434}
+    flatten: 0
+    isImported: 1
+    isVisible: 1
   - name: Cave Platform
     spriteName: Cave Platform
     isGroup: 0
@@ -813,7 +845,7 @@ ScriptedImporter:
   - name: Button up
     spriteName: Button up
     isGroup: 0
-    parentIndex: 15
+    parentIndex: 16
     spriteID: 65ee3d0f1115bf847b3bd879b49dd1fe
     layerID: 6
     mosaicPosition: {x: 3581, y: 861}
@@ -823,7 +855,7 @@ ScriptedImporter:
   - name: Button Down
     spriteName: Button Down
     isGroup: 0
-    parentIndex: 15
+    parentIndex: 16
     spriteID: add97091afed1914fa798fffba6d9a9b
     layerID: 5
     mosaicPosition: {x: 3826, y: 434}
@@ -843,7 +875,7 @@ ScriptedImporter:
   - name: Platform4
     spriteName: Platform4
     isGroup: 0
-    parentIndex: 18
+    parentIndex: 19
     spriteID: 78e5b9115c4f2344ca7a0a44f45b354b
     layerID: 34
     mosaicPosition: {x: 3581, y: 240}
@@ -853,7 +885,7 @@ ScriptedImporter:
   - name: Platform3
     spriteName: Platform3
     isGroup: 0
-    parentIndex: 18
+    parentIndex: 19
     spriteID: fbc6db2a4d811384f9a8b9253e09f15d
     layerID: 35
     mosaicPosition: {x: 1107, y: 2668}
@@ -863,7 +895,7 @@ ScriptedImporter:
   - name: Platform2
     spriteName: Platform2
     isGroup: 0
-    parentIndex: 18
+    parentIndex: 19
     spriteID: 96f62f5d0f1f1bb42a02b36553266db7
     layerID: 10
     mosaicPosition: {x: 4, y: 3345}
@@ -873,7 +905,7 @@ ScriptedImporter:
   - name: Platform1
     spriteName: Platform1
     isGroup: 0
-    parentIndex: 18
+    parentIndex: 19
     spriteID: 439012a2c33396f4ea312f63af5e9053
     layerID: 4
     mosaicPosition: {x: 3581, y: 4}
@@ -883,7 +915,7 @@ ScriptedImporter:
   - name: Big Platform
     spriteName: Big Platform
     isGroup: 0
-    parentIndex: 18
+    parentIndex: 19
     spriteID: 255af2b21a4695a4fa9d9687520fb5f8
     layerID: 3
     mosaicPosition: {x: 4, y: 1866}
@@ -893,7 +925,7 @@ ScriptedImporter:
   - name: Platform5
     spriteName: Platform5
     isGroup: 0
-    parentIndex: 18
+    parentIndex: 19
     spriteID: ae11202083fc63641a7cfd95a857a263
     layerID: 9
     mosaicPosition: {x: 1107, y: 3028}
