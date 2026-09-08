@@ -170,7 +170,7 @@ ScriptedImporter:
     rect:
       serializedVersion: 2
       x: 2674
-      y: 686
+      y: 631
       width: 209
       height: 240
     spriteID: 51e4151bbf40b18448147f252e60e16f
@@ -181,7 +181,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 2674, y: 686}
+    uvTransform: {x: 2674, y: 631}
     spritePosition: {x: 1512, y: 135}
   - name: Shadow pit 2
     originalName: 
@@ -381,6 +381,72 @@ ScriptedImporter:
     tessellationDetail: 0
     uvTransform: {x: 3673, y: 1092}
     spritePosition: {x: 915, y: 778}
+  - name: Layer 1
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 3952
+      y: 1515
+      width: 23
+      height: 25
+    spriteID: d53a15fb02f89764ca30ddd8491e23c5
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 3952, y: 1515}
+    spritePosition: {x: 421, y: 401}
+  - name: Layer 2
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 3952
+      y: 1458
+      width: 31
+      height: 49
+    spriteID: 724fb96f6349dd944934768a24de5432
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 3952, y: 1458}
+    spritePosition: {x: 850, y: 749}
+  - name: Layer 3
+    originalName: 
+    pivot: {x: 0.5, y: 0.5}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 3991
+      y: 1458
+      width: 37
+      height: 37
+    spriteID: b9ef82bcf5350ce419a3c37453825c09
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 3991, y: 1458}
+    spritePosition: {x: 1369, y: 759}
   - name: Big Hill
     originalName: 
     pivot: {x: 0.5, y: 0.5}
@@ -456,7 +522,7 @@ ScriptedImporter:
     rect:
       serializedVersion: 2
       x: 1271
-      y: 686
+      y: 631
       width: 1395
       height: 358
     spriteID: 58fb7019312867948ad6c5788e738b38
@@ -467,7 +533,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 1271, y: 686}
+    uvTransform: {x: 1271, y: 631}
     spritePosition: {x: 164, y: 56}
   spriteImportData: []
   rigSpriteImportData: []
@@ -672,7 +738,7 @@ ScriptedImporter:
     parentIndex: 8
     spriteID: 51e4151bbf40b18448147f252e60e16f
     layerID: 21
-    mosaicPosition: {x: 2674, y: 686}
+    mosaicPosition: {x: 2674, y: 631}
     flatten: 0
     isImported: 1
     isVisible: 1
@@ -807,35 +873,35 @@ ScriptedImporter:
     isImported: 0
     isVisible: 1
   - name: Layer 1
-    spriteName: 
+    spriteName: Layer 1
     isGroup: 0
     parentIndex: 22
     spriteID: d53a15fb02f89764ca30ddd8491e23c5
     layerID: 51
-    mosaicPosition: {x: 0, y: 0}
+    mosaicPosition: {x: 3952, y: 1515}
     flatten: 0
-    isImported: 0
-    isVisible: 0
+    isImported: 1
+    isVisible: 1
   - name: Layer 2
-    spriteName: 
+    spriteName: Layer 2
     isGroup: 0
     parentIndex: 22
     spriteID: 724fb96f6349dd944934768a24de5432
     layerID: 52
-    mosaicPosition: {x: 0, y: 0}
+    mosaicPosition: {x: 3952, y: 1458}
     flatten: 0
-    isImported: 0
-    isVisible: 0
+    isImported: 1
+    isVisible: 1
   - name: Layer 3
-    spriteName: 
+    spriteName: Layer 3
     isGroup: 0
     parentIndex: 22
     spriteID: b9ef82bcf5350ce419a3c37453825c09
     layerID: 53
-    mosaicPosition: {x: 0, y: 0}
+    mosaicPosition: {x: 3991, y: 1458}
     flatten: 0
-    isImported: 0
-    isVisible: 0
+    isImported: 1
+    isVisible: 1
   - name: Big Hill
     spriteName: Big Hill
     isGroup: 0
@@ -872,7 +938,7 @@ ScriptedImporter:
     parentIndex: 22
     spriteID: 58fb7019312867948ad6c5788e738b38
     layerID: 35
-    mosaicPosition: {x: 1271, y: 686}
+    mosaicPosition: {x: 1271, y: 631}
     flatten: 0
     isImported: 1
     isVisible: 1
