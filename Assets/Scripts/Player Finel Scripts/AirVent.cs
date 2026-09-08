@@ -17,6 +17,18 @@ public class AirVent : MonoBehaviour
 
    
 
+    [Header("Mode")]
+    [Tooltip("Blows non-stop like an air-conditioner compressor instead of cycling on and off. " +
+             "The pause fields are then unused; activeDuration still paces one pass of the particle sweep.")]
+    public bool constantBlow = false;
+
+    [Tooltip("Constant mode only: how often the hiss is re-triggered, in seconds. Match it to the " +
+             "clip length so the sound runs without gaps or overlap.")]
+    public float soundRepeatInterval = 1f;
+
+    [Tooltip("Play this vent's alternate clip (AudioManager.airVentAlt) instead of the default one.")]
+    public bool useAltSound = false;
+
     [Header("Timing")]
     [Tooltip("How long the air blows each cycle, in seconds.")]
     public float activeDuration = 2f;
@@ -64,9 +76,18 @@ public class AirVent : MonoBehaviour
         player = FindPlayer();
         if (airParticles != null) particlesRestPosition = airParticles.transform.position;
 
-        // Start idle: no push, no particles, no sound. The cycle turns it on.
+        // Start idle: no push, no particles, no sound. The chosen mode turns it on.
         StopBlow();
-        StartCoroutine(VentCycle());
+
+        if (constantBlow)
+        {
+            StartCoroutine(ConstantBlow());
+            StartCoroutine(ConstantSound());
+        }
+        else
+        {
+            StartCoroutine(VentCycle());
+        }
     }
 
     // The repeating blow/pause loop. Runs forever while the object is alive.
@@ -81,14 +102,7 @@ public class AirVent : MonoBehaviour
             // with the sound (which lags slightly through the AudioManager flag).
             if (pushZone != null) pushZone.enabled = true;
 
-            // Fade the blast sound by the player's distance: full volume up close,
-            // fading out with distance, silent only once the player is really far.
-            float volume = ComputeSoundVolume();
-            if (volume > 0f)
-            {
-                AudioManager.airVentVolume = volume;
-                AudioManager.airVentSound = true;
-            }
+            RaiseBlastSound();
 
             if (particleDelay > 0f) yield return new WaitForSeconds(particleDelay);
             if (airParticles != null) airParticles.Play();
@@ -103,10 +117,48 @@ public class AirVent : MonoBehaviour
         }
     }
 
+    // Constant mode: push and particles never stop. The sweep ping-pongs between its two ends so a
+    // Rate over Distance emitter keeps emitting without ever teleporting back (a jump would spray a
+    // whole line of particles along the return). A Rate over Time emitter works here too.
+    private IEnumerator ConstantBlow()
+    {
+        if (pushZone != null) pushZone.enabled = true;
+        if (airParticles != null) airParticles.Play();
+
+        bool reverse = false;
+        while (true)
+        {
+            yield return SweepParticles(reverse);
+            reverse = !reverse;
+        }
+    }
+
+    // Constant mode: the hiss is a one-shot, so it has to be re-triggered to sound continuous.
+    private IEnumerator ConstantSound()
+    {
+        while (true)
+        {
+            RaiseBlastSound();
+            yield return new WaitForSeconds(Mathf.Max(0.1f, soundRepeatInterval));
+        }
+    }
+
+    // Hands the blast to the AudioManager: which clip this vent uses, and how loud it is from
+    // where the player is standing. Silent when the player is too far to hear it at all.
+    private void RaiseBlastSound()
+    {
+        float volume = ComputeSoundVolume();
+        if (volume <= 0f) return;
+
+        AudioManager.airVentUseAlt = useAltSound;
+        AudioManager.airVentVolume = volume;
+        AudioManager.airVentSound = true;
+    }
+
     // Slides the particle system along particleTravel over the length of the blast.
     // That movement is what a Rate over Distance emitter turns into particles, so the
     // jet is drawn along the path instead of piling up in one spot.
-    private IEnumerator SweepParticles()
+    private IEnumerator SweepParticles(bool reverse = false)
     {
         if (airParticles == null || activeDuration <= 0f)
         {
@@ -114,13 +166,15 @@ public class AirVent : MonoBehaviour
             yield break;
         }
 
-        Vector3 offset = transform.TransformVector(particleTravel);
+        Vector3 far = particlesRestPosition + transform.TransformVector(particleTravel);
+        Vector3 from = reverse ? far : particlesRestPosition;
+        Vector3 to = reverse ? particlesRestPosition : far;
         float elapsed = 0f;
 
         while (elapsed < activeDuration)
         {
             elapsed += Time.deltaTime;
-            airParticles.transform.position = particlesRestPosition + offset * Mathf.Clamp01(elapsed / activeDuration);
+            airParticles.transform.position = Vector3.Lerp(from, to, Mathf.Clamp01(elapsed / activeDuration));
             yield return null;
         }
     }

@@ -72,6 +72,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip footstep;      // Default walking sound (used by SimplePlayer while grounded and moving)
     public AudioClip footstepMetal; // Walking sound on metal platforms (tagged ground)
     public AudioClip airVent;       // Air-vent blast hiss (played by AirVent at the start of each blow)
+    public AudioClip airVentAlt;    // Second vent sound, picked per vent via AirVent's useAltSound
 
     [Header("Sound Flags (Legacy)")]
     public static bool breakSound = false;
@@ -88,6 +89,7 @@ public class AudioManager : MonoBehaviour
     public static bool buttonReleaseSound = false;
     public static bool airVentSound = false; // Air-vent blast (set by AirVent each cycle)
     public static float airVentVolume = 1f;  // Distance-based volume for the next blast (set by AirVent, 0..1)
+    public static bool airVentUseAlt = false; // Which of the two vent clips the next blast uses (set by AirVent)
     private Camera mainCamera;
 
     // Dedicated source for the gear sound so a new rotation can Stop() and restart it
@@ -189,6 +191,7 @@ public class AudioManager : MonoBehaviour
         buttonPressSound = false;
         buttonReleaseSound = false;
         airVentSound = false;
+        airVentUseAlt = false;
 
         // Play the first zone automatically when the game starts
         if (musicZones.Count > 0)
@@ -471,9 +474,13 @@ public class AudioManager : MonoBehaviour
     {
         if (airVentSound == true)
         {
+            // Each vent picks its own clip through airVentUseAlt, falling back to the default
+            // one if the alternate was never assigned.
+            AudioClip clip = (airVentUseAlt && airVentAlt != null) ? airVentAlt : airVent;
+
             // volumeScale multiplies source.volume (the SFX master), so distance fade
             // and the settings volume both apply.
-            if (airVent != null) source.PlayOneShot(airVent, airVentVolume);
+            if (clip != null) source.PlayOneShot(clip, airVentVolume);
             airVentSound = false;
         }
     }

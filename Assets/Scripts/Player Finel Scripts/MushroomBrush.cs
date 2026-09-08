@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering.Universal; // Required for Light2D
 
 // =============================================================================
 // MushroomBrush
@@ -26,7 +27,19 @@ public class MushroomBrush : MonoBehaviour
              "rides along with the cap, and turn off its 'Play On Awake'.")]
     public ParticleSystem hitParticles;
 
+    [Tooltip("Optional Light2D that glows when this mushroom is brushed. Parent it under the bone " +
+             "so it rides along with the cap.")]
+    public Light2D glowLight;
+
+    [Tooltip("How long the glow stays on after a brush, in seconds.")]
+    public float glowDuration = 0.3f;
+
     [Header("Detection")]
+    [Tooltip("Moves the detection circle away from the bone, in world axes. The tip bone sits up in " +
+             "the cap while the player walks past below it, so a negative Y drops the circle down to " +
+             "where the player actually brushes through. Shown by the gizmo.")]
+    public Vector2 detectionOffset = Vector2.zero;
+
     [Tooltip("How close the player must get for this mushroom to be swept aside.")]
     public float brushRadius = 1.2f;
 
@@ -47,9 +60,21 @@ public class MushroomBrush : MonoBehaviour
     [Tooltip("Player speed that maps to the full swayForce.")]
     public float speedForFullForce = 6f;
 
+    [Header("Debug")]
+    [Tooltip("Traces detection to the console: player found, distance vs radius, speed vs gate, and " +
+             "what happens on an actual brush. Turn off once it works.")]
+    public bool showDebug = false;
+
+    // Where the detection circle actually sits. Deliberately a world-axis offset and not a local
+    // one: the bone swings on its hinge, and a local offset would drag the detection circle along
+    // with every sway, moving the trigger zone around while the mushroom is still settling.
+    private Vector2 DetectionCenter => (Vector2)transform.position + detectionOffset;
+
     private Rigidbody2D rb;
     private SimplePlayer player;
     private bool wasInside = false; // Edge detection: true while the player counts as inside.
+    private float nextDebugTime = 0f; // Throttles the debug print so it does not flood the console.
+    private float glowOffTime = 0f;   // When the glow should switch back off.
 
     private void Awake()
     {
@@ -63,13 +88,25 @@ public class MushroomBrush : MonoBehaviour
 
     private void Update()
     {
+        UpdateGlow();
+
         if (player == null)
         {
             player = FindPlayer(); // Re-find if lost (e.g. respawn/scene switch).
-            if (player == null) return;
+            if (player == null)
+            {
+                if (DebugDue()) Debug.LogWarning($"[MushroomBrush] {name}: no SimplePlayer found in the scene.");
+                return;
+            }
         }
 
-        float distance = Vector2.Distance(transform.position, player.transform.position);
+        float distance = Vector2.Distance(DetectionCenter, player.transform.position);
+
+        if (DebugDue())
+        {
+            Debug.Log($"[MushroomBrush] {name} | distance {distance:F2} (needs <= {brushRadius}) | " +
+                      $"speed {player.CurrentSpeed:F2} (needs >= {minPlayerSpeed}) | wasInside {wasInside}");
+        }
 
         if (!wasInside)
         {
@@ -94,7 +131,7 @@ public class MushroomBrush : MonoBehaviour
         // the player is nearly still (e.g. drifting in on a slope).
         float dir = Mathf.Sign(player.Rb.linearVelocity.x);
         if (Mathf.Approximately(dir, 0f))
-            dir = Mathf.Sign(transform.position.x - player.transform.position.x);
+            dir = Mathf.Sign(DetectionCenter.x - player.transform.position.x);
 
         float force = swayForce;
         if (scaleWithSpeed)
@@ -102,6 +139,17 @@ public class MushroomBrush : MonoBehaviour
 
         rb.AddForce(Vector2.right * dir * force, ForceMode2D.Impulse);
         PlayImpact();
+        StartGlow();
+
+        if (showDebug)
+        {
+            // bodyType and simulated matter: AddForce silently does nothing on a Kinematic or
+            // non-simulated body, and an Animator driving this bone would undo it every frame.
+            Debug.Log($"[MushroomBrush] {name} BRUSHED | dir {dir} | force {force:F2} | " +
+                      $"bodyType {rb.bodyType} | simulated {rb.simulated} | mass {rb.mass} | " +
+                      $"velocity after {rb.linearVelocity} | particles " +
+                      (hitParticles != null ? hitParticles.name : "NOT ASSIGNED"));
+        }
     }
 
     // Anything that still collides physically (thrown shells, Movable boxes) also
@@ -109,6 +157,24 @@ public class MushroomBrush : MonoBehaviour
     private void OnCollisionEnter2D(Collision2D collision)
     {
         PlayImpact();
+    }
+
+    // Lights the mushroom up. Brushing again while it is already lit just extends the glow.
+    private void StartGlow()
+    {
+        if (glowLight == null) return;
+
+        glowLight.enabled = true;
+        glowOffTime = Time.time + glowDuration;
+    }
+
+    // Switches the glow back off once its time is up. Also covers a light left enabled in the
+    // editor, which simply goes dark on the first frame.
+    private void UpdateGlow()
+    {
+        if (glowLight == null || !glowLight.enabled) return;
+
+        if (Time.time >= glowOffTime) glowLight.enabled = false;
     }
 
     private void PlayImpact()
@@ -122,6 +188,14 @@ public class MushroomBrush : MonoBehaviour
         hitParticles.Play();
     }
 
+    // True at most twice a second, so the per-frame trace stays readable.
+    private bool DebugDue()
+    {
+        if (!showDebug || Time.time < nextDebugTime) return false;
+        nextDebugTime = Time.time + 0.5f;
+        return true;
+    }
+
     // Finds the active player in the scene (no tag needed), same as AirVent.
     private SimplePlayer FindPlayer()
     {
@@ -131,9 +205,15 @@ public class MushroomBrush : MonoBehaviour
     // Shows the brush and re-arm radii in the Scene view for easy tuning.
     private void OnDrawGizmosSelected()
     {
+        Vector3 center = DetectionCenter;
+
         Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, brushRadius);
+        Gizmos.DrawWireSphere(center, brushRadius);
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, rearmDistance);
+        Gizmos.DrawWireSphere(center, rearmDistance);
+
+        // Thin line back to the bone, so it stays obvious how far the circle was moved.
+        Gizmos.color = Color.gray;
+        Gizmos.DrawLine(transform.position, center);
     }
 }
