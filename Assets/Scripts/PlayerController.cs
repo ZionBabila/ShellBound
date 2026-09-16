@@ -14,7 +14,29 @@ public class PlayerController : MonoBehaviour
     public float decelerationRate = 40.0f;
     [Tooltip("How high the player can jump without a shell ability.")]
     public float jumpForce = 12.0f;
-    
+
+    [Header("Jump Feel")]
+    [Tooltip("זמן קויוטי: כמה זמן אחרי שירדת מקצה פלטפורמה עדיין מותר לקפוץ. מסתיר טעויות תזמון של השחקן.")]
+    [Range(0f, 0.3f)] public float coyoteTime = 0.1f;
+
+    [Tooltip("באפר קפיצה: אם לחצת קפיצה קצת לפני הנחיתה, הלחיצה נשמרת ומתבצעת ברגע שנוגעים בקרקע.")]
+    [Range(0f, 0.3f)] public float jumpBufferTime = 0.125f;
+
+    [Tooltip("קפיצה משתנה: כששוחררים את כפתור הקפיצה באמצע העלייה, המהירות כלפי מעלה מוכפלת בערך הזה. 0 = עצירה מיידית, 1 = בלי חיתוך.")]
+    [Range(0f, 1f)] public float jumpCutMultiplier = 0.45f;
+
+    [Tooltip("כובד נוסף בזמן נפילה. גדול מ-1 = נופלים מהר יותר ממה שעולים, וזה מה שגורם לקפיצה להרגיש חדה.")]
+    [Range(1f, 5f)] public float fallGravityMultiplier = 1.9f;
+
+    [Tooltip("ריחוף בשיא הקפיצה: כשהמהירות האנכית קרובה לאפס הכובד מוכפל בערך הזה. קטן מ-1 = תחושת תלייה רגעית באוויר.")]
+    [Range(0.1f, 1f)] public float apexHangGravityMultiplier = 0.55f;
+
+    [Tooltip("סף המהירות האנכית שנחשבת 'שיא הקפיצה'.")]
+    [Range(0f, 4f)] public float apexVelocityThreshold = 2.0f;
+
+    [Tooltip("מהירות הנפילה המקסימלית. מונע צבירת מהירות אינסופית בנפילות ארוכות.")]
+    public float maxFallSpeed = 26f;
+
     public Vector2 SurfaceNormal { get; private set; } = Vector2.up;
     
     [Header("Ground Detection")]
@@ -76,6 +98,16 @@ public class PlayerController : MonoBehaviour
     private float moveTimer;
     private bool wasGrounded;
 
+    // --- Jump Feel state ---
+    // הכובד המקורי של הגוף, נשמר פעם אחת כדי שנוכל להכפיל אותו זמנית ולהחזיר אותו.
+    private float baseGravityScale;
+    // כמה זמן עוד מותר לקפוץ אחרי שעזבנו את הקרקע (סופר לאחור).
+    private float coyoteTimer;
+    // כמה זמן הלחיצה על קפיצה עדיין "חיה" ומחכה לקרקע (סופר לאחור).
+    private float jumpBufferTimer;
+    // האם אנחנו כרגע בתוך קפיצה שהשחקן יזם (ולא סתם נפילה מקצה).
+    private bool isJumping;
+
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
 
     void Awake()
@@ -87,6 +119,9 @@ public class PlayerController : MonoBehaviour
         // נועלים את סיבוב הפיזיקה לחלוטין - הסרטן לעולם לא יתהפך פיזית
         rb.constraints |= RigidbodyConstraints2D.FreezeRotation;
 
+        // שומרים את הכובד ההתחלתי. מכאן והלאה אנחנו רק מכפילים אותו זמנית (נפילה/שיא) ומחזירים.
+        baseGravityScale = rb.gravityScale;
+
         // Subscribe to input events
         if (input != null)
         {
@@ -95,6 +130,7 @@ public class PlayerController : MonoBehaviour
             input.OnGrabStart += TryStartGrab;
             input.OnGrabEnd += ReleaseGrab;
             input.OnJump += TryJump;
+            input.OnJumpReleased += OnJumpReleased;
         }
     }
 
@@ -108,6 +144,7 @@ public class PlayerController : MonoBehaviour
             input.OnGrabStart -= TryStartGrab;
             input.OnGrabEnd -= ReleaseGrab;
             input.OnJump -= TryJump;
+            input.OnJumpReleased -= OnJumpReleased;
         }
     }
 
@@ -120,6 +157,10 @@ public class PlayerController : MonoBehaviour
         {
             currentVelocityX = 0f;
             moveTimer = 0f;
+            jumpBufferTimer = 0f;
+            coyoteTimer = 0f;
+            isJumping = false;
+            if (rb != null) rb.gravityScale = baseGravityScale; // מחזירים כובד רגיל, כי FixedUpdate כבר לא ירוץ
         }
     }
 
@@ -140,7 +181,9 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
-        HandleMovement(); // Physics-based movement should always be in FixedUpdate
+        HandleJumpTimers();  // מעדכן קויוטי/באפר ומבצע קפיצה אם מותר - לפני התנועה
+        HandleMovement();    // Physics-based movement should always be in FixedUpdate
+        HandleJumpGravity(); // מעצב את עקומת הקפיצה: ריחוף בשיא, נפילה כבדה, תקרת מהירות
     }
 
     private void HandleGroundCheck()
@@ -359,19 +402,111 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // נקרא ברגע לחיצת הכפתור. לא קופץ בעצמו - רק פותח "חלון" של באפר.
+    // ככה לחיצה חצי שנייה לפני הנחיתה לא הולכת לאיבוד.
     private void TryJump()
     {
-        // חוסם קפיצה רגילה אם הקונכייה השתלטה על הפיזיקה (למשל במצב מתגלגל או בתוך השריון)
-        if (currentShell != null && currentShell.CurrentState == ShellState.InUse) return;
+        if (ShellOverridesPhysics) return;
+        jumpBufferTimer = jumpBufferTime;
+    }
+
+    // נקרא ברגע שחרור הכפתור. אם אנחנו עדיין עולים - חותכים את המהירות.
+    // זה מה שנותן "קפיצה קצרה" בנגיעה קלה ו"קפיצה מלאה" בלחיצה ארוכה.
+    private void OnJumpReleased()
+    {
+        if (isJumping && rb.linearVelocity.y > 0f)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
+            isJumping = false;
+        }
+    }
+
+    // מריץ את שני הטיימרים ומחליט אם מותר לקפוץ עכשיו.
+    private void HandleJumpTimers()
+    {
+        if (ShellOverridesPhysics)
+        {
+            coyoteTimer = 0f;
+            jumpBufferTimer = 0f;
+            return;
+        }
+
+        // קויוטי: מתמלא מחדש כל עוד נוגעים בקרקע, ומתרוקן באוויר.
+        if (IsGrounded)
+        {
+            coyoteTimer = coyoteTime;
+            isJumping = false;
+        }
+        else
+        {
+            coyoteTimer -= Time.fixedDeltaTime;
+        }
+
+        // באפר: מתרוקן לבד אם לא הספקנו לנחות בזמן.
+        jumpBufferTimer -= Time.fixedDeltaTime;
+
+        // שני התנאים יחד = קפיצה. שימו לב שאין כאן בדיקה של IsGrounded בכלל -
+        // coyoteTimer הוא הגרסה ה"סלחנית" שלה.
+        if (jumpBufferTimer > 0f && coyoteTimer > 0f)
+        {
+            PerformJump();
+        }
+    }
+
+    private void PerformJump()
+    {
+        // שורפים את שני הטיימרים כדי שלא תתקבל קפיצה כפולה מאותה לחיצה.
+        jumpBufferTimer = 0f;
+        coyoteTimer = 0f;
+        isJumping = true;
+
+        // איפוס המהירות האנכית כדי שהקפיצה תהיה עקבית, למקרה שהשחקן מחליק קצת במורד שיפוע
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+
+        rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+    }
+
+    // עיצוב עקומת הקפיצה על ידי שינוי זמני של gravityScale.
+    // הרעיון: קפיצה שנופלת באותה מהירות שבה היא עולה מרגישה "צפה" ואיטית.
+    private void HandleJumpGravity()
+    {
+        if (ShellOverridesPhysics)
+        {
+            rb.gravityScale = baseGravityScale;
+            return;
+        }
+
+        float vy = rb.linearVelocity.y;
 
         if (IsGrounded)
         {
-            // איפוס המהירות האנכית כדי שהקפיצה תהיה עקבית, למקרה שהשחקן מחליק קצת במורד שיפוע
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
-            
-            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            rb.gravityScale = baseGravityScale;
+        }
+        else if (Mathf.Abs(vy) < apexVelocityThreshold)
+        {
+            // שיא הקפיצה - מחלישים את הכובד לרגע כדי לתת לשחקן זמן לכוון את הנחיתה.
+            rb.gravityScale = baseGravityScale * apexHangGravityMultiplier;
+        }
+        else if (vy < 0f)
+        {
+            // נפילה - מכבידים. זה הפרמטר שהכי משפיע על תחושת ה"חדות".
+            rb.gravityScale = baseGravityScale * fallGravityMultiplier;
+        }
+        else
+        {
+            rb.gravityScale = baseGravityScale;
+        }
+
+        // תקרת מהירות נפילה: מונע צניחה מטורפת שגם שוברת בדיקות התנגשות.
+        if (rb.linearVelocity.y < -maxFallSpeed)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, -maxFallSpeed);
         }
     }
+
+    // תנאי חוזר בכל מקום: האם הקונכייה השתלטה על הפיזיקה (גלגול, שריון וכו').
+    private bool ShellOverridesPhysics =>
+        currentShell != null && currentShell.CurrentState == ShellState.InUse;
 
     private void TryStartGrab()
     {

@@ -50,6 +50,12 @@ public class PlayerInputHandler : MonoBehaviour
     // Fired once when the jump key transitions to performed.
     public event Action OnJump;
 
+    // Fired when the jump key is released. Needed for variable-height jumps.
+    public event Action OnJumpReleased;
+
+    // True while the jump button is currently held down.
+    public bool IsJumpHeld => JumpAction.IsPressed();
+
     void Awake()
     {
         InteractAction.performed += HandleInteractPerformed;
@@ -57,6 +63,7 @@ public class PlayerInputHandler : MonoBehaviour
         GrabAction.performed += HandleGrabPerformed;
         GrabAction.canceled += HandleGrabCanceled;
         JumpAction.performed += HandleJumpPerformed;
+        JumpAction.canceled += HandleJumpCanceled;
     }
 
     void OnDestroy()
@@ -66,6 +73,7 @@ public class PlayerInputHandler : MonoBehaviour
         GrabAction.performed -= HandleGrabPerformed;
         GrabAction.canceled -= HandleGrabCanceled;
         JumpAction.performed -= HandleJumpPerformed;
+        JumpAction.canceled -= HandleJumpCanceled;
     }
 
     void OnEnable()
@@ -91,4 +99,5 @@ public class PlayerInputHandler : MonoBehaviour
     private void HandleGrabPerformed(InputAction.CallbackContext _) => OnGrabStart?.Invoke();
     private void HandleGrabCanceled(InputAction.CallbackContext _) => OnGrabEnd?.Invoke();
     private void HandleJumpPerformed(InputAction.CallbackContext _) => OnJump?.Invoke();
+    private void HandleJumpCanceled(InputAction.CallbackContext _) => OnJumpReleased?.Invoke();
 }

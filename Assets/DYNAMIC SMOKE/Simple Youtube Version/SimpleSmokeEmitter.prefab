@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &9218847471789015963
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4067627491903878037}
+  - component: {fileID: 1514094953155501750}
+  m_Layer: 0
+  m_Name: SimpleSmokeEmitter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4067627491903878037
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9218847471789015963}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -8.35, y: 4.36, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1514094953155501750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9218847471789015963}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d72dfeab56d111c47844bcf24e2620e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GridSize: 64
+  CellSize: 0.1
+  _viscosity: 0.0001
+  _diffusion: 0.0001
+  _timestep: 0.0167
+  _smokeDecay: 0.995
+  _emissionStrength: 150
+  _emissionPoint: {x: 32, y: 10}
+  _emissionRadius: 5
+  _emissionVelocity: {x: 0, y: 20}
+  _velocityRandomness: 50
+  _smokeMaterial: {fileID: 2100000, guid: 7548957904881c545972bcf092ab1d6f, type: 2}
+  _sortingOrder: 1000
+  _sprite: {fileID: 7482667652216324306, guid: db750325989564987a34393247d883b4, type: 3}

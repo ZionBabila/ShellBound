@@ -1,0 +1,932 @@
+#pragma kernel CSShiftVelocity
+#pragma kernel CSShiftDye
+#pragma kernel CSShiftPressure
+
+#pragma kernel AdvectVelocity
+#pragma kernel AdvectHighResDye
+
+#pragma kernel InjectVelocity
+#pragma kernel InjectHighResDye
+
+#pragma kernel ApplySDF_Physics
+
+#pragma kernel Divergence
+#pragma kernel JacobiSmooth
+#pragma kernel Restrict
+#pragma kernel ProlongateAndCorrect
+#pragma kernel Project
+#pragma kernel CalcVorticity
+#pragma kernel ApplyVorticity
+#pragma kernel InjectWind
+
+#pragma kernel AdvectMacCormackStep1_Physics
+#pragma kernel AdvectMacCormackStep1_Visual
+#pragma kernel AdvectMacCormackStep2_Physics
+#pragma kernel AdvectMacCormackStep2_Visual
+#pragma kernel AdvectMacCormackStep3_Physics
+#pragma kernel AdvectMacCormackStep3_Visual
+
+#pragma kernel UpdateSearchDir
+#pragma kernel CalcLaplacian
+#pragma kernel UpdateCGState
+#pragma kernel DotMultiply
+#pragma kernel DotReduce
+#pragma kernel CalcBeta
+#pragma kernel CalcAlpha
+
+#pragma kernel InjectMacroCurlNoise
+#pragma kernel ClearTexture
+#pragma kernel CalcMicroNoise
+#pragma kernel BakeObstacleMask
+
+SamplerState sampler_LinearClamp;
+
+float _DeltaTime;
+float _GridSize;
+
+// DUAL GRID RESOLUTIONS
+float _PhysicsRes;
+float _VisualRes;
+float _SmokeDecay;
+
+// World Space Tracking
+float2 _WorldOrigin;
+float _WorldSize;
+
+// Multigrid Specifics
+int _LevelRes;
+int _CoarseRes;
+
+// SDF Globals
+Texture2D<float> _DistanceFieldTex_Compute;
+float2 _GlobalSDFCenter;
+float2 _GlobalSDFSize;
+
+Texture2D<float> _DistanceFieldTex_Physics;
+float2 _GlobalPhysicsSDFCenter;
+float2 _GlobalPhysicsSDFSize;
+
+// Buffers
+Texture2D<float2> _VelocityRead;
+RWTexture2D<float2> _VelocityWrite;
+
+Texture2D<float4> _DyeRead;
+RWTexture2D<float4> _DyeWrite;
+
+Texture2D<float> _PressureRead;
+RWTexture2D<float> _PressureWrite;
+
+Texture2D<float> _DivergenceRead;
+RWTexture2D<float> _DivergenceWrite;
+Texture2D<float> _ResidualRead;
+RWTexture2D<float> _ResidualWrite;
+
+// Shift Buffers
+int2 _ShiftOffset;
+int2 _VisualShiftOffset;
+Texture2D<float4> _DyeShiftRead;
+RWTexture2D<float4> _DyeShiftWrite;
+Texture2D<float2> _VelShiftRead;
+RWTexture2D<float2> _VelShiftWrite;
+Texture2D<float> _PressureShiftRead;
+RWTexture2D<float> _PressureShiftWrite;
+
+// Emitter
+float2 _EmitWorldPos;
+float2 _EmitVelocity;
+float4 _EmitColor;
+float _EmitRadius;
+float _EmitDensity;
+int _EmitShape;
+int _EmitVelocityMode;
+float _EmitThickness;
+float2 _EmitLineEnd;
+float _EmitVelocityStrength;
+
+float _VorticityStrength;
+
+Texture2D<float> _VorticityRead;
+RWTexture2D<float> _VorticityWrite;
+
+// Wind Integration
+Texture2D<float2> _WindVelocityTex;
+float2 _WindCameraBottomLeft;
+float2 _WindCameraSize;
+float _WindInfluence;
+
+// Intermediate Buffers for MacCormack
+Texture2D<float2> _VelIntermediate;
+Texture2D<float4> _DyeIntermediate;
+Texture2D<float2> _VelBackward;
+Texture2D<float4> _DyeBackward;
+
+// CG Buffers
+Texture2D<float> _ZVectorRead;
+Texture2D<float> _SearchDirRead;
+RWTexture2D<float> _SearchDirWrite;
+Texture2D<float> _QVectorRead;
+RWTexture2D<float> _QVectorWrite;
+Texture2D<float> _CGPressureRead;
+RWTexture2D<float> _CGPressureWrite;
+Texture2D<float> _CGResidualRead;
+RWTexture2D<float> _CGResidualWrite;
+
+// New CG Buffers for GPU-side math
+Texture2D<float> _DotReadA;
+Texture2D<float> _DotReadB;
+Texture2D<float> _ReduceRead;
+RWTexture2D<float> _ReduceWrite;
+Texture2D<float> _RhoTex;
+Texture2D<float> _RhoOldTex;
+Texture2D<float> _SDotQTex;
+RWTexture2D<float> _AlphaTexWrite;
+RWTexture2D<float> _BetaTexWrite;
+Texture2D<float> _AlphaTexRead;
+Texture2D<float> _BetaTexRead;
+
+float _MacCormackStrength;
+
+float _SimplexTime;
+float _MacroNoiseScale;
+float _MacroNoiseStrength;
+float _MicroNoiseScale;
+float _MicroNoiseStrength;
+
+float _EmitExpansionRate;
+float _EmitTurbulenceStrength;
+float _EmitTurbulenceScale;
+Texture2D<float> _ExpansionRead;
+RWTexture2D<float> _ExpansionWrite;
+
+RWTexture2D<float4> _ClearWrite;
+RWTexture2D<float2> _MicroNoiseWrite;
+Texture2D<float2> _MicroNoiseTex;
+
+RWTexture2D<float> _ObstacleMaskWrite;
+Texture2D<float> _ObstacleMaskTex;
+
+[numthreads(8, 8, 1)]
+void ClearTexture(uint3 id : SV_DispatchThreadID)
+{
+    _ClearWrite[id.xy] = float4(0, 0, 0, 0);
+}
+
+float3 mod289(float3 x)
+{
+    return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+float4 mod289(float4 x)
+{
+    return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+float4 permute(float4 x)
+{
+    return mod289(((x * 34.0) + 1.0) * x);
+}
+float4 taylorInvSqrt(float4 r)
+{
+    return 1.79284291400159 - 0.85373472095314 * r;
+}
+
+float4 snoise_grad(float3 v)
+{
+    const float2 C = float2(1.0 / 6.0, 1.0 / 3.0);
+    const float4 D = float4(0.0, 0.5, 1.0, 2.0);
+
+    float3 i = floor(v + dot(v, C.yyy));
+    float3 x0 = v - i + dot(i, C.xxx);
+    float3 g = step(x0.yzx, x0.xyz);
+    float3 l = 1.0 - g;
+    float3 i1 = min(g.xyz, l.zxy);
+    float3 i2 = max(g.xyz, l.zxy);
+    float3 x1 = x0 - i1 + C.xxx;
+    float3 x2 = x0 - i2 + C.yyy;
+    float3 x3 = x0 - D.yyy;
+
+    i = mod289(i);
+    float4 p = permute(permute(permute(
+        i.z + float4(0.0, i1.z, i2.z, 1.0))
+        + i.y + float4(0.0, i1.y, i2.y, 1.0))
+        + i.x + float4(0.0, i1.x, i2.x, 1.0));
+    float n_ = 0.142857142857;
+    float3 ns = n_ * D.wyz - D.xzx;
+    float4 j = p - 49.0 * floor(p * ns.z * ns.z);
+    float4 x_ = floor(j * ns.z);
+    float4 y_ = floor(j - 7.0 * x_);
+    float4 x = x_ * ns.x + ns.yyyy;
+    float4 y = y_ * ns.x + ns.yyyy;
+    float4 h = 1.0 - abs(x) - abs(y);
+    float4 b0 = float4(x.xy, y.xy);
+    float4 b1 = float4(x.zw, y.zw);
+    float4 s0 = floor(b0) * 2.0 + 1.0;
+    float4 s1 = floor(b1) * 2.0 + 1.0;
+    float4 sh = -step(h, float4(0.0, 0.0, 0.0, 0.0));
+    float4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;
+    float4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
+    float3 p0 = float3(a0.xy, h.x);
+    float3 p1 = float3(a0.zw, h.y);
+    float3 p2 = float3(a1.xy, h.z);
+    float3 p3 = float3(a1.zw, h.w);
+    float4 norm = taylorInvSqrt(float4(dot(p0, p0), dot(p1, p1), dot(p2, p2), dot(p3, p3)));
+    p0 *= norm.x;
+    p1 *= norm.y;
+    p2 *= norm.z;
+    p3 *= norm.w;
+
+    float4 m = max(0.6 - float4(dot(x0, x0), dot(x1, x1), dot(x2, x2), dot(x3, x3)), 0.0);
+    float4 m2 = m * m;
+    float4 m3 = m2 * m;
+    float4 m4 = m2 * m2;
+    float3 grad0 = -6.0 * m3.x * x0 * dot(p0, x0) + m4.x * p0;
+    float3 grad1 = -6.0 * m3.y * x1 * dot(p1, x1) + m4.y * p1;
+    float3 grad2 = -6.0 * m3.z * x2 * dot(p2, x2) + m4.z * p2;
+    float3 grad3 = -6.0 * m3.w * x3 * dot(p3, x3) + m4.w * p3;
+    float4 px = float4(dot(p0, x0), dot(p1, x1), dot(p2, x2), dot(p3, x3));
+    return 42.0 * float4(dot(m4, px), grad0.x + grad1.x + grad2.x + grad3.x, grad0.y + grad1.y + grad2.y + grad3.y, grad0.z + grad1.z + grad2.z + grad3.z);
+}
+
+[numthreads(8, 8, 1)]
+void CalcMicroNoise(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _PhysicsRes || id.y >= (uint) _PhysicsRes)
+        return;
+    
+    float2 worldPos = _WorldOrigin + ((float2(id.xy) + 0.5) / _PhysicsRes) * _WorldSize;
+    float4 microNoise = snoise_grad(float3(worldPos.x * _MicroNoiseScale, worldPos.y * _MicroNoiseScale, _SimplexTime));
+    
+    // Store the 2D curl directly into the texture
+    _MicroNoiseWrite[id.xy] = float2(microNoise.z, -microNoise.y) * _MicroNoiseStrength;
+}
+
+// HELPER: SDF Sampling & Baking
+float GetCombinedSDF(float2 worldPos)
+{
+    float2 envBottomLeft = _GlobalSDFCenter - (_GlobalSDFSize * 0.5);
+    float2 envUV = (worldPos - envBottomLeft) / _GlobalSDFSize;
+    float envDist = _DistanceFieldTex_Compute.SampleLevel(sampler_LinearClamp, envUV, 0);
+
+    float2 physBottomLeft = _GlobalPhysicsSDFCenter - (_GlobalPhysicsSDFSize * 0.5);
+    float2 physUV = (worldPos - physBottomLeft) / _GlobalPhysicsSDFSize;
+    float physDist = _DistanceFieldTex_Physics.SampleLevel(sampler_LinearClamp, physUV, 0);
+
+    return min(envDist, physDist);
+}
+
+bool CalculateSolidFromSDF(float2 worldPos)
+{
+    return GetCombinedSDF(worldPos) <= 0.01;
+}
+
+// Bakes the heavy math into a 1-channel texture
+[numthreads(8, 8, 1)]
+void BakeObstacleMask(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _PhysicsRes || id.y >= (uint) _PhysicsRes)
+        return;
+    
+    float2 worldPos = _WorldOrigin + ((float2(id.xy) + 0.5) / _PhysicsRes) * _WorldSize;
+    
+    // We store 0.0 for Solid, and 1.0 for Fluid
+    _ObstacleMaskWrite[id.xy] = CalculateSolidFromSDF(worldPos) ? 0.0 : 1.0;
+}
+
+// The new, ultra-fast IsSolid check used by all your physics kernels!
+bool IsSolid(float2 worldPos)
+{
+    float2 uv = (worldPos - _WorldOrigin) / _WorldSize;
+    // Just a single bilinear sample. If it's < 0.5, it's a solid wall.
+    return _ObstacleMaskTex.SampleLevel(sampler_LinearClamp, uv, 0).r < 0.5;
+}
+
+// SHIFT KERNELS
+[numthreads(8, 8, 1)]
+void CSShiftVelocity(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _PhysicsRes || id.y >= (uint) _PhysicsRes)
+        return;
+    int2 src = int2(id.xy) + _ShiftOffset;
+    _VelShiftWrite[id.xy] = (src.x < 0 || src.x >= (int) _PhysicsRes || src.y < 0 || src.y >= (int) _PhysicsRes) ? float2(0, 0) : _VelShiftRead[src];
+}
+
+[numthreads(8, 8, 1)]
+void CSShiftPressure(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _PhysicsRes || id.y >= (uint) _PhysicsRes)
+        return;
+    int2 src = int2(id.xy) + _ShiftOffset;
+    _PressureShiftWrite[id.xy] = (src.x < 0 || src.x >= (int) _PhysicsRes || src.y < 0 || src.y >= (int) _PhysicsRes) ? 0.0 : _PressureShiftRead[src];
+}
+
+[numthreads(8, 8, 1)]
+void CSShiftDye(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _VisualRes || id.y >= (uint) _VisualRes)
+        return;
+    int2 src = int2(id.xy) + _VisualShiftOffset;
+    _DyeShiftWrite[id.xy] = (src.x < 0 || src.x >= (int) _VisualRes || src.y < 0 || src.y >= (int) _VisualRes) ? float4(0, 0, 0, 0) : _DyeShiftRead[src];
+}
+
+// DUAL-GRID ADVECT (SEMI-LAGRANGIAN)
+[numthreads(8, 8, 1)]
+void AdvectVelocity(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _PhysicsRes || id.y >= (uint) _PhysicsRes)
+        return;
+    if (id.x == 0 || id.x == (uint) _PhysicsRes - 1 || id.y == 0 || id.y == (uint) _PhysicsRes - 1)
+    {
+        _VelocityWrite[id.xy] = float2(0, 0);
+        return;
+    }
+
+    float2 uv = (id.xy + 0.5) / _PhysicsRes;
+    float2 vel = _VelocityRead[id.xy];
+    float2 prevUV = uv - ((vel / _WorldSize) * _DeltaTime);
+    _VelocityWrite[id.xy] = _VelocityRead.SampleLevel(sampler_LinearClamp, prevUV, 0);
+}
+
+[numthreads(8, 8, 1)]
+void AdvectHighResDye(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _VisualRes || id.y >= (uint) _VisualRes)
+        return;
+    if (id.x == 0 || id.x == (uint) _VisualRes - 1 || id.y == 0 || id.y == (uint) _VisualRes - 1)
+    {
+        _DyeWrite[id.xy] = float4(0, 0, 0, 0);
+        return;
+    }
+
+    float2 uv = (id.xy + 0.5) / _VisualRes;
+    float2 vel = _VelocityRead.SampleLevel(sampler_LinearClamp, uv, 0).xy;
+    float2 prevUV = uv - ((vel / _WorldSize) * _DeltaTime);
+    _DyeWrite[id.xy] = saturate(_DyeRead.SampleLevel(sampler_LinearClamp, prevUV, 0)) * _SmokeDecay;
+}
+
+// APPLY SDF (SPLIT)
+[numthreads(8, 8, 1)]
+void ApplySDF_Physics(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _PhysicsRes || id.y >= (uint) _PhysicsRes)
+        return;
+    float2 worldPos = _WorldOrigin + ((float2(id.xy) + 0.5) / _PhysicsRes) * _WorldSize;
+    if (IsSolid(worldPos))
+    {
+        _VelocityWrite[id.xy] = float2(0, 0);
+    }
+}
+
+//SDF HELPER FUNCTIONS
+float sdCircle(float2 p, float2 c, float r)
+{
+    return length(p - c) - r;
+}
+
+float sdRing(float2 p, float2 c, float r, float t)
+{
+    return abs(length(p - c) - r) - t;
+}
+
+float sdLine(float2 p, float2 a, float2 b, float t)
+{
+    float2 pa = p - a, ba = b - a;
+    float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+    return length(pa - ba * h) - t;
+}
+
+// Master function to get distance based on selected shape
+float GetEmissionDistance(float2 worldPos)
+{
+    if (_EmitShape == 0)
+        return sdCircle(worldPos, _EmitWorldPos, _EmitRadius);
+    if (_EmitShape == 1)
+        return sdRing(worldPos, _EmitWorldPos, _EmitRadius, _EmitThickness);
+    
+    float2 absoluteLineEnd = _EmitWorldPos + _EmitLineEnd;
+    return sdLine(worldPos, _EmitWorldPos, absoluteLineEnd, _EmitThickness);
+}
+
+// Calculates the outward normal via central differences
+float2 GetSDFGradient(float2 worldPos)
+{
+    float eps = _GridSize; 
+    float dx = (GetEmissionDistance(worldPos + float2(eps, 0.0)) - GetEmissionDistance(worldPos - float2(eps, 0.0))) / (2.0 * eps);
+    float dy = (GetEmissionDistance(worldPos + float2(0.0, eps)) - GetEmissionDistance(worldPos - float2(0.0, eps))) / (2.0 * eps);
+    
+    float lenSq = dx * dx + dy * dy;
+    if (lenSq > 0.000001)
+    {
+        return float2(dx, dy) * rsqrt(lenSq); 
+    }
+    return float2(0, 0);
+}
+
+[numthreads(8, 8, 1)]
+void InjectVelocity(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _PhysicsRes || id.y >= (uint) _PhysicsRes)
+        return;
+    
+    float2 worldPos = _WorldOrigin + ((float2(id.xy) + 0.5) / _PhysicsRes) * _WorldSize;
+    float dist = GetEmissionDistance(worldPos);
+    float window = _GridSize;
+    float coverage = smoothstep(window * 0.5, -window * 0.5, dist);
+
+    float currentExpansion = _ExpansionRead[id.xy];
+
+    if (coverage > 0.001)
+    {
+        float2 injectionVel = float2(0, 0);
+        
+        //radial
+        if (_EmitVelocityMode == 1)
+        { 
+            float2 gradient = GetSDFGradient(worldPos);
+            injectionVel = gradient * _EmitVelocityStrength;
+            currentExpansion += _EmitExpansionRate * coverage * _DeltaTime;
+        }
+        //directional
+        else
+        { 
+            injectionVel = _EmitVelocity;
+        }
+
+        if (_EmitTurbulenceStrength > 0.001)
+        {
+            float3 posTime = float3(worldPos.x * _EmitTurbulenceScale, worldPos.y * _EmitTurbulenceScale, _SimplexTime);
+            
+            float4 noiseData = snoise_grad(posTime);
+            
+            float2 curlVelocity = float2(noiseData.z, -noiseData.y);
+            
+            injectionVel += curlVelocity * _EmitTurbulenceStrength;
+        }
+
+        _VelocityWrite[id.xy] = _VelocityRead[id.xy] + injectionVel * coverage * _DeltaTime;
+    }
+    else
+    {
+        _VelocityWrite[id.xy] = _VelocityRead[id.xy];
+    }
+    
+    _ExpansionWrite[id.xy] = currentExpansion;
+}
+
+[numthreads(8, 8, 1)]
+void InjectHighResDye(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _VisualRes || id.y >= (uint) _VisualRes)
+        return;
+    
+    float4 currentDye = _DyeRead[id.xy];
+    float2 worldPos = _WorldOrigin + ((float2(id.xy) + 0.5) / _VisualRes) * _WorldSize;
+    
+    float dist = GetEmissionDistance(worldPos);
+    
+    float visualWindow = _WorldSize / _VisualRes;
+    float coverage = smoothstep(visualWindow * 0.5, -visualWindow * 0.5, dist);
+
+    if (coverage > 0.001)
+    {
+        //smoke got darker around the edges with this method. 
+        float addedDensity = _EmitDensity * coverage * _DeltaTime;
+        float totalDensity = currentDye.a + addedDensity;
+        
+        if (totalDensity > 0.0001)
+        {
+            currentDye.rgb = lerp(currentDye.rgb, _EmitColor.rgb, addedDensity / totalDensity);
+        }
+        currentDye.a = totalDensity;
+        
+        //one PURE color
+        //float addedDensity = _EmitDensity * coverage * _DeltaTime;
+            
+        //currentDye.rgb += _EmitColor.rgb * addedDensity;
+        //currentDye.a += addedDensity;
+        
+    }
+    _DyeWrite[id.xy] = currentDye;
+}
+
+// ALL REMAINING PHYSICS (Using _PhysicsRes)
+
+[numthreads(8, 8, 1)]
+void Divergence(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x == 0 || id.x >= (uint) _PhysicsRes - 1 || id.y == 0 || id.y >= (uint) _PhysicsRes - 1)
+        return;
+
+    float vL = _VelocityRead[id.xy + int2(-1, 0)].x;
+    float vR = _VelocityRead[id.xy + int2(1, 0)].x;
+    float vB = _VelocityRead[id.xy + int2(0, -1)].y;
+    float vT = _VelocityRead[id.xy + int2(0, 1)].y;
+
+    float2 worldPos = _WorldOrigin + ((float2(id.xy) + 0.5) / _PhysicsRes) * _WorldSize;
+    float step = _GridSize;
+
+    if (IsSolid(worldPos + float2(-step, 0)))
+        vL = 0.0;
+    if (IsSolid(worldPos + float2(step, 0)))
+        vR = 0.0;
+    if (IsSolid(worldPos + float2(0, -step)))
+        vB = 0.0;
+    if (IsSolid(worldPos + float2(0, step)))
+        vT = 0.0;
+
+    float expansion = _ExpansionRead[id.xy];
+
+    _DivergenceWrite[id.xy] = (0.5 * (vR - vL + vT - vB) / _GridSize) - expansion;
+}
+
+[numthreads(8, 8, 1)]
+void JacobiSmooth(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _LevelRes || id.y >= (uint) _LevelRes)
+        return;
+    
+    float pCurrent = _PressureRead[id.xy];
+    float pL = _PressureRead[min(id.xy + int2(-1, 0), _LevelRes - 1)];
+    float pR = _PressureRead[max(id.xy + int2(1, 0), 0)];
+    float pB = _PressureRead[min(id.xy + int2(0, -1), _LevelRes - 1)];
+    float pT = _PressureRead[max(id.xy + int2(0, 1), 0)];
+    
+    float2 worldPos = _WorldOrigin + ((float2(id.xy) + 0.5) / _LevelRes) * _WorldSize;
+    float step = _WorldSize / _LevelRes;
+    
+    int fluidNeighbors = 4;
+    
+    // Neumann Boundary Condition: If neighbor is solid, assume pressure gradient is zero (pNeighbor = pCurrent)
+    if (IsSolid(worldPos + float2(-step, 0)))
+    {
+        pL = pCurrent;
+        fluidNeighbors--;
+    }
+    if (IsSolid(worldPos + float2(step, 0)))
+    {
+        pR = pCurrent;
+        fluidNeighbors--;
+    }
+    if (IsSolid(worldPos + float2(0, -step)))
+    {
+        pB = pCurrent;
+        fluidNeighbors--;
+    }
+    if (IsSolid(worldPos + float2(0, step)))
+    {
+        pT = pCurrent;
+        fluidNeighbors--;
+    }
+
+    float b = _DivergenceRead[id.xy];
+    
+    float pJacobi = (pL + pR + pB + pT - (b * (_GridSize * _GridSize))) / max(1.0, (float) fluidNeighbors);
+    
+    _PressureWrite[id.xy] = lerp(pCurrent, pJacobi, 2.0 / 3.0);
+}
+
+[numthreads(8, 8, 1)]
+void Restrict(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _CoarseRes || id.y >= (uint) _CoarseRes)
+        return;
+    float2 uv = (id.xy + 0.5) / _CoarseRes;
+    _ResidualWrite[id.xy] = _ResidualRead.SampleLevel(sampler_LinearClamp, uv, 0);
+}
+
+[numthreads(8, 8, 1)]
+void ProlongateAndCorrect(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _LevelRes || id.y >= (uint) _LevelRes)
+        return;
+    float2 uv = (id.xy + 0.5) / _LevelRes;
+    _PressureWrite[id.xy] += _PressureRead.SampleLevel(sampler_LinearClamp, uv, 0);
+}
+
+[numthreads(8, 8, 1)]
+void Project(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x == 0 || id.x >= (uint) _PhysicsRes - 1 || id.y == 0 || id.y >= (uint) _PhysicsRes - 1)
+        return;
+    
+    float pC = _PressureRead[id.xy];
+    float pL = _PressureRead[id.xy + int2(-1, 0)];
+    float pR = _PressureRead[id.xy + int2(1, 0)];
+    float pB = _PressureRead[id.xy + int2(0, -1)];
+    float pT = _PressureRead[id.xy + int2(0, 1)];
+    
+    float2 worldPos = _WorldOrigin + ((float2(id.xy) + 0.5) / _PhysicsRes) * _WorldSize;
+    float step = _GridSize;
+    
+    // Neumann Boundary Condition: Cancel pressure gradient against solid walls
+    if (IsSolid(worldPos + float2(-step, 0)))
+        pL = pC;
+    if (IsSolid(worldPos + float2(step, 0)))
+        pR = pC;
+    if (IsSolid(worldPos + float2(0, -step)))
+        pB = pC;
+    if (IsSolid(worldPos + float2(0, step)))
+        pT = pC;
+
+    float2 vel = _VelocityRead[id.xy];
+    vel.x -= 0.5 * (pR - pL) / _GridSize;
+    vel.y -= 0.5 * (pT - pB) / _GridSize;
+    
+    // Force zero velocity inside the geometry for stability
+    if (IsSolid(worldPos))
+    {
+        vel = float2(0, 0);
+    }
+
+    _VelocityWrite[id.xy] = vel;
+}
+
+[numthreads(8, 8, 1)]
+void InjectWind(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _PhysicsRes || id.y >= (uint) _PhysicsRes)
+        return;
+    float2 worldPos = _WorldOrigin + ((float2(id.xy) + 0.5) / _PhysicsRes) * _WorldSize;
+    float2 windUV = (worldPos - _WindCameraBottomLeft) / _WindCameraSize;
+    float2 windVel = _WindVelocityTex.SampleLevel(sampler_LinearClamp, windUV, 0);
+    _VelocityWrite[id.xy] = _VelocityRead[id.xy] + windVel * _WindInfluence * _DeltaTime;
+}
+
+[numthreads(8, 8, 1)]
+void CalcVorticity(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x == 0 || id.x >= (uint) _PhysicsRes - 1 || id.y == 0 || id.y >= (uint) _PhysicsRes - 1)
+        return;
+    float vR = _VelocityRead[id.xy + int2(1, 0)].y;
+    float vL = _VelocityRead[id.xy + int2(-1, 0)].y;
+    float vT = _VelocityRead[id.xy + int2(0, 1)].x;
+    float vB = _VelocityRead[id.xy + int2(0, -1)].x;
+    _VorticityWrite[id.xy] = 0.5 * ((vR - vL) - (vT - vB)) / _GridSize;
+}
+
+[numthreads(8, 8, 1)]
+void ApplyVorticity(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x == 0 || id.x >= (uint) _PhysicsRes - 1 || id.y == 0 || id.y >= (uint) _PhysicsRes - 1)
+        return;
+    float curlR = abs(_VorticityRead[id.xy + int2(1, 0)]);
+    float curlL = abs(_VorticityRead[id.xy + int2(-1, 0)]);
+    float curlT = abs(_VorticityRead[id.xy + int2(0, 1)]);
+    float curlB = abs(_VorticityRead[id.xy + int2(0, -1)]);
+    float gradX = 0.5 * (curlR - curlL);
+    float gradY = 0.5 * (curlT - curlB);
+    float lenSq = gradX * gradX + gradY * gradY;
+    if (lenSq > 0.000001)
+    {
+        float2 n = float2(gradX, gradY) * rsqrt(lenSq);
+        float2 force = float2(n.y, -n.x) * _VorticityRead[id.xy] * _VorticityStrength * _GridSize;
+        _VelocityWrite[id.xy] = _VelocityRead[id.xy] + force * _DeltaTime;
+    }
+}
+
+[numthreads(8, 8, 1)]
+void CalcLaplacian(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x == 0 || id.x >= (uint) _PhysicsRes - 1 || id.y == 0 || id.y >= (uint) _PhysicsRes - 1)
+    {
+        _QVectorWrite[id.xy] = 0.0;
+        return;
+    }
+    float sL = _SearchDirRead[id.xy + int2(-1, 0)];
+    float sR = _SearchDirRead[id.xy + int2(1, 0)];
+    float sB = _SearchDirRead[id.xy + int2(0, -1)];
+    float sT = _SearchDirRead[id.xy + int2(0, 1)];
+    float sC = _SearchDirRead[id.xy];
+    
+    float2 worldPos = _WorldOrigin + ((float2(id.xy) + 0.5) / _PhysicsRes) * _WorldSize;
+    float step = _GridSize;
+    
+    if (IsSolid(worldPos + float2(-step, 0)))
+        sL = sC;
+    if (IsSolid(worldPos + float2(step, 0)))
+        sR = sC;
+    if (IsSolid(worldPos + float2(0, -step)))
+        sB = sC;
+    if (IsSolid(worldPos + float2(0, step)))
+        sT = sC;
+
+    _QVectorWrite[id.xy] = (sL + sR + sB + sT - 4.0 * sC) / (_GridSize * _GridSize);
+}
+
+[numthreads(8, 8, 1)]
+void UpdateSearchDir(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _PhysicsRes || id.y >= (uint) _PhysicsRes)
+        return;
+    _SearchDirWrite[id.xy] = _ZVectorRead[id.xy] + (_BetaTexRead[uint2(0, 0)] * _SearchDirRead[id.xy]);
+}
+
+[numthreads(8, 8, 1)]
+void UpdateCGState(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _PhysicsRes || id.y >= (uint) _PhysicsRes)
+        return;
+    float alpha = _AlphaTexRead[uint2(0, 0)];
+    _CGPressureWrite[id.xy] = _CGPressureRead[id.xy] + (alpha * _SearchDirRead[id.xy]);
+    _CGResidualWrite[id.xy] = _CGResidualRead[id.xy] - (alpha * _QVectorRead[id.xy]);
+}
+
+[numthreads(8, 8, 1)]
+void DotMultiply(uint3 id : SV_DispatchThreadID)
+{
+    uint2 srcId = id.xy * 2;
+    _ReduceWrite[id.xy] =
+        (_DotReadA[srcId] * _DotReadB[srcId]) +
+        (_DotReadA[srcId + uint2(1, 0)] * _DotReadB[srcId + uint2(1, 0)]) +
+        (_DotReadA[srcId + uint2(0, 1)] * _DotReadB[srcId + uint2(0, 1)]) +
+        (_DotReadA[srcId + uint2(1, 1)] * _DotReadB[srcId + uint2(1, 1)]);
+}
+
+[numthreads(8, 8, 1)]
+void DotReduce(uint3 id : SV_DispatchThreadID)
+{
+    uint2 srcId = id.xy * 2;
+    _ReduceWrite[id.xy] = _ReduceRead[srcId] + _ReduceRead[srcId + uint2(1, 0)] + _ReduceRead[srcId + uint2(0, 1)] + _ReduceRead[srcId + uint2(1, 1)];
+}
+
+[numthreads(1, 1, 1)]
+void CalcBeta(uint3 id : SV_DispatchThreadID)
+{
+    float rhoOld = _RhoOldTex[uint2(0, 0)];
+    _BetaTexWrite[uint2(0, 0)] = (rhoOld != 0.0) ? (_RhoTex[uint2(0, 0)] / rhoOld) : 0.0;
+}
+
+[numthreads(1, 1, 1)]
+void CalcAlpha(uint3 id : SV_DispatchThreadID)
+{
+    float sDotQ = _SDotQTex[uint2(0, 0)];
+    _AlphaTexWrite[uint2(0, 0)] = (sDotQ != 0.0) ? (_RhoTex[uint2(0, 0)] / sDotQ) : 0.0;
+}
+
+// MACRO NOISE (PHYSICS GRID)
+[numthreads(8, 8, 1)]
+void InjectMacroCurlNoise(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _PhysicsRes || id.y >= (uint) _PhysicsRes)
+        return;
+    float2 worldPos = _WorldOrigin + ((float2(id.xy) + 0.5) / _PhysicsRes) * _WorldSize;
+    float3 posTime = float3(worldPos.x * _MacroNoiseScale, worldPos.y * _MacroNoiseScale, _SimplexTime);
+    float4 noiseData = snoise_grad(posTime);
+    float2 curlVelocity = float2(noiseData.z, -noiseData.y);
+    _VelocityWrite[id.xy] = _VelocityRead[id.xy] + (curlVelocity * _MacroNoiseStrength * _DeltaTime);
+}
+
+// MACCORMACK ADVECT (DUAL GRID)
+
+[numthreads(8, 8, 1)]
+void AdvectMacCormackStep1_Physics(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _PhysicsRes || id.y >= (uint) _PhysicsRes)
+        return;
+    float2 uv = (id.xy + 0.5) / _PhysicsRes;
+    float2 vel = _VelocityRead[id.xy];
+    float2 prevUV = uv - ((vel / _WorldSize) * _DeltaTime);
+    _VelocityWrite[id.xy] = _VelocityRead.SampleLevel(sampler_LinearClamp, prevUV, 0);
+}
+
+[numthreads(8, 8, 1)]
+void AdvectMacCormackStep1_Visual(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _VisualRes || id.y >= (uint) _VisualRes)
+        return;
+    float2 uv = (id.xy + 0.5) / _VisualRes;
+    float2 vel = _VelocityRead.SampleLevel(sampler_LinearClamp, uv, 0).xy;
+    vel += _MicroNoiseTex.SampleLevel(sampler_LinearClamp, uv, 0);
+    float2 prevUV = uv - ((vel / _WorldSize) * _DeltaTime);
+    _DyeWrite[id.xy] = _DyeRead.SampleLevel(sampler_LinearClamp, prevUV, 0);
+}
+
+[numthreads(8, 8, 1)]
+void AdvectMacCormackStep2_Physics(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _PhysicsRes || id.y >= (uint) _PhysicsRes)
+        return;
+    float2 uv = (id.xy + 0.5) / _PhysicsRes;
+    float2 vel = _VelocityRead[id.xy];
+    float2 nextUV = uv + ((vel / _WorldSize) * _DeltaTime);
+    _VelocityWrite[id.xy] = _VelIntermediate.SampleLevel(sampler_LinearClamp, nextUV, 0);
+}
+
+[numthreads(8, 8, 1)]
+void AdvectMacCormackStep2_Visual(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _VisualRes || id.y >= (uint) _VisualRes)
+        return;
+    float2 uv = (id.xy + 0.5) / _VisualRes;
+    float2 vel = _VelocityRead.SampleLevel(sampler_LinearClamp, uv, 0).xy;
+    vel += _MicroNoiseTex.SampleLevel(sampler_LinearClamp, uv, 0);
+    float2 nextUV = uv + ((vel / _WorldSize) * _DeltaTime);
+    _DyeWrite[id.xy] = _DyeIntermediate.SampleLevel(sampler_LinearClamp, nextUV, 0);
+}
+
+[numthreads(8, 8, 1)]
+void AdvectMacCormackStep3_Physics(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _PhysicsRes || id.y >= (uint) _PhysicsRes)
+        return;
+    float2 origVel = _VelocityRead[id.xy];
+    float2 intVel = _VelIntermediate[id.xy];
+    float2 backVel = _VelBackward[id.xy];
+    float2 correctedVel = intVel - _MacCormackStrength * (backVel - origVel);
+    
+    float2 velPixels = (origVel / _WorldSize) * _PhysicsRes;
+    float2 exactPixelPos = float2(id.xy) + 0.5f - (velPixels * _DeltaTime);
+    float2 tracePos = exactPixelPos - 0.5f;
+
+    int2 pos00 = int2(floor(tracePos));
+    int2 maxB = int2(_PhysicsRes - 1, _PhysicsRes - 1);
+    
+    float2 val00 = _VelocityRead[clamp(pos00, int2(0, 0), maxB)];
+    float2 val10 = _VelocityRead[clamp(pos00 + int2(1, 0), int2(0, 0), maxB)];
+    float2 val01 = _VelocityRead[clamp(pos00 + int2(0, 1), int2(0, 0), maxB)];
+    float2 val11 = _VelocityRead[clamp(pos00 + int2(1, 1), int2(0, 0), maxB)];
+
+    float2 minVal = min(min(val00, val10), min(val01, val11));
+    float2 maxVal = max(max(val00, val10), max(val01, val11));
+
+    float2 tolerance = (maxVal - minVal) * 0.01;
+    bool isOutside = any(correctedVel < (minVal - tolerance)) || any(correctedVel > (maxVal + tolerance));
+    
+    _VelocityWrite[id.xy] = isOutside ? intVel : correctedVel;
+}
+
+[numthreads(8, 8, 1)]
+void AdvectMacCormackStep3_Visual(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _VisualRes || id.y >= (uint) _VisualRes)
+        return;
+    float4 origDye = _DyeRead[id.xy];
+    float4 intDye = _DyeIntermediate[id.xy];
+    float4 backDye = _DyeBackward[id.xy];
+    float4 correctedDye = intDye - _MacCormackStrength * (backDye - origDye);
+    
+    float2 uv = (id.xy + 0.5) / _VisualRes;
+    float2 origVel = _VelocityRead.SampleLevel(sampler_LinearClamp, uv, 0).xy;
+    
+    origVel += _MicroNoiseTex.SampleLevel(sampler_LinearClamp, uv, 0);
+    
+    float2 velPixels = (origVel / _WorldSize) * _VisualRes;
+    float2 exactPixelPos = float2(id.xy) + 0.5f - (velPixels * _DeltaTime);
+    float2 tracePos = exactPixelPos - 0.5f;
+
+    int2 pos00 = int2(floor(tracePos));
+    int2 maxB = int2(_VisualRes - 1, _VisualRes - 1);
+    
+    float4 val00 = _DyeRead[clamp(pos00, int2(0, 0), maxB)];
+    float4 val10 = _DyeRead[clamp(pos00 + int2(1, 0), int2(0, 0), maxB)];
+    float4 val01 = _DyeRead[clamp(pos00 + int2(0, 1), int2(0, 0), maxB)];
+    float4 val11 = _DyeRead[clamp(pos00 + int2(1, 1), int2(0, 0), maxB)];
+    
+    float4 minVal = min(min(val00, val10), min(val01, val11));
+    float4 maxVal = max(max(val00, val10), max(val01, val11));
+    
+    float4 tolerance = (maxVal - minVal) * 0.01;
+    bool isOutside = any(correctedDye < (minVal - tolerance)) || any(correctedDye > (maxVal + tolerance));
+    
+    _DyeWrite[id.xy] = (isOutside ? intDye : correctedDye) * _SmokeDecay;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

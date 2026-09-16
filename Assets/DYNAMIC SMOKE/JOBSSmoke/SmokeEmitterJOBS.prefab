@@ -1,0 +1,237 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7773238149725386444
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5761371954379317567}
+  - component: {fileID: 2022510395188916261}
+  - component: {fileID: 8129116868899786500}
+  - component: {fileID: 8889541042813779244}
+  m_Layer: 0
+  m_Name: SmokeEmitterJOBS
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5761371954379317567
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7773238149725386444}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 5, y: 5, z: 5}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2022510395188916261
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7773238149725386444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c3dcb52a3fff734888d0308513a0dc7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _emissionSettings:
+    PlayOnAwake: 1
+    SimulationSpeed: 3
+    Substeps: 1
+    SpeedEmissionFactor: 0.5
+    Position: {x: 32, y: 5}
+    Shape: 0
+    EdgeFalloff: 0.5
+    Radius: 3
+    BoxSize: {x: 6, y: 2}
+    LineStart: {x: 30, y: 5}
+    LineEnd: {x: 34, y: 5}
+    LineWidth: 1
+    RingSize: 0.25
+    CustomShapeTexture: {fileID: 0}
+    UseTextureAlpha: 1
+    Strength: 50
+    VelocityStrength: 10
+    VelocityDirection: {x: 0, y: 1}
+    VelocityRandomness: 50
+    UseRandomDirection: 0
+    ScaleVelocityWithStrength: 0
+    RadialOutward: 0
+    TangentialStrength: 0.25
+    RadialExpansionSpeed: 1
+    Continuous: 0
+    BurstDuration: 0.15
+    BurstCooldown: 2
+    BurstCount: 1
+    BurstInterval: 0.01
+    BurstStrengthMultiplier: 3
+    BurstEmissionSteps: 2
+  stopAction: 3
+  DensityThreshold: 0.01
+  OnStopped:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 8889541042813779244}
+        m_TargetAssemblyTypeName: ReturnSmokeToPool, Assembly-CSharp
+        m_MethodName: ReturnToPool
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  GridSize: 64
+  CellSize: 0.1
+  SmokeGradient:
+    serializedVersion: 2
+    key0: {r: 0.2, g: 0.2, b: 0.2, a: 0}
+    key1: {r: 1, g: 1, b: 1, a: 1}
+    key2: {r: 0, g: 0, b: 0, a: 1}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 65535
+    ctime2: 0
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 19661
+    atime2: 65535
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 2
+    m_NumAlphaKeys: 3
+  _viscosity: 0.0001
+  _diffusion: 0.0001
+  _timeStep: 0.0167
+  _smokeDecay: 0.995
+  _linearSmokeDecay: 0.01
+  _useVorticity: 1
+  _vorticityStrength: 3
+  _enableBoundaryFade: 1
+  FadeWidth: 0.2
+  FadeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: -1
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: -1
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  VelocityDamping: 0.01
+  _useAutomaticPositioning: 1
+  _gridBuffer: 0.3
+  _useAdaptiveGrid: 0
+  _gridPadding: 3
+  _densityThresholdForGrid: 0.2
+  _minGridSize: 16
+  _inactiveRegionDamping: 0.98
+  _spritePrefab: {fileID: 5192642793861425913, guid: 3ddbfa05e6d6dbc4c88b3907e03107bb, type: 3}
+  _showPerformanceReadout: 0
+  _changeJobsBatchSize: 0
+  _batchSize: 128
+  _smootherType: 0
+  _diffuseIterations: 3
+  _mgPreSmoothIterations: 2
+  _mgPostSmoothIterations: 2
+  _mgBottomSolveIterations: 8
+  PauseWhenOffscreen: 0
+  _showVelocityField: 0
+  _velocityLineWidth: 0.02
+  _velocityLineLength: 0.1
+  _showBoundaries: 0
+  _showAdaptiveGridBounds: 0
+  _boundaryColor: {r: 0, g: 1, b: 0, a: 1}
+  _foldoutStates:
+    showControls: 1
+    showEmissionSettings: 1
+    showEmissionPosition: 1
+    showEmissionShape: 1
+    showEmissionProperties: 1
+    showRadialControls: 0
+    showTemporalControl: 1
+    showStopBehavior: 1
+    showGridSettings: 0
+    showSmokeProperties: 0
+    showBoundaryFade: 0
+    showVorticityFade: 0
+    showGridPositioning: 0
+    showAdaptiveGrid: 0
+    showReferences: 0
+    showPerformanceOptimization: 0
+    showDebug: 0
+--- !u!114 &8129116868899786500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7773238149725386444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92933f13b67e4ac45bbde8207232c93a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  boundaryColliders: []
+  boundaryLayerMask:
+    serializedVersion: 2
+    m_Bits: 64
+  autoFindColliders: 1
+  showBoundaryDebug: 0
+  debugBoundaryColor: {r: 1, g: 0, b: 0, a: 1}
+  boundaryType: 3
+  dampingFactor: 0.2
+--- !u!114 &8889541042813779244
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7773238149725386444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23755e7ff7ed5d74a848bf7fa4e5be55, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
