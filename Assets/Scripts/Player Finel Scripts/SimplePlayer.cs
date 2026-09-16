@@ -89,16 +89,35 @@ public class SimplePlayer : MonoBehaviour
     [Tooltip("Offset from the player's center to start the ground check raycast.")]
     public Vector2 groundCheckOffset = new Vector2(0, 0f); // Start from player center to avoid getting stuck in slopes
     
-    [Tooltip("Distance between the parallel raycasts (should match the collider's width).")]
+    [Tooltip("Distance between the outermost ground rays, centred on groundCheckOffset. Hand-tuned by feel - the collider's bounding box is NOT a good substitute here.")]
     public float groundCheckWidth = 0.5f;
+
+    [Tooltip("Probe width while carrying a shell (withShellCollider active). Leave at 0 to just use groundCheckWidth.")]
+    public float withShellCheckWidth = 0f;
+
+    [Tooltip("Probe width while rolling (rollingCollider active). Leave at 0 to just use groundCheckWidth.")]
+    public float rollingCheckWidth = 0f;
+
+    [Tooltip("How many parallel ground rays to cast across the probe width. 3 matches the old left/center/right behaviour.")]
+    [Range(2, 10)]
+    public int groundRayCount = 3;
 
     public float groundCheckDistance = 1.0f; // Lengthen raycast to reach the ground safely
     public LayerMask groundLayer;
+
+    [Tooltip("TUNING: run ground detection BEFORE movement so movement uses this frame's normal instead of last frame's. Off = the original (one frame stale) order. Flip in play mode to A/B the feel.")]
+    public bool groundCheckBeforeMovement = true;
+
     
     private Rigidbody2D rb;
     private PlayerInputHandler inputHandler;
     private float moveInputX;
     private Vector2 surfaceNormal = Vector2.up;
+
+    // Reused across FixedUpdate so the ground probes never allocate. Sized generously: a single
+    // ray rarely stacks more than a couple of ground colliders.
+    private readonly RaycastHit2D[] groundHitBuffer = new RaycastHit2D[8];
+    private ContactFilter2D groundContactFilter;
 
     // Cached gravity so the grip logic can toggle it to 0 and restore it safely.
     private float defaultGravityScale = 1f;
@@ -157,6 +176,11 @@ public class SimplePlayer : MonoBehaviour
     // Ignoring micro-movements so the animator gets a "clean" 0 when the player barely moves
     public float CurrentSpeed => Mathf.Abs(rb.linearVelocity.x) < 0.15f ? 0f : Mathf.Abs(rb.linearVelocity.x);
     public bool IsGrounded { get; private set; }
+
+    // Previous frame's grounded state. Nothing reads it yet; it is the single field that coyote
+    // time, landing detection and jump buffering all need once vertical mechanics arrive.
+    public bool WasGroundedLastFrame { get; private set; }
+
     public bool IsGrabbing => grabbedBody != null;
 
     // The Rigidbody currently held, or null when not grabbing. Movable uses this to identify the grabbed object.
@@ -179,7 +203,16 @@ public class SimplePlayer : MonoBehaviour
 
         // Lock physics rotation to prevent flipping bugs.
         // All rotation is handled purely visually via visualsRoot.
-        rb.freezeRotation = true; 
+        rb.freezeRotation = true;
+
+        // useTriggers = false makes the cast itself skip triggers, so we don't pay for hits we
+        // would only discard afterwards.
+        groundContactFilter = new ContactFilter2D
+        {
+            useTriggers = false,
+            useLayerMask = true,
+            layerMask = groundLayer
+        };
     }
 
     private void OnDestroy()
@@ -189,6 +222,14 @@ public class SimplePlayer : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // Probing first means HandleMovement consumes THIS frame's surfaceNormal/IsGrounded.
+        // The original order probed last, so movement ran on values that were one physics step
+        // (20ms at 50Hz) old - visible when crossing from flat ground onto a slope.
+        if (groundCheckBeforeMovement)
+        {
+            HandleGroundDetection();
+        }
+
         if (isPhysicsFrozen)
         {
             // Re-zero every step: gravity/collisions could otherwise nudge velocity away from zero.
@@ -209,7 +250,10 @@ public class SimplePlayer : MonoBehaviour
             DriveGrabbedObject();
         }
 
-        HandleGroundDetection();
+        if (!groundCheckBeforeMovement)
+        {
+            HandleGroundDetection();
+        }
     }
 
     private void Update()
@@ -260,8 +304,10 @@ public class SimplePlayer : MonoBehaviour
 
     private void HandleMovement()
     {
-        // Measure how steep the current ground is (0 = flat, 90 = vertical wall)
-        float slopeAngle = Vector2.Angle(surfaceNormal, Vector2.up);
+        // Measure how steep the current ground is (0 = flat, 90 = vertical wall).
+        // Rounded to whole degrees to match the walkable test in HandleGroundDetection, so a
+        // surface can never be "walkable" there and "too steep" here on the same frame.
+        float slopeAngle = Mathf.Round(Vector2.Angle(surfaceNormal, Vector2.up));
         bool onSteepSlope = IsGrounded && slopeAngle > maxSlopeAngle;
 
         // CASE A: Steep slope -> lose grip and slide downhill, ignoring player input
@@ -370,40 +416,68 @@ public class SimplePlayer : MonoBehaviour
 
     private void HandleGroundDetection()
     {
-        Vector2 centerPos = (Vector2)transform.position + groundCheckOffset;
-        Vector2 leftPos = centerPos + Vector2.left * (groundCheckWidth / 2f);
-        Vector2 rightPos = centerPos + Vector2.right * (groundCheckWidth / 2f);
-
-        // Array of origins: Center, Left, Right
-        Vector2[] origins = { centerPos, leftPos, rightPos };
+        GetGroundProbeSpan(out float minX, out float maxX, out float originY);
         
+        int rayCount = Mathf.Max(2, groundRayCount);
+        float span = maxX - minX;
+
         bool foundGround = false;
-        Vector2 combinedNormal = Vector2.zero;
-        int hitCount = 0;
+        bool foundWalkableGround = false;
+        float smallestHitDistance = float.MaxValue;
 
-        RaycastHit2D closestHit = new RaycastHit2D(); // Store the closest valid hit
+        RaycastHit2D closestHit = new RaycastHit2D(); // Store the best valid hit
 
-        foreach (Vector2 origin in origins)
+        for (int i = 0; i < rayCount; i++)
         {
-            // Reverted to RaycastAll for robustness (it correctly filters out triggers).
-            RaycastHit2D[] hits = Physics2D.RaycastAll(origin, Vector2.down, groundCheckDistance, groundLayer);
+            // Evenly spaced across the footprint. With rayCount = 3 this lands on
+            // left / center / right, matching the original three-ray layout.
+            float t = (float)i / (rayCount - 1);
+            Vector2 origin = new Vector2(minX + span * t, originY);
 
-            foreach (RaycastHit2D hit in hits)
+            // Non-allocating cast into a reused buffer. The old RaycastAll built a fresh array
+            // per ray, per FixedUpdate - roughly 150 throwaway arrays a second.
+            int hitCount = Physics2D.Raycast(origin, Vector2.down, groundContactFilter, groundHitBuffer, groundCheckDistance);
+
+            for (int h = 0; h < hitCount; h++)
             {
-                // Ignore triggers and the player's own collider
+                RaycastHit2D hit = groundHitBuffer[h];
+
+                // The filter already drops triggers; this still guards the player's own collider,
+                // and any stray trigger if queriesHitTriggers was left on by another system.
+                if (hit.collider == null) continue;
                 if (hit.collider.isTrigger || hit.collider.gameObject == gameObject) continue;
 
-                // If this is the first valid ground we've found, or if this hit is closer
-                // than the previous closest one, it becomes our new reference point.
-                if (!foundGround || hit.distance < closestHit.distance)
+                // Rounded for the same reason as in HandleMovement: raw normals jitter by
+                // fractions of a degree at collider seams and would flip this test frame to frame.
+                float hitAngle = Mathf.Round(Vector2.Angle(hit.normal, Vector2.up));
+                bool isHitWalkable = hitAngle < maxSlopeAngle;
+
+                if (!foundGround)
                 {
+                    smallestHitDistance = hit.distance;
+                    closestHit = hit;
+                    foundGround = true;
+                    foundWalkableGround = isHitWalkable;
+                }
+                else if (!foundWalkableGround && isHitWalkable)
+                {
+                    // Walkable ground beats non-walkable even when it is further away. Without
+                    // this the crab slides while standing on flat floor whenever a steep ramp
+                    // happens to sit marginally closer to one of the rays.
+                    smallestHitDistance = hit.distance;
+                    closestHit = hit;
+                    foundWalkableGround = true;
+                }
+                else if (foundWalkableGround == isHitWalkable && hit.distance < smallestHitDistance)
+                {
+                    // Same category - nearest wins.
+                    smallestHitDistance = hit.distance;
                     closestHit = hit;
                 }
-
-                foundGround = true; // We found at least one valid ground surface
             }
         }
 
+        WasGroundedLastFrame = IsGrounded;
         IsGrounded = foundGround;
 
         if (foundGround)
@@ -425,6 +499,51 @@ public class SimplePlayer : MonoBehaviour
             onMetalGround = false;
             groundCollider = null;
         }
+    }
+
+    /// <summary>
+    /// The collider currently defining the player's footprint. PlayerShellSystem and RollingShell
+    /// toggle these via .enabled, keeping exactly one active at a time.
+    /// </summary>
+    private Collider2D GetActiveCollider()
+    {
+        if (rollingCollider != null && rollingCollider.enabled) return rollingCollider;
+        if (withShellCollider != null && withShellCollider.enabled) return withShellCollider;
+        if (standingCollider != null && standingCollider.enabled) return standingCollider;
+        return null;
+    }
+
+    /// <summary>
+    /// Horizontal span and vertical origin for the ground probes. Shared by the detection pass and
+    /// the gizmo so the drawing can never drift from what is actually being cast.
+    /// </summary>
+    private void GetGroundProbeSpan(out float minX, out float maxX, out float originY)
+    {
+        Vector2 center = (Vector2)transform.position + groundCheckOffset;
+        originY = center.y;
+
+        float width = GetActiveGroundCheckWidth();
+
+        minX = center.x - width * 0.5f;
+        maxX = center.x + width * 0.5f;
+    }
+
+    /// <summary>
+    /// Probe width for whichever collider is active. Deliberately NOT derived from the collider's
+    /// bounds. The tuned width is intentionally WIDER than any of the colliders (2.28 against a
+    /// 1.29 capsule / 1.86 polygon), and that overhang is what smooths the slope normal: the rays
+    /// sample ahead of and behind the footing instead of only under it. Deriving the span from
+    /// bounds narrows it - asymmetrically so for the polygon - and slope reads got noisy.
+    /// These stay hand-tuned; 0 means "no separate value, use groundCheckWidth".
+    /// </summary>
+    private float GetActiveGroundCheckWidth()
+    {
+        Collider2D active = GetActiveCollider();
+
+        if (active == rollingCollider && rollingCheckWidth > 0f) return rollingCheckWidth;
+        if (active == withShellCollider && withShellCheckWidth > 0f) return withShellCheckWidth;
+
+        return groundCheckWidth;
     }
 
     private void HandleVisualRotation()
@@ -616,13 +735,17 @@ public class SimplePlayer : MonoBehaviour
     {
         // Draw the raycasts in the editor to easily adjust the offset, distance, and width
         Gizmos.color = Color.red;
-        Vector2 centerPos = (Vector2)transform.position + groundCheckOffset;
-        Vector2 leftPos = centerPos + Vector2.left * (groundCheckWidth / 2f);
-        Vector2 rightPos = centerPos + Vector2.right * (groundCheckWidth / 2f);
 
-        Gizmos.DrawLine(centerPos, centerPos + Vector2.down * groundCheckDistance);
-        Gizmos.DrawLine(leftPos, leftPos + Vector2.down * groundCheckDistance);
-        Gizmos.DrawLine(rightPos, rightPos + Vector2.down * groundCheckDistance);
+        GetGroundProbeSpan(out float minX, out float maxX, out float originY);
+        int rayCount = Mathf.Max(2, groundRayCount);
+        float span = maxX - minX;
+
+        for (int i = 0; i < rayCount; i++)
+        {
+            float t = (float)i / (rayCount - 1);
+            Vector2 origin = new Vector2(minX + span * t, originY);
+            Gizmos.DrawLine(origin, origin + Vector2.down * groundCheckDistance);
+        }
 
         // Draw Grab Probe (Yellow = Free, Magenta = Grabbing)
         Gizmos.color = grabbedBody != null ? Color.magenta : Color.yellow;
