@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem; // Required for the new Input System
 
 public class HeavyArmorShell : BaseShell
 {
@@ -24,9 +23,13 @@ public class HeavyArmorShell : BaseShell
     // Internal state for ground pound
     private bool isGroundPounding = false;
 
+    private PlayerInputHandler inputHandler;
+
     public override void Equip(PlayerShellSystem player)
     {
         base.Equip(player);
+
+        inputHandler = playerSystem.GetComponent<PlayerInputHandler>();
         
         // Set default visual state when equipped
         if (defaultVisuals != null) defaultVisuals.SetActive(true);
@@ -52,7 +55,8 @@ public class HeavyArmorShell : BaseShell
             return;
         }
 
-        bool spaceHeld = Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
+        // Read the Ability action (not a hardcoded key) so every binding - Space, gamepad button - works
+        bool spaceHeld = inputHandler != null && inputHandler.AbilityAction.IsPressed();
 
         if (!spaceHeld)
         {
