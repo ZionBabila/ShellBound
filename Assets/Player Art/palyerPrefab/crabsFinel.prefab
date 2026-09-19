@@ -5353,11 +5353,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: e45749fedb0f698429ce329ddf41d61d, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -99.1
+      value: -101
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: e45749fedb0f698429ce329ddf41d61d, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 55.6
+      value: 59
       objectReference: {fileID: 0}
     - target: {fileID: -7552582706839291426, guid: e45749fedb0f698429ce329ddf41d61d, type: 3}
       propertyPath: m_LocalPosition.z
@@ -6011,6 +6011,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8653719598885068355, guid: e45749fedb0f698429ce329ddf41d61d, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1267270746576335655}
+    - targetCorrespondingSourceObject: {fileID: -8653719598885068355, guid: e45749fedb0f698429ce329ddf41d61d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7017377632696026764}
     - targetCorrespondingSourceObject: {fileID: -5384787732419995165, guid: e45749fedb0f698429ce329ddf41d61d, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8759533883726267519}
@@ -6401,7 +6404,7 @@ MonoBehaviour:
       m_Flags: 4
     - m_Name: up
       m_Id: 61a146ad-853f-4b98-9554-ca9aad940d12
-      m_Path: <XInputController>/leftStick/up
+      m_Path: <Gamepad>/leftStick/up
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -6409,7 +6412,7 @@ MonoBehaviour:
       m_Flags: 8
     - m_Name: down
       m_Id: ce154a51-8115-4354-9cdb-7f48b5b282e7
-      m_Path: <XInputController>/leftStick/down
+      m_Path: <Gamepad>/leftStick/down
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -6417,7 +6420,7 @@ MonoBehaviour:
       m_Flags: 8
     - m_Name: left
       m_Id: cbefbaf0-a417-4ed6-bba2-baee1e737d9a
-      m_Path: <XInputController>/leftStick/left
+      m_Path: <Gamepad>/leftStick/left
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -6425,7 +6428,7 @@ MonoBehaviour:
       m_Flags: 8
     - m_Name: right
       m_Id: 5f940075-e208-41d9-849d-220849b64078
-      m_Path: <XInputController>/leftStick/right
+      m_Path: <Gamepad>/leftStick/right
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -6459,7 +6462,7 @@ MonoBehaviour:
       m_Flags: 0
     - m_Name: 
       m_Id: 978a2519-887b-4260-b2b3-221db43e0114
-      m_Path: <XInputController>/buttonSouth
+      m_Path: <Gamepad>/buttonSouth
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -6493,7 +6496,7 @@ MonoBehaviour:
       m_Flags: 0
     - m_Name: 
       m_Id: a64d1880-1683-4792-a438-f73b802d2e3d
-      m_Path: <XInputController>/buttonWest
+      m_Path: <Gamepad>/buttonWest
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -6527,7 +6530,7 @@ MonoBehaviour:
       m_Flags: 0
     - m_Name: 
       m_Id: 77126881-c7b1-40da-bafd-c7d159c83e26
-      m_Path: <XInputController>/buttonNorth
+      m_Path: <Gamepad>/buttonNorth
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -6625,6 +6628,21 @@ MonoBehaviour:
     showGizmo: 1
   - color: {r: 0, g: 1, b: 0, a: 1}
     showGizmo: 1
+--- !u!114 &7017377632696026764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1272841714347640617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a08e16a851592fb4b94167d53e172dff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WaterSwim
+  swimUpForce: 11.3
+  swimDownForce: 113.8
+  inputHandler: {fileID: 0}
 --- !u!4 &1391850082120304601 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8854889053627997875, guid: e45749fedb0f698429ce329ddf41d61d, type: 3}
