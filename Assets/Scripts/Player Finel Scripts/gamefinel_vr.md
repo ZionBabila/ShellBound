@@ -780,3 +780,15 @@
   5. מערכת ה-springs הישנה (`Assets/waterShader/WaterShapeController`/`WaterSpring`/`FallingObject`) — כנראה מיותרת עכשיו; להחליט אם למחוק.
 * **בעיות ובאגים:** אין באגים ידועים בקוד. ⚠️ שדרוג Unity ל-6.6 טרם נבדק מול תחושת התנועה.
 * **חתימת זמן:** סשן 30 נסגר — 19.09.2026.
+
+**סשן 31 (נוכחי):**
+* 🟢 **פתיחת סשן:** [19.09.2026] - שאלת המפתח: מה צריך להגדיר בבילד WebGL כדי שג'ויסטיק Xbox יעבוד ב-itch.io.
+* **הישגים:**
+  1. **🎮 ג'ויסטיק לא עבד בבילד WebGL — הבעיה לא הייתה בבילד אלא בפריפאב:** ב-`crabsFinel.prefab` כל 7 ה-bindings של השלט (סטיק שמאלי ל-`Move`, `buttonSouth` ל-`Interact`, `buttonWest` ל-`Ability`, `buttonNorth` ל-`Grab`) היו על `<XInputController>`. **`XInputController` קיים רק ב-Windows/אדיטור** — בדפדפן Unity מזהה את שלט ה-Xbox כ-`WebGLGamepad`, ולכן אף binding לא נתפס. **תיקון:** החלפה ל-`<Gamepad>` הכללי, שתופס כל שלט (Xbox ב-Windows, Xbox בדפדפן, PlayStation). ב-Windows ההתנהגות זהה (`XInputController` יורש מ-`Gamepad`). **נבדק ע"י המפתח — עובד ב-itch.**
+     * **הלקח:** ב-bindings תמיד `<Gamepad>` ולא מכשיר ספציפי, אלא אם צריך כפתור שקיים רק בשלט מסוים.
+     * **אין הגדרה ב-Build Settings לג'ויסטיק.** מה שכן צריך לדעת ב-WebGL: הדפדפן חושף את השלט רק **אחרי לחיצה על כפתור בשלט** אחרי טעינת העמוד (מגבלת Gamepad API); צריך קליק על הקנבס לפוקוס; מומלץ Chrome/Edge (ב-Firefox המיפוי לפעמים שונה).
+* **נמצא בדרך (לא טופל):**
+  1. ⚠️ ל-`JumpAction` אין binding בשלט בכלל — רק `Space`. אם רוצים קפיצה בשלט צריך להוסיף, ולשים לב ש-`buttonSouth` (A) כבר תפוס ע"י `Interact`.
+  2. `FallingObject.cs` קורא `Keyboard.current` ישירות — לא יגיב לשלט (קשור למערכת ה-springs הישנה שממילא על הפרק למחיקה).
+  3. `Assets/_Recovery/0 (2).unity` עדיין מכיל `<XInputController>` — סצנת גיבוי מחוץ לבילד, לא נגענו.
+* **קבצים ששונו:** `Assets/Player Art/palyerPrefab/crabsFinel.prefab` בלבד (7 שורות `m_Path`). אפס שינויי קוד.
