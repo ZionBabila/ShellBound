@@ -761,3 +761,22 @@
   7. **בדיקת החיווט ב-`Level2 - amir 01` (אחרי שמירה):** ההיררכיה נכונה (`Water` הורה עם `BoxCollider2D` Trigger+Used By Effector + `BuoyancyEffector2D`; ילד `WaterMesh` עם כל רכיבי `InteractableWater` + `SortingGroup`). **נמצאו:** (א) `Water Mask` = Nothing → אין גלים. (ב) `WaterSwim` לא קיים על השחקן בסצנה. (ג) שני אובייקטי המים על layer `Player` (10) במקום `Water` (4). (ד) `WaterMesh` עם Scale ‏1.49×1.72 — הגיזמו והידיות של ה-Editor מתעלמים מ-Scale; עדיף Scale 1 ו-`Width`/`Height` ‏31.89×18.66. (ה) **יישור:** פני המים הוויזואליים ב-y≈3.14 עולמי, ראש ה-Box ב-1.16, ו-`Surface Level` של ה-effector ב-1.71 → הסרטן חוצה את פני המים ונופל ~2 יחידות לפני שהציפה מתחילה. תיקון: Box `Offset` = (3.84, -8.06), `Size` = (31.89, 18.66), `Surface Level` = 1.27.
   8. **כפתור `Fit Effector Collider` ב-`InteractableWater` (בקשת המפתח):** פונקציה `FitEffectorCollider()` מתאימה את ה-`BoxCollider2D` וה-`surfaceLevel` של ה-`BuoyancyEffector2D` **בהורה** למש המים — פינות המש עוברות world → parent-local, כך שזה עובד עם כל Scale. גם מסמנת `isTrigger` + `usedByEffector`. הכפתור ב-Editor עוטף ב-`Undo.RecordObjects` — כך Ctrl+Z עובד **והסצנה מסומנת כ"מלוכלכת" ונשמרת** (שינוי מקוד Editor בלי Undo/SetDirty עלול לא להישמר).
   9. **🎮 באג: כפתור X בג'ויסטיק לא מפעיל את הקונכייה הכבדה (רק Space עבד):** `HeavyArmorShell.Update` קרא **ישירות** `Keyboard.current.spaceKey.isPressed`. לחיצת X ירתה את `AbilityAction` → `ActivateAbility` העביר ל-`InUse` — ובפריים הבא `Update` ראה ש-Space לא מוחזק וחזר מיד ל-`OnBack`. **תיקון:** קריאה ל-`inputHandler.AbilityAction.IsPressed()` (ה-`PlayerInputHandler` נשמר ב-`Equip` מתוך `playerSystem`), והוסר `using UnityEngine.InputSystem`. עכשיו כל binding של `Ability` עובד. נבדק: זה היה המקום **היחיד** בקוד הפעיל עם מקש קשיח.
+
+### 🔴 סגירת סשן 30
+* **מצב:** מערכת המים החדשה (`InteractableWater` + `WaterTriggerHandler`) מחוברת בקוד ובנויה בהיררכיה הנכונה ב-`Level2 - amir 01`, **אך טרם נבדקה ב-Play**. הקונכייה הכבדה עובדת עכשיו דרך `AbilityAction` (טרם נבדק עם ג'ויסטיק). הכל נדחף בקומיט `41e13be "Particalsand More"` (כולל שדרוג Unity ל-`6000.6.0f1`); רק סגירת הסשן ביומן נשארה לא מקומטת.
+* **קבצים ששונו:** `InteractableWater.cs` (`#if UNITY_EDITOR`, `sharedMaterial`, `FitEffectorCollider` + כפתור), `HeavyArmorShell.cs` (קלט דרך `AbilityAction`). נמחקה `Assets/Scripts/Water/Jobs Implementation/`.
+* **חיווט פתוח בעורך (ממצאי הבדיקה, סעיף 7):**
+  1. `Water Mask` ב-`Water Trigger Handler` → לסמן `Player` + `Shells` + `Movable` (כרגע Nothing = אין גלים).
+  2. להוסיף `WaterSwim` לשחקן בסצנה (11.3 / 113.8).
+  3. להעביר את `Water` ו-`WaterMesh` מ-layer `Player` ל-layer `Water`.
+  4. `WaterMesh`: Scale ‏1,1,1 ו-`Width`/`Height` ‏31.89 / 18.66 → Generate Mesh → Place Edge Collider → **Fit Effector Collider**.
+  5. אופציונלי: פרטיקלס ספלאש עם `Looping` כבוי ו-`Stop Action = Destroy`.
+* **לבדוק ב-Play:** גלים בכניסה/יציאה; ציפה מתחילה בדיוק בפני המים הוויזואליים; שחייה W/S; האם הנדנוד של הציפה על קו פני המים יוצר ספלאשים רועשים (אם כן — להוריד `ForceMultiplier`). ג'ויסטיק: גרירת קופסה, Ground Pound, שחרור.
+* **משימות פתוחות לסשן הבא (סשן 31):**
+  1. לסיים ולבדוק את חיווט המים (למעלה) — לבקש מהמפתח לשמור ולבדוק שוב את הסצנה.
+  2. ❓ שתי השאלות מסשן 29 שעדיין לא נענו: A/B על `groundCheckBeforeMovement`, ו-`groundLayer` שלא ניתן לעריכה חיה ב-Play.
+  3. 🐞 באג ה-TMP בבילד — עדיין פתוח.
+  4. מחיקת מופע השחקן המת `crabsNewPlayer (1)` ב-`FinelScene`; בדיקת מצב Death ב-Animator.
+  5. מערכת ה-springs הישנה (`Assets/waterShader/WaterShapeController`/`WaterSpring`/`FallingObject`) — כנראה מיותרת עכשיו; להחליט אם למחוק.
+* **בעיות ובאגים:** אין באגים ידועים בקוד. ⚠️ שדרוג Unity ל-6.6 טרם נבדק מול תחושת התנועה.
+* **חתימת זמן:** סשן 30 נסגר — 19.09.2026.
