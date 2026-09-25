@@ -68,7 +68,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 54.83531, y: -60.18465}
+  m_Offset: {x: 55.239452, y: -58.99858}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -78,7 +78,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 9.83252, y: 7.6855392}
+  m_Size: {x: 9.759438, y: 3.5743752}
   m_EdgeRadius: 0
 --- !u!114 &6246666278847789734
 MonoBehaviour:
@@ -101,7 +101,7 @@ MonoBehaviour:
   Repeating: 1
   OnObjectEnter:
     Action: 1
-    Target: {fileID: 0}
+    Target: {fileID: 8663626164079181379}
     BoostAmount: 2
     StartTime: 0
     Mode: 0
@@ -122,7 +122,7 @@ MonoBehaviour:
           m_CallState: 2
   OnObjectExit:
     Action: 1
-    Target: {fileID: 0}
+    Target: {fileID: 8663626164079181379}
     BoostAmount: -2
     StartTime: 0
     Mode: 0
@@ -239,15 +239,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 073797afb82c5a1438f328866b10b3f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.Light2D
-  m_ComponentVersion: 2
+  m_ComponentVersion: 4
   m_LightType: 1
   m_BlendStyleIndex: 0
+  m_Light2DProvider:
+    rid: -2
+  m_SelectionSources:
+    rid: 1000
   m_FalloffIntensity: 1
   m_Color: {r: 1, g: 0.8431373, b: 0, a: 1}
   m_Intensity: 8.09
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000a74e4e10e30c21af35544821038946e69931721861790fafebf55640f745a1012f2454122b70a2a57126df05
+  m_ApplyToSortingLayers: 00000000a74e4e10e30c21af35544821038946e69931721861790fafebf55640f745a1012f2454122b70a2a57126df05i
   m_LightCookieSprite: {fileID: 0}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -262,6 +266,9 @@ MonoBehaviour:
   m_ShadowSoftnessFalloffIntensity: 0.5
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
   m_LocalBounds:
     m_Center: {x: 6.5808, y: -0.00030004978, z: 0}
     m_Extent: {x: 7.5815, y: 1.0007, z: 0}
@@ -279,6 +286,19 @@ MonoBehaviour:
   - {x: 13.662338, y: -0.4559059, z: 0}
   - {x: 13.640289, y: 0.36771584, z: 0}
   - {x: -0.5, y: 0.5, z: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 1000
+      type: {class: Light2DProviderSources, ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.2D.Runtime}
+      data:
+        m_SelectedHashCode: 1
+        m_SelectedSource:
+          rid: -2
+        m_Provider2DCache:
+          rid: -2
 --- !u!114 &8571475894498634995
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -326,9 +346,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7505419534983750658}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -174.3, y: 18, z: 0}
-  m_LocalScale: {x: 0.7125, y: 0.7125, z: 0.7125}
+  m_LocalScale: {x: 0.95, y: 0.95, z: 0.95}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 6525746924346009063}
@@ -338,7 +358,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &194858276318898481
 SpriteRenderer:
-  serializedVersion: 2
+  serializedVersion: 3
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -395,6 +415,7 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+  m_BlendShapeWeights: []
 --- !u!61 &2868893045503389772
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -465,6 +486,7 @@ GameObject:
   - component: {fileID: 6525746924346009063}
   - component: {fileID: 1492233724204811353}
   - component: {fileID: 2863838185273966186}
+  - component: {fileID: 6865818644390625996}
   m_Layer: 0
   m_Name: CinemachineCameraZoom
   m_TagString: Untagged
@@ -481,7 +503,7 @@ Transform:
   m_GameObject: {fileID: 8663626164079181379}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 61.247887, y: 30.077196, z: -21.052633}
+  m_LocalPosition: {x: -17.389463, y: 11.77411, z: -10.526316}
   m_LocalScale: {x: 1.4035089, y: 1.4035089, z: 1.4035089}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -512,7 +534,7 @@ MonoBehaviour:
     CustomLookAtTarget: 0
   Lens:
     FieldOfView: 34
-    OrthographicSize: 26.2
+    OrthographicSize: 4.67
     NearClipPlane: 0.3
     FarClipPlane: 1000
     Dutch: 0
@@ -542,22 +564,46 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 886251e9a18ece04ea8e61686c173e1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachinePositionComposer
-  CameraDistance: 15
+  CameraDistance: 10
   DeadZoneDepth: 0
   Composition:
-    ScreenPosition: {x: -0.38, y: 0.1}
+    ScreenPosition: {x: 0, y: -0.19}
     DeadZone:
-      Enabled: 0
-      Size: {x: 0.2, y: 0.2}
+      Enabled: 1
+      Size: {x: 0.2, y: 0.23}
     HardLimits:
       Enabled: 0
-      Size: {x: 0.8, y: 0.8}
+      Size: {x: 0.8, y: 0.7}
       Offset: {x: 0, y: 0}
   CenterOnActivate: 1
-  TargetOffset: {x: 0.66, y: 1.21, z: 0}
+  TargetOffset: {x: 0, y: -0.92, z: 0}
   Damping: {x: 1, y: 1, z: 1}
   Lookahead:
     Enabled: 0
     Time: 0
     Smoothing: 0
     IgnoreY: 0
+--- !u!114 &6865818644390625996
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8663626164079181379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00b2d199b96b516448144ab30fb26aed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineImpulseListener
+  ApplyAfter: 2
+  ChannelMask: 1
+  Gain: 2
+  Use2DDistance: 1
+  UseCameraSpace: 1
+  SignalCombinationMode: 0
+  ReactionSettings:
+    m_SecondaryNoise: {fileID: 11400000, guid: 69ce8388f6785dd4c8c39915efece2f4, type: 2}
+    AmplitudeGain: 4
+    FrequencyGain: 4
+    Duration: 4
+    m_NoiseOffsets: {x: -182.96826, y: 611.4287, z: 643.2905}
