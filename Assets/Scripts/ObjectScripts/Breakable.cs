@@ -29,8 +29,10 @@ public class Breakable : MonoBehaviour
         if (isBroken) return;
         isBroken = true;
 
-        // Trigger the global break sound via our AudioManager property
+        // Trigger the global break sound via AudioManager, and the controller rumble via
+        // PlayerInputHandler (it owns all gamepad rumble).
         AudioManager.breakSound = true;
+        PlayerInputHandler.instance?.PlayBreakRumble();
 
         // Swap the sprite to the broken version
         if (spriteRenderer != null && brokenSprite != null)

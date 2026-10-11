@@ -119,17 +119,33 @@ public class Movable : MonoBehaviour
         if (!dragging)
         {
             // Cut the drag sound only on the transition to not-dragging, not every frame.
-            if (wasDragging && AudioManager.instance != null) AudioManager.instance.StopDrag();
+            // Same for the rumble: stopping it every frame would also kill the break rumble
+            // and the rumble of any other Movable that is currently being dragged.
+            if (wasDragging)
+            {
+                if (AudioManager.instance != null) AudioManager.instance.StopDrag();
+                PlayerInputHandler.instance?.StopDragRumble();
+            }
             wasDragging = false;
             dragTimer = 0f; // Reset so the first drag step fires immediately when dragging resumes.
             return;
         }
+
+        // Start the rumble only on the transition into dragging, not every frame.
+        if (!wasDragging) PlayerInputHandler.instance?.StartDragRumble();
         wasDragging = true;
+
+        // SpeedScaled rumble mode needs the object's current speed every frame while dragging.
+        // No-op in the other two rumble modes.
+        PlayerInputHandler.instance?.UpdateDragRumble(Mathf.Abs(rb.linearVelocity.x));
 
         dragTimer -= Time.fixedDeltaTime;
         if (dragTimer <= 0f)
         {
             if (AudioManager.instance != null) AudioManager.instance.PlayDrag(IsDraggingOnMetal());
+            // Pulse rumble mode fires one burst per drag step, same cadence as the sound.
+            // No-op in the other two rumble modes.
+            PlayerInputHandler.instance?.PulseDragRumble();
             dragTimer = dragSoundInterval;
         }
     }

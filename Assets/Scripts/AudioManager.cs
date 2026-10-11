@@ -545,6 +545,7 @@ public class AudioManager : MonoBehaviour
             breakSound = false;
         }
     }
+
     // Plays one drag "step", restarting its dedicated source so consecutive drag sounds
     // never overlap into cacophony. Called directly by Movable while an object is dragged.
     // Picks the metal clip when the object is scraping metal-tagged ground.
@@ -563,6 +564,7 @@ public class AudioManager : MonoBehaviour
     {
         if (dragSource != null) dragSource.Stop();
     }
+
     private void EquipShell()
     {
         if (equipShellSound == true)

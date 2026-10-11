@@ -792,3 +792,13 @@
   2. `FallingObject.cs` קורא `Keyboard.current` ישירות — לא יגיב לשלט (קשור למערכת ה-springs הישנה שממילא על הפרק למחיקה).
   3. `Assets/_Recovery/0 (2).unity` עדיין מכיל `<XInputController>` — סצנת גיבוי מחוץ לבילד, לא נגענו.
 * **קבצים ששונו:** `Assets/Player Art/palyerPrefab/crabsFinel.prefab` בלבד (7 שורות `m_Path`). אפס שינויי קוד.
+* **חתימת זמן:** סשן 31 נסגר — 19.09.2026.
+
+**סשן 32 (נוכחי):**
+* 🟢 **פתיחת סשן:** [02.10.2026] - "הרטט לא עובד עכשיו" (רטט שלט: שבירה + גרירה, קוד לא מקומט שהוסף ב-`PlayerInputHandler`/`Movable`/`Breakable`).
+* **הישגים:**
+  1. **🎮 באג רטט — `StopDragRumble()` נקרא בכל `FixedUpdate`:** ב-`Movable.HandleDragSound`, ענף `!dragging` קרא ל-`StopDragRumble()` (=`SetMotorSpeeds(0,0)`) בכל פריים מכל `Movable` שלא נגרר. זה ביטל מיד את רטט השבירה (`PlayBreakRumble`) ואת רטט הגרירה של `Movable` אחר שכן נגרר. **תיקון:** `StopDrag()` של הסאונד ו-`StopDragRumble()` נקראים רק במעבר גרירה→לא-גרירה (`if (wasDragging)`). **לא נבדק במשחק עדיין.**
+     * **הלקח:** קריאות "עצור" גלובליות (מוטורים/סאונד משותף) תמיד על קצה המעבר, לא בכל פריים, במיוחד כשיש כמה מופעים של אותו סקריפט בסצנה.
+* **נמצא בדרך (לא טופל):** אם הרטט עדיין שקט — לוודא ש-`PlayerInputHandler` קיים בסצנה (`instance` נקבע ב-`Awake`).
+* **קבצים ששונו:** `Movable.cs` (תיקון), ובנוסף שינויי רטט קודמים שטרם נעשה להם commit: `PlayerInputHandler.cs`, `Breakable.cs`, `AudioManager.cs` (רווחים בלבד).
+* **חתימת זמן:** סשן 32 נסגר — 02.10.2026.
