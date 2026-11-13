@@ -684,13 +684,16 @@ document.getElementById('theme').addEventListener('click',()=>{
 /* ---------- export ---------- */
 function serialize(){
   const svg=document.getElementById('sheet').cloneNode(true);
+  // Ensure the namespace is present exactly once (setAttribute is idempotent —
+  // adding it as a raw string would duplicate xmlns and make the SVG invalid,
+  // which silently breaks Image loading and therefore PNG export).
+  svg.setAttribute('xmlns','http://www.w3.org/2000/svg');
   // inline resolved stroke colors so the export is theme-independent
   const cs=getComputedStyle(document.getElementById('sheet'));
   const map={'--tf-ink':cs.getPropertyValue('--tf-ink'),'--tf-guide':cs.getPropertyValue('--tf-guide'),
              '--tf-frame':cs.getPropertyValue('--tf-frame'),'--tf-label':cs.getPropertyValue('--tf-label')};
   let str=new XMLSerializer().serializeToString(svg);
-  for(const k in map) str=str.split(`var(${k})`).join(map[k].trim());
-  str=str.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+  for(const k in map) str=str.split(`var(${k})`).join((map[k]||'').trim());
   return str;
 }
 // Save a Blob. On the hosted artifact, downloads are mediated by the viewer
@@ -715,7 +718,9 @@ document.getElementById('svgBtn').addEventListener('click',()=>{
   saveFile(`traceforge-${state.seed}.svg`, new Blob([serialize()],{type:'image/svg+xml'}));
 });
 document.getElementById('pngBtn').addEventListener('click',()=>{
+  const btn=document.getElementById('pngBtn');
   const scale=2; // ~2080px wide — crisp for Procreate tracing
+  const svgStr=serialize();
   const img=new Image();
   img.onload=()=>{
     const cv=document.createElement('canvas');
@@ -724,9 +729,17 @@ document.getElementById('pngBtn').addEventListener('click',()=>{
     ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--sheet').trim();
     ctx.fillRect(0,0,cv.width,cv.height);
     ctx.drawImage(img,0,0,cv.width,cv.height);
-    cv.toBlob(b=>saveFile(`traceforge-${state.seed}.png`, b),'image/png');
+    cv.toBlob(b=>{ if(b) saveFile(`traceforge-${state.seed}.png`, b); else pngFail(); },'image/png');
   };
-  img.src='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(serialize())));
+  img.onerror=pngFail;
+  function pngFail(){
+    // Fallback: hand over the vector instead of failing silently.
+    btn.textContent='PNG failed — saved SVG';
+    setTimeout(()=>btn.innerHTML='Download PNG ↧',2500);
+    saveFile(`traceforge-${state.seed}.svg`, new Blob([svgStr],{type:'image/svg+xml'}));
+  }
+  // UTF-8 data URI (avoids btoa, which throws on characters like "·").
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgStr);
 });
 
 /* first paint */
