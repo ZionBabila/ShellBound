@@ -173,7 +173,7 @@
       <div class="chips" id="focus" data-multi="1">
         <div class="chip" data-v="fundamentals" aria-pressed="true">Fundamentals<span class="k">boxes · ellipses</span></div>
         <div class="chip" data-v="fillets" aria-pressed="true">Fillets<span class="k">radii · transitions</span></div>
-        <div class="chip" data-v="archetypes">Product archetypes<span class="k">bottle · mug · pod</span></div>
+        <div class="chip" data-v="archetypes">Product archetypes<span class="k">bottle · chair · camera…</span></div>
       </div>
     </div>
 
@@ -310,8 +310,9 @@ function circle3D(center, u, v, r, {a0=0, a1=Math.PI*2, seg=64}={}){
   return out;
 }
 
-// Axis-aligned box wireframe (12 edges) centered at c.
-function box(c, hx,hy,hz){
+// Axis-aligned box wireframe (12 edges) centered at c. `role` defaults to the
+// dashed construction crate; pass 'contour' when the box IS the form (a leg).
+function box(c, hx,hy,hz, role='crate'){
   const s=[-1,1], V3=[];
   for(const sx of s) for(const sy of s) for(const sz of s)
     V3.push(add(c,V(sx*hx,sy*hy,sz*hz)));
@@ -323,7 +324,7 @@ function box(c, hx,hy,hz){
   for(const y of s) for(const z of s) push(P(-1,y,z),P(1,y,z)); // x edges
   for(const x of s) for(const z of s) push(P(x,-1,z),P(x,1,z)); // y edges
   for(const x of s) for(const y of s) push(P(x,y,-1),P(x,y,1)); // z edges
-  return E.map(([a,b])=>({pts:[a,b], role:'crate'}));
+  return E.map(([a,b])=>({pts:[a,b], role}));
 }
 
 // Rounded box: straight seam edges shortened by r + quarter-circle
@@ -392,10 +393,41 @@ function revolve(c, profile){
   return out;
 }
 
-/* ============================================================
-   Exercise builders — each returns { shapes, label }
-   in object space; the packer fits them into a tile.
-   ============================================================ */
+// A ring of radius r centered at `center`, lying in the plane whose normal is
+// `normal` — lets us draw circular faces around any axis (headphone cups, lens
+// barrels) and get a correct projected ellipse.
+function ring(center, normal, r, opts){
+  const n=norm(normal);
+  const ref=Math.abs(n.y)>0.9 ? V(1,0,0) : V(0,1,0);
+  const u=norm(cross(n,ref));
+  const v=cross(n,u);
+  return circle3D(center,u,v,r,opts);
+}
+
+// Wireframe ellipsoid shown as its three principal ellipses (the construction
+// a designer uses to block in a rounded blob like an earbud).
+function ellipsoid(center, rx,ry,rz){
+  const ell=(ax,ay,role)=>{ const pts=[]; for(let i=0;i<=64;i++){ const t=Math.PI*2*i/64;
+    pts.push(add(center, add(mul(ax,Math.cos(t)), mul(ay,Math.sin(t))))); } return {pts, role, closed:true}; };
+  return [
+    ell(V(rx,0,0), V(0,ry,0), 'contour'), // front  (XY)
+    ell(V(rx,0,0), V(0,0,rz), 'contour'), // ground (XZ)
+    ell(V(0,ry,0), V(0,0,rz), 'guide'),   // side   (YZ)
+  ];
+}
+
+// A straight tube between two rings on a shared axis: the two end rings plus
+// silhouette lines at N points around them. Used for barrels and ear cups.
+function tube(cA, cB, axis, rA, rB, {sil=4}={}){
+  const out=[{pts:ring(cA,axis,rA), role:'contour', closed:true},
+             {pts:ring(cB,axis,rB), role:'contour', closed:true}];
+  const n=norm(axis);
+  const ref=Math.abs(n.y)>0.9 ? V(1,0,0) : V(0,1,0);
+  const u=norm(cross(n,ref)), v=cross(n,u);
+  for(let i=0;i<sil;i++){ const t=Math.PI*2*i/sil; const d=add(mul(u,Math.cos(t)),mul(v,Math.sin(t)));
+    out.push({pts:[add(cA,mul(d,rA)), add(cB,mul(d,rB))], role:'contour'}); }
+  return out;
+}
 
 function exFundamentals(rng, diff){
   // A crate with an inscribed ellipse on top + a leaning cylinder beside it.
@@ -475,15 +507,83 @@ function exPod(rng, diff){
   return {shapes, label:'ARCHETYPE · audio pod (filleted block + details)'};
 }
 
+function exAirpod(rng){
+  // Rounded bud (ellipsoid) + a slim stem below — the earbud archetype.
+  let shapes=[];
+  const bud=V(0,0.5,0);
+  shapes=shapes.concat(ellipsoid(bud, 0.44,0.40,0.44));
+  // nozzle facing the ear (+x), a small tube off the bud
+  shapes=shapes.concat(tube(V(0.4,0.55,0), V(0.72,0.5,0), V(1,0,0), 0.2,0.17,{sil:4}));
+  // stem hanging down, slightly forward
+  const sTop=V(-0.02,0.2,0.16), sBot=V(0.02,-0.72,0.16);
+  shapes=shapes.concat(tube(sTop, sBot, V(0,1,0), 0.16,0.15,{sil:4}));
+  shapes.push({pts:ring(sBot, V(0,1,0), 0.15), role:'contour', closed:true});
+  return {shapes, label:'ARCHETYPE · earbud (ellipsoid bud + stem)'};
+}
+
+function exChair(rng){
+  // Seat slab + four legs + a back panel — classic perspective furniture drill.
+  const sx=0.8+rng()*0.1, sz=0.8, st=0.07, inset=0.12, lh=0.075, legH=0.46;
+  let shapes=roundedBox(V(0,0,0), sx,st,sz, 0.06);           // seat
+  const legY=-st-legH;
+  for(const gx of [-1,1]) for(const gz of [-1,1])
+    shapes=shapes.concat(box(V(gx*(sx-inset-lh), legY, gz*(sz-inset-lh)), lh, legH, lh, 'contour'));
+  const backH=0.5+rng()*0.12, bt=0.06;
+  shapes=shapes.concat(roundedBox(V(0, st+backH, -(sz-bt)), sx*0.9, backH, bt, 0.05)); // backrest
+  return {shapes, label:'ARCHETYPE · chair (seat + legs + back)'};
+}
+
+function exTable(rng){
+  // Tabletop + four legs. Wider than a chair; good for a long horizon read.
+  const tx=1.2+rng()*0.2, tz=0.78, tt=0.05, inset=0.14, lh=0.07, legH=0.62;
+  let shapes=roundedBox(V(0,0,0), tx,tt,tz, 0.04);            // top
+  const legY=-tt-legH;
+  for(const gx of [-1,1]) for(const gz of [-1,1])
+    shapes=shapes.concat(box(V(gx*(tx-inset-lh), legY, gz*(tz-inset-lh)), lh, legH, lh, 'contour'));
+  return {shapes, label:'ARCHETYPE · table (top + four legs)'};
+}
+
+function exHeadphones(rng){
+  // Two ear cups (tubes along X) joined by a headband arc in the XY plane.
+  let shapes=[];
+  const cupR=0.5, depth=0.24, X=1.0;
+  for(const s of [-1,1])
+    shapes=shapes.concat(tube(V(s*X,0,0), V(s*(X-depth),0,0), V(1,0,0), cupR, cupR*0.95, {sil:6}));
+  // headband: half-ellipse from one cup top over to the other
+  const bandH=X*0.95, band=[], band2=[];
+  for(let i=0;i<=28;i++){ const t=Math.PI*i/28;
+    band.push(V(Math.cos(t)*X, Math.sin(t)*bandH, 0));
+    band2.push(V(Math.cos(t)*X*0.9, Math.sin(t)*bandH*0.9, 0)); }
+  shapes.push({pts:band, role:'contour'});
+  shapes.push({pts:band2, role:'guide'});
+  return {shapes, label:'ARCHETYPE · headphones (cups + headband)'};
+}
+
+function exCamera(rng){
+  // Filleted body + protruding lens barrel (tube along Z) + viewfinder + button.
+  const bx=1.05+rng()*0.15, by=0.6, bz=0.4;
+  let shapes=box(V(0,0,0), bx,by,bz);                        // crate
+  shapes=shapes.concat(roundedBox(V(0,0,0), bx,by,bz, 0.14)); // body
+  const lensC=V(0.12,-0.02,0), lensR=0.4;
+  shapes=shapes.concat(tube(add(lensC,V(0,0,bz)), add(lensC,V(0,0,bz+0.34)), V(0,0,1), lensR, lensR*0.9, {sil:4}));
+  shapes.push({pts:ring(add(lensC,V(0,0,bz+0.34)), V(0,0,1), lensR*0.55), role:'detail', closed:true});
+  shapes=shapes.concat(roundedBox(V(-0.52, by+0.1, 0), 0.3,0.12,0.26, 0.05)); // viewfinder hump
+  shapes.push({pts:ring(V(0.72, by+0.04, 0.05), V(0,1,0), 0.12), role:'detail', closed:true}); // shutter
+  return {shapes, label:'ARCHETYPE · camera (body + lens + viewfinder)'};
+}
+
 /* ---------- pick an exercise given the brief ---------- */
 function buildExercise(kind, rng, diff){
   if(kind==='fundamentals') return exFundamentals(rng,diff);
   if(kind==='fillets') return exFillet(rng,diff);
-  // archetypes → rotate through variants
-  const pick=Math.floor(rng()*3);
-  if(pick===0) return exBottle(rng);
-  if(pick===1) return exMug(rng);
-  return exPod(rng,diff);
+  // archetypes → wider pool as difficulty rises (more parts, more occlusion)
+  const simple=[exBottle, exMug, exPod, exAirpod];
+  const mid=[exCamera, exChair];
+  const hard=[exTable, exHeadphones];
+  const pool = diff==='warmup' ? simple
+             : diff==='builder' ? simple.concat(mid)
+             : simple.concat(mid, hard);
+  return pool[Math.floor(rng()*pool.length)](rng, diff);
 }
 
 /* ============================================================

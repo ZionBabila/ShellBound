@@ -46,8 +46,12 @@ gives a fresh variation on the same drill.
 
 **Fundamentals** — crate + inscribed top-ellipse (with minor-axis guides) + cylinder.
 **Fillets** — construction crate + soft-radius block with true corner arcs.
-**Archetypes** — bottle (revolved surface), mug (cylinder + handle), audio pod
-(filleted block + grille + parting line), each built on the same primitives.
+**Archetypes** — a pool that widens with difficulty, each built on the same
+primitives: bottle (revolved surface), mug (cylinder + handle), audio pod,
+earbud (ellipsoid bud + stem), camera (body + lens barrel + viewfinder), chair
+and table (slab + solid legs + back), and headphones (ear cups + headband arc).
+Warm-up draws the single-form objects; builder and challenge add the multi-part,
+more-occluded ones.
 
 ## Export
 
