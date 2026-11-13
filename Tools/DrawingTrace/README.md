@@ -58,4 +58,7 @@ more-occluded ones.
 - **Download PNG** rasterises the sheet at ~2× (~2080px wide) — crisp for Procreate.
 - **SVG** exports the vector sheet with theme colours inlined.
 
-Toggle *construction lines* and *labels* off if you want a cleaner reference.
+**Trace mode** (on by default) renders every line as pure opaque black (no alpha)
+on a white ground, and drops the grid and tile frames — the cleanest reference to
+trace over. Turn it off for the themed grey/dashed studio preview. Toggle
+*construction lines* and *labels* off as well if you want only the finished contour.

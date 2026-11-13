@@ -216,7 +216,7 @@
     <button class="generate" id="gen">Forge sheet →</button>
 
     <p class="hint">
-      <b>How to use it.</b> Export the PNG at 2× and import to Procreate on its own layer at low opacity. Trace the <span style="color:var(--guide)">grey construction</span> first — crate, then ellipse minor-axis, then contour — not just the dark outline. Re-roll the seed for a new variation on the same drill.
+      <b>How to use it.</b> Export the PNG at 2× and import to Procreate on its own layer at low opacity. Work the construction first — crate, then ellipse minor-axis, then contour — not just the outline. <b>Trace mode</b> gives pure black lines with no transparency on white; turn it off for the themed grey/dashed preview. Re-roll the seed for a new variation on the same drill.
     </p>
   </aside>
 
@@ -225,6 +225,7 @@
     <div class="toolbar">
       <span class="title">Sheet</span>
       <span class="meta" id="stamp">—</span>
+      <label class="toggle"><input type="checkbox" id="pureBlack" checked> trace mode (pure black)</label>
       <label class="toggle"><input type="checkbox" id="showConstruction" checked> construction lines</label>
       <label class="toggle"><input type="checkbox" id="showLabels" checked> labels</label>
       <span class="spacer"></span>
@@ -628,27 +629,30 @@ function tileGroup(ex, projector, rect, opts){
     const el=document.createElementNS(SVGNS, s.closed?'polygon':'polyline');
     el.setAttribute('points', s.pts.map(T).join(' '));
     el.setAttribute('fill','none');
-    el.setAttribute('stroke', st.stroke);
+    // Trace mode: pure opaque black, no alpha — cleanest to trace over.
+    el.setAttribute('stroke', opts.pureBlack ? '#000000' : st.stroke);
     el.setAttribute('stroke-width', st.w);
-    el.setAttribute('stroke-opacity', st.op);
+    el.setAttribute('stroke-opacity', opts.pureBlack ? 1 : st.op);
     el.setAttribute('stroke-linejoin','round');
     el.setAttribute('stroke-linecap','round');
     if(st.dash) el.setAttribute('stroke-dasharray', st.dash);
     g.appendChild(el);
   }
-  // tile frame + label
-  const frame=document.createElementNS(SVGNS,'rect');
-  frame.setAttribute('x',rect.x+6); frame.setAttribute('y',rect.y+6);
-  frame.setAttribute('width',rect.w-12); frame.setAttribute('height',rect.h-12);
-  frame.setAttribute('rx',6); frame.setAttribute('fill','none');
-  frame.setAttribute('stroke','var(--tf-frame)'); frame.setAttribute('stroke-width',1);
-  g.appendChild(frame);
+  // tile frame (skipped in trace mode so the export is nothing but line art)
+  if(!opts.pureBlack){
+    const frame=document.createElementNS(SVGNS,'rect');
+    frame.setAttribute('x',rect.x+6); frame.setAttribute('y',rect.y+6);
+    frame.setAttribute('width',rect.w-12); frame.setAttribute('height',rect.h-12);
+    frame.setAttribute('rx',6); frame.setAttribute('fill','none');
+    frame.setAttribute('stroke','var(--tf-frame)'); frame.setAttribute('stroke-width',1);
+    g.appendChild(frame);
+  }
 
   if(opts.labels){
     const t=document.createElementNS(SVGNS,'text');
     t.setAttribute('x',rect.x+16); t.setAttribute('y',rect.y+26);
     t.setAttribute('font-family','"IBM Plex Mono",monospace');
-    t.setAttribute('font-size','11'); t.setAttribute('fill','var(--tf-label)');
+    t.setAttribute('font-size','11'); t.setAttribute('fill', opts.pureBlack ? '#000000' : 'var(--tf-label)');
     t.setAttribute('letter-spacing','.03em');
     t.textContent=ex.label;
     g.appendChild(t);
@@ -699,19 +703,22 @@ function render(){
   svg.style.setProperty('--tf-frame', cs.getPropertyValue('--grid').trim());
   svg.style.setProperty('--tf-label', cs.getPropertyValue('--guide').trim());
   while(svg.firstChild) svg.removeChild(svg.firstChild);
+  const pureBlack = document.getElementById('pureBlack').checked;
 
-  // background paper + faint grid
+  // background paper (forced white in trace mode so black reads on any theme)
   const bg=document.createElementNS(SVGNS,'rect');
   bg.setAttribute('width',SHEET_W); bg.setAttribute('height',SHEET_H);
-  bg.setAttribute('fill', cs.getPropertyValue('--sheet').trim());
+  bg.setAttribute('fill', pureBlack ? '#ffffff' : cs.getPropertyValue('--sheet').trim());
   svg.appendChild(bg);
-  const gcol=cs.getPropertyValue('--grid').trim();
-  for(let x=40;x<SHEET_W;x+=40){ const l=document.createElementNS(SVGNS,'line');
-    l.setAttribute('x1',x);l.setAttribute('y1',0);l.setAttribute('x2',x);l.setAttribute('y2',SHEET_H);
-    l.setAttribute('stroke',gcol);l.setAttribute('stroke-width',.5);l.setAttribute('stroke-opacity',.5);svg.appendChild(l);}
-  for(let y=40;y<SHEET_H;y+=40){ const l=document.createElementNS(SVGNS,'line');
-    l.setAttribute('x1',0);l.setAttribute('y1',y);l.setAttribute('x2',SHEET_W);l.setAttribute('y2',y);
-    l.setAttribute('stroke',gcol);l.setAttribute('stroke-width',.5);l.setAttribute('stroke-opacity',.5);svg.appendChild(l);}
+  if(!pureBlack){
+    const gcol=cs.getPropertyValue('--grid').trim();
+    for(let x=40;x<SHEET_W;x+=40){ const l=document.createElementNS(SVGNS,'line');
+      l.setAttribute('x1',x);l.setAttribute('y1',0);l.setAttribute('x2',x);l.setAttribute('y2',SHEET_H);
+      l.setAttribute('stroke',gcol);l.setAttribute('stroke-width',.5);l.setAttribute('stroke-opacity',.5);svg.appendChild(l);}
+    for(let y=40;y<SHEET_H;y+=40){ const l=document.createElementNS(SVGNS,'line');
+      l.setAttribute('x1',0);l.setAttribute('y1',y);l.setAttribute('x2',SHEET_W);l.setAttribute('y2',y);
+      l.setAttribute('stroke',gcol);l.setAttribute('stroke-width',.5);l.setAttribute('stroke-opacity',.5);svg.appendChild(l);}
+  }
 
   const rng=mulberry32(hashStr(state.seed));
   const focus=state.focus.length?state.focus:['fundamentals'];
@@ -719,6 +726,7 @@ function render(){
   const opts={
     construction: document.getElementById('showConstruction').checked,
     labels: document.getElementById('showLabels').checked,
+    pureBlack,
   };
   rects.forEach((rect,i)=>{
     const kind=focus[i%focus.length];
@@ -770,6 +778,7 @@ document.getElementById('roll').addEventListener('click',()=>{
 document.getElementById('gen').addEventListener('click', render);
 document.getElementById('showConstruction').addEventListener('change', render);
 document.getElementById('showLabels').addEventListener('change', render);
+document.getElementById('pureBlack').addEventListener('change', render);
 
 /* theme toggle */
 document.getElementById('theme').addEventListener('click',()=>{
@@ -826,7 +835,9 @@ document.getElementById('pngBtn').addEventListener('click',()=>{
     const cv=document.createElement('canvas');
     cv.width=SHEET_W*scale; cv.height=SHEET_H*scale;
     const ctx=cv.getContext('2d');
-    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--sheet').trim();
+    ctx.fillStyle = document.getElementById('pureBlack').checked
+      ? '#ffffff'
+      : getComputedStyle(document.documentElement).getPropertyValue('--sheet').trim();
     ctx.fillRect(0,0,cv.width,cv.height);
     ctx.drawImage(img,0,0,cv.width,cv.height);
     cv.toBlob(b=>{ if(b) saveFile(`traceforge-${state.seed}.png`, b); else pngFail(); },'image/png');
